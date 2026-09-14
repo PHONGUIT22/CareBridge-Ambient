@@ -1,0 +1,26 @@
+{
+  "name": "carebridge-ambient",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend-mcp"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=backend-mcp\" \"npm run dev --workspace=frontend\"",
+    "dev:backend": "npm run dev --workspace=backend-mcp",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspaces",
+    "start": "concurrently \"npm run start --workspace=backend-mcp\" \"npm run start --workspace=frontend\"",
+    "test:bedrock": "npm run test:bedrock --workspace=backend-mcp"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module"
+}
