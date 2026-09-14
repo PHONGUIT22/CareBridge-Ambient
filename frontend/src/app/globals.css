@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #071117;
+  --foreground: #F1F5F9;
+}
+
+body {
+  background: radial-gradient(circle at 50% 0%, #153243 0%, #0C1E29 45%, #071117 100%);
+  background-attachment: fixed;
+  color: #F1F5F9;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Thanh cuộn phong cách Ambient Dark */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #071117;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #182E3C;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00CAFF;
+}
+
+/* Các lớp tiện ích Glass & Card Neumorphic */
+@layer components {
+  .alexa-card {
+    background: linear-gradient(145deg, rgba(20, 40, 52, 0.75) 0%, rgba(11, 23, 31, 0.9) 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  }
+
+  .alexa-card-interactive {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .alexa-card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px -4px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 202, 255, 0.15);
+  }
+
+  .ambient-card {
+    background: linear-gradient(145deg, rgba(20, 40, 52, 0.75) 0%, rgba(11, 23, 31, 0.9) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .ambient-glass {
+    background: rgba(11, 23, 31, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 202, 255, 0.2);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  }
+}
