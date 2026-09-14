@@ -147,6 +147,7 @@ npm run build --workspace=frontend
 
 - [PRODUCT.md](file:///D:/UIT/NamBonUIT/carebridge-ambient/PRODUCT.md): Comprehensive product vision, user personas (Eleanor 78 & Sarah 48), and jobs-to-be-done.
 - [DESIGN.md](file:///D:/UIT/NamBonUIT/carebridge-ambient/DESIGN.md): Design tokens, surface physics (`.alexa-card`), typography hierarchy, and anti-patterns.
+- [FRICTION_LOG.md](file:///D:/UIT/NamBonUIT/carebridge-ambient/FRICTION_LOG.md): Developer friction log and tooling feedback for AWS Bedrock, MCP, and ambient devices.
 - [RULE.md](file:///D:/UIT/NamBonUIT/carebridge-ambient/RULE.md): Environment variable safety and security guardrails.
 
 ---
