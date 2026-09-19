@@ -7,10 +7,11 @@
 ## 📑 Table of Contents
 1. [Friction Entry #1: AWS Bedrock Cross-Region Inference Profile Validation (ap-southeast-2)](#friction-entry-1-aws-bedrock-cross-region-inference-profile-validation-ap-southeast-2)
 2. [Friction Entry #2: Streamable HTTP Transport (SSEServerTransport) Multi-Turn Session Persistence](#friction-entry-2-streamable-http-transport-sseservertransport-multi-turn-session-persistence)
-3. [Friction Entry #3: Audio Feedback & Echo Loop in Smart Display Environments](#friction-entry-3-audio-feedback--echo-loop-in-smart-display-environments)
-4. [Friction Entry #4: SpeechRecognition Multi-Triggering on Interim Voice Fragments](#friction-entry-4-speechrecognition-multi-triggering-on-interim-voice-fragments)
-5. [Friction Entry #5: MCP Streamable HTTP DTO & Contract Alignment](#friction-entry-5-mcp-streamable-http-dto--contract-alignment)
-6. [Friction Entry #6: Screen Real-Estate & Double Scrollbars on Smart Display Consoles](#friction-entry-6-screen-real-estate--double-scrollbars-on-smart-display-consoles)
+3. [Friction Entry #3: Non-Deterministic Markdown Wrapping in Bedrock Structured Output](#friction-entry-3-non-deterministic-markdown-wrapping-in-bedrock-structured-output)
+4. [Friction Entry #4: Audio Feedback & Echo Loop in Smart Display Environments](#friction-entry-4-audio-feedback--echo-loop-in-smart-display-environments)
+5. [Friction Entry #5: SpeechRecognition Multi-Triggering on Interim Voice Fragments](#friction-entry-5-speechrecognition-multi-triggering-on-interim-voice-fragments)
+6. [Friction Entry #6: MCP Streamable HTTP DTO & Contract Alignment](#friction-entry-6-mcp-streamable-http-dto--contract-alignment)
+7. [Friction Entry #7: Screen Real-Estate & Double Scrollbars on Smart Display Consoles](#friction-entry-7-screen-real-estate--double-scrollbars-on-smart-display-consoles)
 
 ---
 
@@ -48,7 +49,23 @@
 
 ---
 
-### Friction Entry #3: Audio Feedback & Echo Loop in Smart Display Environments
+### Friction Entry #3: Non-Deterministic Markdown Wrapping in Bedrock Structured Output
+
+- **Task Attempted:** Extracting strict, parseable JSON schema payloads from AWS Bedrock Claude models to drive Alexa display rich cards (`ClinicalAdviceCard`, `PillVisualCard`).
+- **Steps Taken:**
+  1. Formatted system prompt with strict schema instructions: `"Respond STRICTLY in valid JSON with NO markdown codeblock markers"`.
+  2. Invoked Claude Haiku with temperature set to low (0.2).
+  3. Attempted `JSON.parse()` on `parsed.content[0].text`.
+- **Expected vs. Actual Result:**
+  - *Expected:* Bedrock outputs a clean raw JSON string `{"speechResponse": "...", ...}`.
+  - *Actual:* Despite system prompts prohibiting markdown, the model occasionally wrapped output in triple backticks (```json ... ```) or prepended brief greeting conversational tokens, causing unhandled `SyntaxError: Unexpected token in JSON`.
+- **Severity Rating:** **Medium** (Causes voice fallback or empty UI triage cards if parse fails).
+- **Workaround Used:** Built a sanitization pipeline in `backend-mcp/src/aws/bedrockClient.ts`: applied regex to strip markdown code blocks (`cleanJson.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')`) and extracted substring between first `{` and last `}` before executing `JSON.parse`. Added offline clinical DTO fallbacks to prevent crash during unexpected LLM anomalies.
+- **Actionable Suggestion for AWS Bedrock Team:** Introduce native constrained JSON schema enforcement (similar to OpenAI `response_format: { type: "json_object" }` or Anthropic JSON mode) at the AWS Bedrock API level to guarantee schema compliance without developer regex workarounds.
+
+---
+
+### Friction Entry #4: Audio Feedback & Echo Loop in Smart Display Environments
 
 - **Task Attempted:** Enabling continuous ambient voice interaction where an elderly patient speaks to Alexa and receives verbal feedback via Text-to-Speech (`speechService.speak()`).
 - **Steps Taken:**
@@ -66,7 +83,7 @@
 
 ---
 
-### Friction Entry #4: SpeechRecognition Multi-Triggering on Interim Voice Fragments
+### Friction Entry #5: SpeechRecognition Multi-Triggering on Interim Voice Fragments
 
 - **Task Attempted:** Capturing patient voice queries reliably without stuttering or duplicate execution.
 - **Steps Taken:** Attached `recognition.onresult = (event) => processVoiceQuery(event.results[0][0].transcript)`.
@@ -89,7 +106,7 @@
 
 ---
 
-### Friction Entry #5: MCP Streamable HTTP DTO & Contract Alignment
+### Friction Entry #6: MCP Streamable HTTP DTO & Contract Alignment
 
 - **Task Attempted:** Transmitting structured medical triage recommendations from backend Model Context Protocol (MCP) server to the Next.js frontend.
 - **Steps Taken:** Implemented `clinicalAdvisorTool` returning JSON objects with `actionAdvice`, `clinicalExplanation`, and `urgencyLevel`.
@@ -102,7 +119,7 @@
 
 ---
 
-### Friction Entry #6: Screen Real-Estate & Double Scrollbars on Smart Display Consoles
+### Friction Entry #7: Screen Real-Estate & Double Scrollbars on Smart Display Consoles
 
 - **Task Attempted:** Presenting both a senior-facing ambient display and an agentic copilot tool stream simultaneously for hackathon judge inspection (Echo Show 10 dual-view).
 - **Steps Taken:** Nested a monospace tool log container inside the secondary panel.
