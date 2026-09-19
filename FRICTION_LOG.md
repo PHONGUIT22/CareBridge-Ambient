@@ -8,10 +8,11 @@
 1. [Friction Entry #1: AWS Bedrock Cross-Region Inference Profile Validation (ap-southeast-2)](#friction-entry-1-aws-bedrock-cross-region-inference-profile-validation-ap-southeast-2)
 2. [Friction Entry #2: Streamable HTTP Transport (SSEServerTransport) Multi-Turn Session Persistence](#friction-entry-2-streamable-http-transport-sseservertransport-multi-turn-session-persistence)
 3. [Friction Entry #3: Non-Deterministic Markdown Wrapping in Bedrock Structured Output](#friction-entry-3-non-deterministic-markdown-wrapping-in-bedrock-structured-output)
-4. [Friction Entry #4: Audio Feedback & Echo Loop in Smart Display Environments](#friction-entry-4-audio-feedback--echo-loop-in-smart-display-environments)
-5. [Friction Entry #5: SpeechRecognition Multi-Triggering on Interim Voice Fragments](#friction-entry-5-speechrecognition-multi-triggering-on-interim-voice-fragments)
-6. [Friction Entry #6: MCP Streamable HTTP DTO & Contract Alignment](#friction-entry-6-mcp-streamable-http-dto--contract-alignment)
-7. [Friction Entry #7: Screen Real-Estate & Double Scrollbars on Smart Display Consoles](#friction-entry-7-screen-real-estate--double-scrollbars-on-smart-display-consoles)
+4. [Friction Entry #4: SQLite WAL Mode Multi-Process Lock Contention with Voice Agent Ingestion](#friction-entry-4-sqlite-wal-mode-multi-process-lock-contention-with-voice-agent-ingestion)
+5. [Friction Entry #5: Audio Feedback & Echo Loop in Smart Display Environments](#friction-entry-5-audio-feedback--echo-loop-in-smart-display-environments)
+6. [Friction Entry #6: SpeechRecognition Multi-Triggering on Interim Voice Fragments](#friction-entry-6-speechrecognition-multi-triggering-on-interim-voice-fragments)
+7. [Friction Entry #7: MCP Streamable HTTP DTO & Contract Alignment](#friction-entry-7-mcp-streamable-http-dto--contract-alignment)
+8. [Friction Entry #8: Screen Real-Estate & Double Scrollbars on Smart Display Consoles](#friction-entry-8-screen-real-estate--double-scrollbars-on-smart-display-consoles)
 
 ---
 
@@ -65,7 +66,22 @@
 
 ---
 
-### Friction Entry #4: Audio Feedback & Echo Loop in Smart Display Environments
+### Friction Entry #4: SQLite WAL Mode Multi-Process Lock Contention with Voice Agent Ingestion
+
+- **Task Attempted:** Simultaneous write operations across `medicines`, `intake_logs`, and `daily_vitals` when rapid voice intake and manual touch clicks occur together.
+- **Steps Taken:**
+  1. Configured `better-sqlite3` in Node.js backend with `journal_mode = WAL`.
+  2. Triggered consecutive voice dose updates (`logDoseStatus`) while auto-seeding or updating vitals in parallel.
+- **Expected vs. Actual Result:**
+  - *Expected:* SQLite WAL mode allows concurrent read/write streams seamlessly without lock latency spikes.
+  - *Actual:* Sub-millisecond consecutive writes without pooled transactions intermittently triggered short locking contention spikes during heavy batch logs.
+- **Severity Rating:** **Low** (Transient database busy warning).
+- **Workaround Used:** Grouped multi-row generation into atomic SQLite transactions (`db.transaction(...)`) in `logRepo.ts` and `seedDemoData.ts`, enabled `PRAGMA synchronous = NORMAL`, and added an optimistic UI rollback pattern on the frontend (`useMedicines.ts`) so users never experience UI freezing.
+- **Actionable Suggestion for Amazon App Dev Documentation:** Include clear recommended practices for local state management (WAL configuration, defensive schema column migrations, and transactional batching) in Edge/Device developer guides for appliances running local persistence.
+
+---
+
+### Friction Entry #5: Audio Feedback & Echo Loop in Smart Display Environments
 
 - **Task Attempted:** Enabling continuous ambient voice interaction where an elderly patient speaks to Alexa and receives verbal feedback via Text-to-Speech (`speechService.speak()`).
 - **Steps Taken:**
@@ -83,7 +99,7 @@
 
 ---
 
-### Friction Entry #5: SpeechRecognition Multi-Triggering on Interim Voice Fragments
+### Friction Entry #6: SpeechRecognition Multi-Triggering on Interim Voice Fragments
 
 - **Task Attempted:** Capturing patient voice queries reliably without stuttering or duplicate execution.
 - **Steps Taken:** Attached `recognition.onresult = (event) => processVoiceQuery(event.results[0][0].transcript)`.
@@ -106,7 +122,7 @@
 
 ---
 
-### Friction Entry #6: MCP Streamable HTTP DTO & Contract Alignment
+### Friction Entry #7: MCP Streamable HTTP DTO & Contract Alignment
 
 - **Task Attempted:** Transmitting structured medical triage recommendations from backend Model Context Protocol (MCP) server to the Next.js frontend.
 - **Steps Taken:** Implemented `clinicalAdvisorTool` returning JSON objects with `actionAdvice`, `clinicalExplanation`, and `urgencyLevel`.
@@ -119,7 +135,7 @@
 
 ---
 
-### Friction Entry #7: Screen Real-Estate & Double Scrollbars on Smart Display Consoles
+### Friction Entry #8: Screen Real-Estate & Double Scrollbars on Smart Display Consoles
 
 - **Task Attempted:** Presenting both a senior-facing ambient display and an agentic copilot tool stream simultaneously for hackathon judge inspection (Echo Show 10 dual-view).
 - **Steps Taken:** Nested a monospace tool log container inside the secondary panel.
