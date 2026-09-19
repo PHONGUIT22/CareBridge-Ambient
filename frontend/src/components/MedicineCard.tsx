@@ -93,6 +93,7 @@ export function MedicineCard({
           }`}
         >
           {item.imageUri ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={item.imageUri} alt={item.name} className="w-9 h-9 rounded-lg object-cover" />
           ) : (
             <FontAwesomeIcon icon={faCapsules} className="text-lg" />
