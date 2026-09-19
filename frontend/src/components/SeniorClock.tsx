@@ -33,36 +33,33 @@ export function SeniorClock({ className = '' }: SeniorClockProps) {
   const minutes = currentTime.getMinutes().toString().padStart(2, '0');
   const seconds = currentTime.getSeconds().toString().padStart(2, '0');
 
-  // Định dạng ngày: "FRIDAY, SEPTEMBER 11, 2026"
+  // Natural human date format: e.g. "Friday, September 11, 2026"
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
-  })
-    .format(currentTime)
-    .toUpperCase();
+  }).format(currentTime);
 
   return (
     <div className={`flex flex-col items-center justify-center text-center select-none ${className}`}>
-      {/* CỤM ĐỒNG HỒ SỐ KHỔNG LỒ PHÁT SÁNG DẠ QUANG */}
-      <div className="flex items-baseline justify-center tracking-tight font-display font-black tabular-nums">
-        {/* Giờ : Phút với dấu hai chấm phát sáng nhịp nhàng */}
+      {/* Authentic Hardware Clock Digits */}
+      <div className="flex items-baseline justify-center font-mono font-bold tabular-nums">
         <span
-          className="text-7xl sm:text-8xl md:text-9xl text-white font-display font-black drop-shadow-[0_4px_25px_rgba(0,0,0,0.6)]"
+          className="text-7xl sm:text-8xl md:text-9xl text-white tracking-tight"
           style={{ letterSpacing: '-0.03em' }}
         >
-          {hours}<span className="text-[#FF725E] animate-pulse inline-block mx-0.5">:</span>{minutes}
+          {hours}<span className="text-[#FF5733] animate-pulse inline-block mx-0.5">:</span>{minutes}
         </span>
 
-        {/* Giây được làm dịu lại để tránh cảm giác gấp gáp cho người cao tuổi */}
-        <span className="text-2xl sm:text-3xl md:text-4xl text-[#8A92A6] font-display font-medium ml-2 sm:ml-3 opacity-60 tabular-nums">
+        {/* Softened seconds indicator */}
+        <span className="text-2xl sm:text-3xl md:text-4xl text-slate-400 font-mono font-normal ml-2 sm:ml-3 opacity-60 tabular-nums">
           :{seconds}
         </span>
       </div>
 
-      {/* NGÀY THÁNG ĐẦY ĐỦ VỚI SOFT BLUE ACCENT */}
-      <p className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base font-display font-bold tracking-[0.25em] text-[#4D8BFF] drop-shadow-[0_0_12px_rgba(77,139,255,0.35)]">
+      {/* Clean Human Date Display */}
+      <p className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base font-normal text-slate-300">
         {formattedDate}
       </p>
     </div>

@@ -3,75 +3,75 @@
 @tailwind utilities;
 
 :root {
-  --background: #181B2A;
+  --background: #151922;
   --foreground: #FFFFFF;
 }
 
 body {
-  background: radial-gradient(circle at 50% 0%, #1F2438 0%, #181B2A 50%, #121420 100%);
-  background-attachment: fixed;
+  background: #151922;
   color: #FFFFFF;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
 
-/* Thanh cuộn phong cách Smart Home Dark */
+/* Tactile Industrial Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #181B2A;
+  background: #151922;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #22273B;
+  background: #1E2330;
   border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #FF725E;
+  background: #FF5733;
 }
 
-/* Các lớp tiện ích Glass & Card Neumorphic */
+/* Tactile Hardware Surface Utilities */
 @layer components {
   .alexa-card {
-    background: #22273B;
+    background: #1E2330;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 1.25rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border-radius: 1rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   }
 
   .alexa-card-interactive {
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.2s ease-out;
   }
 
   .alexa-card-interactive:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
-    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.14);
   }
 
   .alexa-card-active {
-    border: 2px solid rgba(255, 114, 94, 0.8) !important;
-    box-shadow: 0 0 20px rgba(255, 114, 94, 0.25), 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid #FF5733 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
   }
 
   .ambient-card {
-    background: #22273B;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 1.25rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    background: #1E2330;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   }
 
   .ambient-glass {
-    background: rgba(34, 39, 59, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(30, 35, 48, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 1.25rem;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
 }

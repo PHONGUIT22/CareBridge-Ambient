@@ -253,12 +253,12 @@ export default function Home() {
   // Khi chưa đọc xong localStorage, hiển thị dark loading skeleton để tránh hydration mismatch
   if (!isAuthLoaded) {
     return (
-      <div className="min-h-screen bg-[#121420] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#151922] text-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#FF725E]/20 border border-[#FF725E]/40 flex items-center justify-center animate-pulse shadow-[0_0_15px_rgba(255,114,94,0.35)]">
-            <FontAwesomeIcon icon={faHeartPulse} className="text-[#FF725E]" />
+          <div className="w-10 h-10 rounded-2xl bg-[#1E2330] border border-[#FF5733]/30 flex items-center justify-center">
+            <FontAwesomeIcon icon={faHeartPulse} className="text-[#FF5733]" />
           </div>
-          <p className="text-xs text-[#8A92A6] font-mono tracking-wider">Loading CareBridge Ambient OS...</p>
+          <p className="text-xs text-slate-400 font-mono">Loading CareBridge Ambient OS...</p>
         </div>
       </div>
     );
@@ -275,18 +275,18 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen text-slate-100 font-sans selection:bg-[#FF725E] selection:text-white flex flex-col justify-between">
+    <main className="min-h-screen bg-[#151922] text-slate-100 font-sans selection:bg-[#FF5733] selection:text-white flex flex-col justify-between">
       {/* 1. THANH ĐIỀU KHIỂN HACKATHON SIMULATOR TRÊN CÙNG */}
-      <header className="bg-[#181B2A]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 py-2.5 flex items-center justify-between sticky top-0 z-40 gap-3">
+      <header className="bg-[#151922]/95 backdrop-blur-md border-b border-white/[0.08] px-4 py-2.5 flex items-center justify-between sticky top-0 z-40 gap-3">
         <div className="flex items-center gap-2.5 shrink-0">
           {/* Logo Smart Home Ambient faHeartPulse */}
-          <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-[#FF725E] to-[#FF8A71] flex items-center justify-center shadow-[0_0_15px_rgba(255,114,94,0.35)]">
+          <div className="w-8 h-8 rounded-xl bg-[#FF5733] flex items-center justify-center">
             <FontAwesomeIcon icon={faHeartPulse} className="text-white text-sm" />
           </div>
           <div>
-            <span className="font-display font-black text-sm tracking-tight text-white uppercase flex items-center gap-1.5">
+            <span className="font-semibold text-sm tracking-tight text-white flex items-center gap-1.5">
               <span>CareBridge</span>
-              <span className="text-[#FF725E] font-display font-bold text-xs">Ambient OS</span>
+              <span className="text-[#FF5733] font-mono font-medium text-xs">Ambient OS</span>
             </span>
           </div>
         </div>
@@ -294,15 +294,14 @@ export default function Home() {
         {/* Persona Indicator & Pro Badge & Sign Out Button */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
           {/* Active Profile Pill */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#22273B] border border-white/[0.08] text-xs shadow-sm">
-            <span className="text-sm">{authSession.role === 'senior' ? '👵' : '👩‍⚕️'}</span>
-            <div className="leading-tight flex items-center gap-1.5">
-              <span className="font-bold text-white whitespace-nowrap">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1E2330] border border-white/[0.08] text-xs">
+            <div className="leading-tight flex items-center gap-2">
+              <span className="font-medium text-white whitespace-nowrap">
                 {authSession.role === 'senior' ? 'Eleanor Vance (Senior Mode)' : 'Sarah Connor (Caregiver)'}
               </span>
               {authSession.isPro && (
-                <span className="px-1.5 py-0.5 text-[9px] font-black rounded bg-[#FF725E]/20 text-[#FF725E] border border-[#FF725E]/40 font-mono">
-                  PRO
+                <span className="px-1.5 py-0.5 text-xs font-mono font-semibold rounded bg-[#FF5733]/15 text-[#FF5733] border border-[#FF5733]/30">
+                  Pro
                 </span>
               )}
             </div>
@@ -311,52 +310,52 @@ export default function Home() {
           {/* Pro Badge / Upgrade Button */}
           <button
             onClick={() => setIsPaywallOpen(true)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm active:scale-95 ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all active:scale-95 ${
               authSession.isPro
-                ? 'bg-[#FF725E]/15 border border-[#FF725E]/40 text-[#FF725E] shadow-[0_0_12px_rgba(255,114,94,0.2)]'
-                : 'bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25'
+                ? 'bg-[#FF5733]/15 border border-[#FF5733]/40 text-[#FF5733]'
+                : 'bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
             }`}
             title="CareBridge Ambient Subscription Status"
           >
             <FontAwesomeIcon icon={faCrown} className="text-xs" />
-            <span className="hidden xs:inline">{authSession.isPro ? 'PRO ACTIVE' : 'UPGRADE PRO'}</span>
+            <span className="hidden xs:inline">{authSession.isPro ? 'Pro active' : 'Upgrade Pro'}</span>
           </button>
 
           {/* Switch Profile / Sign Out */}
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#22273B] hover:bg-[#2A314A] border border-white/[0.08] text-xs font-bold text-[#8A92A6] hover:text-white transition-all shadow-sm active:scale-95"
-            title="Switch Profile / Sign Out"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1E2330] hover:bg-[#252B3B] border border-white/[0.08] text-xs font-medium text-slate-300 hover:text-white transition-all active:scale-95"
+            title="Switch profile or sign out"
           >
             <FontAwesomeIcon icon={faRightFromBracket} className="text-xs" />
-            <span className="hidden md:inline">Switch Profile / Sign Out</span>
+            <span className="hidden md:inline">Switch profile</span>
           </button>
 
           {/* Nút chuyển đổi Echo Show 10 Dual View / Single Frame View */}
           <button
             onClick={() => setIsDualMode(true)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
               isDualMode
-                ? 'bg-gradient-to-r from-[#FF725E] to-[#FF8A71] text-white shadow-[0_0_15px_rgba(255,114,94,0.35)]'
-                : 'bg-[#22273B] border border-white/[0.06] text-[#8A92A6] hover:text-white'
+                ? 'bg-[#FF5733] text-white font-semibold'
+                : 'bg-[#1E2330] border border-white/[0.08] text-slate-400 hover:text-white'
             }`}
             title="Echo Show 10 Dual View"
           >
             <FontAwesomeIcon icon={faDesktop} className="text-xs" />
-            <span className="hidden lg:inline">Dual Frame</span>
+            <span className="hidden lg:inline">Dual frame</span>
           </button>
 
           <button
             onClick={() => setIsDualMode(false)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
               !isDualMode
-                ? 'bg-gradient-to-r from-[#FF725E] to-[#FF8A71] text-white shadow-[0_0_15px_rgba(255,114,94,0.35)]'
-                : 'bg-[#22273B] border border-white/[0.06] text-[#8A92A6] hover:text-white'
+                ? 'bg-[#FF5733] text-white font-semibold'
+                : 'bg-[#1E2330] border border-white/[0.08] text-slate-400 hover:text-white'
             }`}
-            title="Single Device (430px) Mobile View"
+            title="Single Device Mobile View"
           >
             <FontAwesomeIcon icon={faMobileScreen} className="text-xs" />
-            <span className="hidden lg:inline">Single Device</span>
+            <span className="hidden lg:inline">Single device</span>
           </button>
         </div>
       </header>
@@ -374,13 +373,13 @@ export default function Home() {
           <div
             className={`${
               isDualMode ? 'lg:col-span-7 xl:col-span-8' : 'w-full'
-            } relative rounded-[36px] p-2 sm:p-2.5 bg-gradient-to-b from-white/[0.12] via-white/[0.03] to-white/[0.08] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] border border-white/[0.08]`}
+            } relative rounded-[32px] p-2 sm:p-2.5 bg-[#1E2330]/40 border border-white/[0.08] shadow-2xl`}
           >
             {/* INNER SCREEN CONTAINER */}
-            <div className="relative rounded-[28px] overflow-hidden bg-[#181B2A] border border-white/[0.06] shadow-inner min-h-[720px] max-h-[850px] flex flex-col justify-between">
-              {/* TOP STATUS NOTCH / AMBIENT GLOW BAR */}
+            <div className="relative rounded-[24px] overflow-hidden bg-[#151922] border border-white/[0.08] min-h-[720px] max-h-[850px] flex flex-col justify-between">
+              {/* TOP STATUS NOTCH / HARDWARE BAR */}
               <div className="w-full flex items-center justify-center pt-2.5 pb-1 relative z-20">
-                <div className="w-24 h-1.5 rounded-full bg-white/20 shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+                <div className="w-20 h-1 rounded-full bg-white/15" />
               </div>
 
               {/* SCROLLABLE VIEW CONTENT */}
@@ -413,20 +412,20 @@ export default function Home() {
 
               {/* 3. FLOATING BOTTOM NAVIGATION BAR VỚI NÚT MICRO ELEVATED Ở TRUNG TÂM */}
               <div className="sticky bottom-4 left-0 right-0 w-full px-4 z-30 pointer-events-auto">
-                <nav className="relative bg-[#1E2235]/95 backdrop-blur-xl rounded-full px-3 py-2 flex items-center justify-between shadow-[0_15px_35px_rgba(0,0,0,0.6)] border border-white/10">
+                <nav className="relative bg-[#1E2330]/95 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center justify-between border border-white/[0.08] shadow-xl">
                   {/* 2 Tab bên trái */}
-                  <div className="flex items-center gap-4 pl-2">
+                  <div className="flex items-center gap-5 pl-1">
                     {/* Tab 1: Caregiver */}
                     <button
                       onClick={() => setActiveTab('caregiver')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'caregiver'
-                          ? 'text-[#FF725E] scale-105 drop-shadow-[0_0_8px_rgba(255,114,94,0.6)]'
-                          : 'text-[#8A92A6] hover:text-white'
+                          ? 'text-[#FF5733] font-semibold'
+                          : 'text-slate-400 hover:text-slate-200'
                       }`}
                     >
                       <FontAwesomeIcon icon={faShieldHalved} className="text-base" />
-                      <span className="text-[9px] font-bold mt-1 tracking-tight">Caregiver</span>
+                      <span className="text-xs font-medium mt-1">Caregiver</span>
                     </button>
 
                     {/* Tab 2: History Matrix */}
@@ -434,61 +433,51 @@ export default function Home() {
                       onClick={() => setActiveTab('history')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'history'
-                          ? 'text-[#FF725E] scale-105 drop-shadow-[0_0_8px_rgba(255,114,94,0.6)]'
-                          : 'text-[#8A92A6] hover:text-white'
+                          ? 'text-[#FF5733] font-semibold'
+                          : 'text-slate-400 hover:text-slate-200'
                       }`}
                     >
                       <FontAwesomeIcon icon={faTableCells} className="text-base" />
-                      <span className="text-[9px] font-bold mt-1 tracking-tight">History</span>
+                      <span className="text-xs font-medium mt-1">History</span>
                     </button>
                   </div>
 
-                  {/* NÚT MICRO ELEVATED Ở TRUNG TÂM THEO STYLE SMART HOME */}
-                  <div className="relative -top-5 flex items-center justify-center">
-                    {/* Feedback giọng nói trực quan ngay trên Mic Orb */}
+                  {/* NÚT MICRO ELEVATED Ở TRUNG TÂM THEO STYLE HARDWARE */}
+                  <div className="relative -top-4 flex items-center justify-center">
+                    {/* Feedback giọng nói trực quan ngay trên Mic */}
                     {voiceQueryFeedback && (
-                      <div className="absolute -top-11 px-3.5 py-1.5 rounded-full bg-[#1E2235]/95 border border-[#FF725E]/50 text-white text-[11px] font-display font-semibold shadow-[0_0_20px_rgba(255,114,94,0.3)] backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none transition-all">
-                        <span className="w-2 h-2 rounded-full bg-[#FF725E] animate-ping shrink-0" />
+                      <div className="absolute -top-11 px-3 py-1.5 rounded-xl bg-[#1E2330] border border-white/[0.12] text-white text-xs font-medium shadow-lg backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none">
+                        <span className="w-2 h-2 rounded-full bg-[#FF5733] animate-ping shrink-0" />
                         <span className="max-w-[220px] truncate">{voiceQueryFeedback}</span>
                       </div>
                     )}
 
-                    {/* Vòng hào quang lan tỏa khi đang nghe */}
-                    {isVoiceActive && (
-                      <div className="absolute w-20 h-20 rounded-full bg-[#FF725E]/40 blur-md animate-ping" />
-                    )}
-
                     <button
                       onClick={handleCenterMicClick}
-                      style={{
-                        boxShadow: isVoiceActive
-                          ? '0 0 35px rgba(255, 114, 94, 0.85)'
-                          : '0 8px 25px rgba(255, 114, 94, 0.45)',
-                      }}
-                      className={`relative z-10 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 ${
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-md active:scale-95 ${
                         isVoiceActive
-                          ? 'bg-gradient-to-tr from-[#FF725E] to-[#FFA08C] text-white scale-110 shadow-[0_8px_25px_rgba(255,114,94,0.45)] animate-pulse'
-                          : 'bg-gradient-to-tr from-[#FF725E] to-[#FFA08C] text-white border-2 border-white/20 hover:scale-105 shadow-[0_8px_25px_rgba(255,114,94,0.45)]'
+                          ? 'bg-[#FF5733] text-white ring-2 ring-white/40 ring-offset-2 ring-offset-[#151922]'
+                          : 'bg-[#FF5733] hover:bg-[#E64D2E] text-white'
                       }`}
-                      title="Nhấn để nói với trợ lý Alexa Ambient"
+                      title="Speak with Alexa Ambient assistant"
                     >
-                      <FontAwesomeIcon icon={faMicrophone} className="text-xl text-white" />
+                      <FontAwesomeIcon icon={faMicrophone} className="text-lg text-white" />
                     </button>
                   </div>
 
                   {/* 2 Tab bên phải */}
-                  <div className="flex items-center gap-4 pr-2">
+                  <div className="flex items-center gap-5 pr-1">
                     {/* Tab 3: Analytics */}
                     <button
                       onClick={() => setActiveTab('analytics')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'analytics'
-                          ? 'text-[#FF725E] scale-105 drop-shadow-[0_0_8px_rgba(255,114,94,0.6)]'
-                          : 'text-[#8A92A6] hover:text-white'
+                          ? 'text-[#FF5733] font-semibold'
+                          : 'text-slate-400 hover:text-slate-200'
                       }`}
                     >
                       <FontAwesomeIcon icon={faChartLine} className="text-base" />
-                      <span className="text-[9px] font-bold mt-1 tracking-tight">Analytics</span>
+                      <span className="text-xs font-medium mt-1">Analytics</span>
                     </button>
 
                     {/* Tab 4: Desk Clock */}
@@ -496,12 +485,12 @@ export default function Home() {
                       onClick={() => setActiveTab('deskClock')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'deskClock'
-                          ? 'text-[#FF725E] scale-105 drop-shadow-[0_0_8px_rgba(255,114,94,0.6)]'
-                          : 'text-[#8A92A6] hover:text-white'
+                          ? 'text-[#FF5733] font-semibold'
+                          : 'text-slate-400 hover:text-slate-200'
                       }`}
                     >
                       <FontAwesomeIcon icon={faClock} className="text-base" />
-                      <span className="text-[9px] font-bold mt-1 tracking-tight">Desk Mode</span>
+                      <span className="text-xs font-medium mt-1">Desk mode</span>
                     </button>
                   </div>
                 </nav>
@@ -511,8 +500,8 @@ export default function Home() {
 
           {/* DEVICE MOCKUP FRAME 2: ALEXA AGENT CONSOLE (DUAL VIEW) */}
           {isDualMode && (
-            <div className="lg:col-span-5 xl:col-span-4 relative rounded-[36px] p-2 sm:p-2.5 bg-gradient-to-b from-white/[0.12] via-white/[0.03] to-white/[0.08] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] border border-white/[0.08] h-[760px] flex flex-col">
-              <div className="relative rounded-[28px] overflow-hidden bg-[#181B2A] border border-white/[0.06] shadow-inner h-full flex flex-col">
+            <div className="lg:col-span-5 xl:col-span-4 relative rounded-[32px] p-2 sm:p-2.5 bg-[#1E2330]/40 border border-white/[0.08] shadow-2xl h-[760px] flex flex-col">
+              <div className="relative rounded-[24px] overflow-hidden bg-[#151922] border border-white/[0.08] h-full flex flex-col">
                 <AlexaAgentConsole
                   onTriggerVisualCard={handleTriggerVisualCard}
                   onTriggerClinicalAdvice={handleTriggerClinicalAdvice}
@@ -529,14 +518,14 @@ export default function Home() {
 
       {/* POPUP PHẢN HỒI GIỌNG NÓI NHANH KHI BẤM NÚT MIC Ở TRUNG TÂM */}
       {isVoiceActive && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#22273B]/95 border-2 border-[#FF725E] px-6 py-3.5 rounded-2xl shadow-[0_0_35px_rgba(255,114,94,0.35)] backdrop-blur-xl flex items-center gap-3 animate-fadeIn">
-          <span className="w-3 h-3 rounded-full bg-[#FF725E] animate-ping" />
-          <p className="text-xs font-black text-white tracking-wide">
-            {voiceQueryFeedback || 'Alexa Ambient Listening... Speak in English'}
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#1E2330] border border-[#FF5733] px-5 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-fadeIn">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#FF5733] animate-ping" />
+          <p className="text-xs font-medium text-white tracking-wide">
+            {voiceQueryFeedback || 'Alexa Ambient listening... Speak in English'}
           </p>
           <button
             onClick={() => setIsVoiceActive(false)}
-            className="p-1 rounded-lg text-[#8A92A6] hover:text-white"
+            className="p-1 rounded-lg text-slate-400 hover:text-white"
           >
             <FontAwesomeIcon icon={faXmark} className="text-sm" />
           </button>

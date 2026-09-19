@@ -84,99 +84,96 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
   return (
     <div className="min-h-full pb-24 font-sans select-none text-white p-4">
       <div className="max-w-2xl mx-auto flex flex-col gap-4">
-        {/* HEADER SECTION */}
+        {/* Header Section */}
         <div className="pt-1">
-          <span className="font-display text-[11px] font-extrabold tracking-widest text-[#4D8BFF] uppercase">
-            Biometric Trends
+          <span className="text-xs font-medium text-slate-400">
+            Biometric trends
           </span>
-          <h1 className="font-display text-2xl font-black text-white tracking-tight mt-0.5">
+          <h1 className="text-2xl font-semibold text-white tracking-[-0.01em] mt-0.5">
             Vitals Analytics
           </h1>
         </div>
 
-        {/* 1. BỘ 3 NÚT CHUYỂN TAB CHỈ SỐ SINH TỒN */}
+        {/* 1. Metric Tab Switcher */}
         <div className="grid grid-cols-3 gap-2.5">
-          {/* Nút Huyết áp */}
           <button
             onClick={() => setActiveTab('bloodPressure')}
-            className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-2xl text-xs font-bold transition-all alexa-card-interactive ${
+            className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl text-xs font-medium transition-all ${
               activeTab === 'bloodPressure'
-                ? 'bg-gradient-to-r from-[#FF725E] to-[#FF8A71] text-white shadow-[0_0_15px_rgba(255,114,94,0.35)]'
-                : 'bg-[#22273B] border border-white/[0.06] text-[#8A92A6] hover:text-white'
+                ? 'bg-[#FF5733] text-white shadow-sm'
+                : 'bg-[#1E2330] border border-white/[0.08] text-slate-300 hover:text-white'
             }`}
           >
             <FontAwesomeIcon
               icon={faHeartPulse}
-              className={`text-xs ${activeTab === 'bloodPressure' ? 'text-white' : 'text-rose-400'}`}
+              className={`text-xs ${activeTab === 'bloodPressure' ? 'text-white' : 'text-slate-400'}`}
             />
             <span className="truncate">Blood Pressure</span>
           </button>
 
-          {/* Nút Đường huyết */}
           <button
             onClick={() => setActiveTab('bloodSugar')}
-            className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-2xl text-xs font-bold transition-all alexa-card-interactive ${
+            className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl text-xs font-medium transition-all ${
               activeTab === 'bloodSugar'
-                ? 'bg-gradient-to-r from-[#FF725E] to-[#FF8A71] text-white shadow-[0_0_15px_rgba(255,114,94,0.35)]'
-                : 'bg-[#22273B] border border-white/[0.06] text-[#8A92A6] hover:text-white'
+                ? 'bg-[#FF5733] text-white shadow-sm'
+                : 'bg-[#1E2330] border border-white/[0.08] text-slate-300 hover:text-white'
             }`}
           >
             <FontAwesomeIcon
               icon={faDroplet}
-              className={`text-xs ${activeTab === 'bloodSugar' ? 'text-white' : 'text-[#FFB347]'}`}
+              className={`text-xs ${activeTab === 'bloodSugar' ? 'text-white' : 'text-slate-400'}`}
             />
             <span className="truncate">Blood Sugar</span>
           </button>
 
-          {/* Nút Nhịp tim */}
           <button
             onClick={() => setActiveTab('heartRate')}
-            className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-2xl text-xs font-bold transition-all alexa-card-interactive ${
+            className={`flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl text-xs font-medium transition-all ${
               activeTab === 'heartRate'
-                ? 'bg-gradient-to-r from-[#FF725E] to-[#FF8A71] text-white shadow-[0_0_15px_rgba(255,114,94,0.35)]'
-                : 'bg-[#22273B] border border-white/[0.06] text-[#8A92A6] hover:text-white'
+                ? 'bg-[#FF5733] text-white shadow-sm'
+                : 'bg-[#1E2330] border border-white/[0.08] text-slate-300 hover:text-white'
             }`}
           >
             <FontAwesomeIcon
               icon={faHeartPulse}
-              className={`text-xs ${activeTab === 'heartRate' ? 'text-white' : 'text-[#10B981]'}`}
+              className={`text-xs ${activeTab === 'heartRate' ? 'text-white' : 'text-slate-400'}`}
             />
             <span className="truncate">Heart Rate</span>
           </button>
         </div>
 
-        {/* 2. CARD KHUNG ĐỒ THỊ RECHARTS 30 NGÀY THỰC TẾ */}
-        <div className="bg-[#22273B] border border-white/[0.06] rounded-3xl p-5 relative overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
+        {/* 2. Tactile 30-Day Recharts Surface */}
+        <div className="bg-[#1E2330] border border-white/[0.08] rounded-2xl p-5 relative overflow-hidden shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-            <h3 className="text-base font-black text-white tracking-tight">
+            <h3 className="text-sm font-semibold text-white tracking-[-0.01em]">
               {activeTab === 'bloodPressure' && '30-Day Blood Pressure Trend (mmHg)'}
               {activeTab === 'bloodSugar' && '30-Day Blood Sugar Trend (mg/dL)'}
               {activeTab === 'heartRate' && '30-Day Heart Rate Trend (BPM)'}
             </h3>
 
-            {/* Chú thích màu các đường */}
-            <div className="flex items-center gap-3 text-xs font-semibold">
+            {/* Subtle Legend */}
+            <div className="flex items-center gap-3 text-xs font-normal text-slate-300">
               {activeTab === 'bloodPressure' && (
                 <>
-                  <div className="flex items-center gap-1.5 text-[#8A92A6]">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#FF725E]" />
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#FF5733]" />
                     <span>Systolic</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-[#8A92A6]">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#4D8BFF]" />
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#94A3B8]" />
                     <span>Diastolic</span>
                   </div>
                 </>
               )}
               {activeTab === 'bloodSugar' && (
-                <div className="flex items-center gap-1.5 text-[#8A92A6]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#FFB347]" />
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#FF5733]" />
                   <span>mg/dL</span>
                 </div>
               )}
               {activeTab === 'heartRate' && (
-                <div className="flex items-center gap-1.5 text-[#8A92A6]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#FF5733]" />
                   <span>BPM</span>
                 </div>
               )}
@@ -189,20 +186,20 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
                 <AreaChart data={vitalsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="systolicGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#FF725E" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#FF725E" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="#FF5733" stopOpacity={0.10} />
+                      <stop offset="95%" stopColor="#FF5733" stopOpacity={0.0} />
                     </linearGradient>
                     <linearGradient id="diastolicGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4D8BFF" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#4D8BFF" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="#94A3B8" stopOpacity={0.10} />
+                      <stop offset="95%" stopColor="#94A3B8" stopOpacity={0.0} />
                     </linearGradient>
                     <linearGradient id="sugarGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#FFB347" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#FFB347" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="#FF5733" stopOpacity={0.10} />
+                      <stop offset="95%" stopColor="#FF5733" stopOpacity={0.0} />
                     </linearGradient>
                     <linearGradient id="heartGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="#FF5733" stopOpacity={0.10} />
+                      <stop offset="95%" stopColor="#FF5733" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
 
@@ -212,25 +209,25 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
                     dataKey="date"
                     tickLine={false}
                     axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                    tick={{ fill: '#8A92A6', fontSize: 10, fontWeight: 600 }}
+                    tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 500 }}
                   />
 
                   <YAxis
                     domain={activeTab === 'bloodPressure' ? [65, 140] : ['auto', 'auto']}
                     tickLine={false}
                     axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                    tick={{ fill: '#8A92A6', fontSize: 10, fontWeight: 600 }}
+                    tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 500 }}
                   />
 
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#181B2A',
-                      borderRadius: '16px',
+                      backgroundColor: '#151922',
+                      borderRadius: '12px',
                       color: '#fff',
                       border: '1px solid rgba(255,255,255,0.1)',
                       fontSize: '12px',
                       fontWeight: 'bold',
-                      boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
                     }}
                   />
 
@@ -239,11 +236,11 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
                       key="systolic"
                       type="monotone"
                       dataKey="systolic"
-                      stroke="#FF725E"
-                      strokeWidth={2.5}
+                      stroke="#FF5733"
+                      strokeWidth={2}
                       fill="url(#systolicGradient)"
-                      dot={{ r: 2, fill: '#FF725E' }}
-                      activeDot={{ r: 5 }}
+                      dot={{ r: 2, fill: '#FF5733' }}
+                      activeDot={{ r: 4 }}
                       isAnimationActive={false}
                     />
                   )}
@@ -252,11 +249,11 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
                       key="diastolic"
                       type="monotone"
                       dataKey="diastolic"
-                      stroke="#4D8BFF"
-                      strokeWidth={2.5}
+                      stroke="#94A3B8"
+                      strokeWidth={2}
                       fill="url(#diastolicGradient)"
-                      dot={{ r: 2, fill: '#4D8BFF' }}
-                      activeDot={{ r: 5 }}
+                      dot={{ r: 2, fill: '#94A3B8' }}
+                      activeDot={{ r: 4 }}
                       isAnimationActive={false}
                     />
                   )}
@@ -266,11 +263,11 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
                       key="bloodSugar"
                       type="monotone"
                       dataKey="bloodSugar"
-                      stroke="#FFB347"
-                      strokeWidth={2.5}
+                      stroke="#FF5733"
+                      strokeWidth={2}
                       fill="url(#sugarGradient)"
-                      dot={{ r: 2, fill: '#FFB347' }}
-                      activeDot={{ r: 5 }}
+                      dot={{ r: 2, fill: '#FF5733' }}
+                      activeDot={{ r: 4 }}
                       isAnimationActive={false}
                     />
                   )}
@@ -280,62 +277,62 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
                       key="heartRate"
                       type="monotone"
                       dataKey="heartRate"
-                      stroke="#10B981"
-                      strokeWidth={2.5}
+                      stroke="#FF5733"
+                      strokeWidth={2}
                       fill="url(#heartGradient)"
-                      dot={{ r: 2, fill: '#10B981' }}
-                      activeDot={{ r: 5 }}
+                      dot={{ r: 2, fill: '#FF5733' }}
+                      activeDot={{ r: 4 }}
                       isAnimationActive={false}
                     />
                   )}
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full w-full flex items-center justify-center text-[#8A92A6] text-xs font-mono">
-                Loading biometric chart...
+              <div className="h-full w-full flex items-center justify-center text-slate-400 text-xs font-mono">
+                Loading biometric telemetry...
               </div>
             )}
           </div>
         </div>
 
-        {/* 3. CARD CLINICAL OBSERVATION TỰ ĐỘNG TÍNH THEO NGƯỠNG AHA 130/85 */}
+        {/* 3. Clinical Observation Card */}
         <div
-          className={`bg-[#22273B] rounded-3xl p-5 flex items-start gap-3.5 border shadow-[0_10px_25px_rgba(0,0,0,0.3)] ${
+          className={`bg-[#1E2330] rounded-2xl p-4 flex items-start gap-3.5 border shadow-sm ${
             bpAnalysis.isElevated
-              ? 'border-amber-500/40'
-              : 'border-white/[0.06]'
+              ? 'border-amber-500/30'
+              : 'border-white/[0.08]'
           }`}
         >
           <div
-            className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 mt-0.5 shadow-sm ${
+            className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
               bpAnalysis.isElevated
-                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
                 : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
             }`}
           >
             <FontAwesomeIcon
               icon={bpAnalysis.isElevated ? faTriangleExclamation : faCircleCheck}
-              className="text-base"
+              className="text-sm"
             />
           </div>
           <div>
-            <h4 className="text-sm font-black text-white flex items-center gap-2 tracking-tight">
+            <h4 className="text-sm font-semibold text-white flex items-center gap-2 tracking-[-0.01em]">
               <span>
                 {bpAnalysis.isElevated
-                  ? 'Clinical Observation: Elevated Blood Pressure Alert'
-                  : 'Clinical Observation: Stable Therapeutic Range'}
+                  ? 'Clinical observation: Elevated blood pressure alert'
+                  : 'Clinical observation: Stable therapeutic range'}
               </span>
               <span
-                className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-semibold ${
+                className={`text-xs font-mono tabular-nums px-2 py-0.5 rounded-md font-medium ${
                   bpAnalysis.isElevated
-                    ? 'bg-amber-500/20 text-amber-300'
-                    : 'bg-emerald-500/20 text-emerald-300'
+                    ? 'bg-amber-500/15 text-amber-300'
+                    : 'bg-emerald-500/15 text-emerald-400'
                 }`}
               >
                 Avg {bpAnalysis.avgSys}/{bpAnalysis.avgDia} mmHg
               </span>
             </h4>
-            <p className="text-xs sm:text-sm text-[#8A92A6] font-medium leading-relaxed mt-1.5">
+            <p className="text-xs text-slate-300 font-normal leading-relaxed mt-1">
               {bpAnalysis.isElevated
                 ? `Average 30-day blood pressure reading is ${bpAnalysis.avgSys}/${bpAnalysis.avgDia} mmHg, exceeding the AHA recommended threshold (130/85 mmHg). Amlodipine regimen adherence should be reinforced, and daughter Sarah Connor has been alerted to review diet and sodium intake.`
                 : `Average 30-day blood pressure reading is ${bpAnalysis.avgSys}/${bpAnalysis.avgDia} mmHg, maintaining optimal stability within AHA guidelines (<=130/85 mmHg). Consistent Amlodipine and Metformin intake keeps hemodynamic biomarkers steady with zero hypertensive crisis spikes.`}

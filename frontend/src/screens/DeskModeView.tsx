@@ -113,90 +113,90 @@ export function DeskModeView({
     <div className="min-h-full text-white flex flex-col justify-between p-4 sm:p-6 select-none overflow-hidden font-sans">
       {/* 1. TOP STATUS BAR */}
       <div className="flex items-center justify-between w-full max-w-lg mx-auto pt-2">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#22273B] border border-white/[0.06] text-[#4D8BFF] text-xs font-display font-bold tracking-wider uppercase shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-[#4D8BFF] animate-pulse" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1E2330] border border-white/[0.08] text-slate-300 text-xs font-medium shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
           <span>Ambient Nightstand</span>
         </div>
 
         <button
           onClick={onSwitchToCaregiver}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#22273B] hover:bg-[#2A3048] text-[#8A92A6] hover:text-white text-xs font-bold transition-all border border-white/[0.06] shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1E2330] hover:bg-[#252B3B] text-slate-300 hover:text-white text-xs font-medium transition-colors border border-white/[0.08] shadow-sm"
         >
-          <FontAwesomeIcon icon={faShieldHalved} className="text-xs text-[#FF725E]" />
+          <FontAwesomeIcon icon={faShieldHalved} className="text-xs text-[#FF5733]" />
           <span>Caregiver Hub</span>
           <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
         </button>
       </div>
 
-      {/* 2. SENIOR CLOCK KHỔNG LỒ PHÁT SÁNG */}
+      {/* 2. SENIOR CLOCK */}
       <div className="my-auto py-6">
         <SeniorClock />
       </div>
 
-      {/* 3. THẺ LIỀU THUỐC SẮP TỚI & NÚT BẤM "I TOOK MY PILL" */}
+      {/* 3. UPCOMING DOSE CARD & ACTION BUTTON */}
       <div className="w-full max-w-lg mx-auto flex flex-col gap-4 pb-4">
-        {/* Thanh tiến độ tuân thủ */}
-        <div className="bg-[#22273B] rounded-2xl p-3.5 border border-white/[0.06] shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
-          <div className="flex items-center justify-between text-xs font-bold mb-2">
-            <span className="text-[#8A92A6] uppercase tracking-wider">Today&apos;s Adherence</span>
-            <span className="text-[#4D8BFF] font-mono">
-              {completedDoses} / {totalDoses} Doses ({progressPercent}%)
+        {/* Compliance Progress Track */}
+        <div className="bg-[#1E2330] rounded-2xl p-3.5 border border-white/[0.08] shadow-sm">
+          <div className="flex items-center justify-between text-xs font-medium mb-2">
+            <span className="text-slate-300">Today&apos;s adherence</span>
+            <span className="text-white font-mono tabular-nums font-bold">
+              {completedDoses} / {totalDoses} doses ({progressPercent}%)
             </span>
           </div>
-          <div className="w-full h-2 bg-[#181B2A] rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-white/[0.08] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#4D8BFF] to-[#FF725E] transition-all duration-500 rounded-full shadow-[0_0_10px_rgba(255,114,94,0.3)]"
+              className="h-full bg-[#FF5733] transition-all duration-500 rounded-full"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
 
-        {/* Thẻ liều thuốc tiếp theo hoặc thông báo đã xong */}
+        {/* Next Dose Card or Completed Notice */}
         {upcomingDose ? (
-          <div className="bg-[#22273B] rounded-3xl p-5 border-2 border-[#FF725E]/80 shadow-[0_0_25px_rgba(255,114,94,0.25)]">
+          <div className="bg-[#1E2330] rounded-2xl p-5 border border-[#FF5733] shadow-sm">
             <div className="flex items-start justify-between gap-3 mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#FF725E]/15 border border-[#FF725E]/30 flex items-center justify-center text-[#FF725E] shrink-0 shadow-[0_0_15px_rgba(255,114,94,0.2)]">
-                  <FontAwesomeIcon icon={faCapsules} className="text-xl" />
+                <div className="w-12 h-12 rounded-xl bg-[#151922] border border-white/[0.08] flex items-center justify-center text-[#FF5733] shrink-0">
+                  <FontAwesomeIcon icon={faCapsules} className="text-lg" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-extrabold text-[#FF725E] uppercase tracking-wider">
-                    Upcoming Dose at {upcomingDose.scheduledTime}
+                  <p className="text-xs font-medium text-[#FF5733]">
+                    Upcoming dose at {upcomingDose.scheduledTime}
                   </p>
-                  <h2 className="text-xl sm:text-2xl font-black text-white mt-0.5 tracking-tight">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-white mt-0.5 tracking-[-0.01em]">
                     {upcomingDose.name}
                   </h2>
-                  <p className="text-xs text-[#8A92A6] font-medium">{upcomingDose.dosage}</p>
+                  <p className="text-xs text-slate-300 font-normal leading-relaxed">{upcomingDose.dosage}</p>
                 </div>
               </div>
 
-              {/* Nút loa phát âm thanh Alexa TTS */}
+              {/* Alexa TTS Read-Aloud Button */}
               <button
                 onClick={handleSpeakMedicine}
-                className="w-12 h-12 rounded-2xl bg-[#181B2A] hover:bg-[#2A3048] text-[#4D8BFF] border border-white/[0.08] flex items-center justify-center transition-all active:scale-90 shrink-0 shadow-sm"
-                title="Nghe Alexa đọc to tên thuốc"
+                className="w-11 h-11 rounded-xl bg-[#151922] hover:bg-[#252B3B] text-slate-300 hover:text-white border border-white/[0.08] flex items-center justify-center transition-colors active:scale-95 shrink-0 shadow-sm"
+                title="Hear Alexa read medication name"
               >
-                <FontAwesomeIcon icon={faVolumeHigh} className="text-lg" />
+                <FontAwesomeIcon icon={faVolumeHigh} className="text-base" />
               </button>
             </div>
 
-            {/* Nút bấm siêu lớn Warm Coral Gradient */}
+            {/* Tactile Signal Coral Button */}
             <button
               onClick={handleTakePill}
-              className="w-full py-4 sm:py-5 rounded-2xl bg-gradient-to-r from-[#FF725E] to-[#FF8A71] hover:opacity-95 text-white font-black text-lg tracking-wide flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(255,114,94,0.4)] active:scale-98 transition-all"
+              className="w-full py-4 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] text-white font-semibold text-base tracking-normal flex items-center justify-center gap-2.5 shadow-sm active:scale-[0.98] transition-all"
             >
-              <FontAwesomeIcon icon={faCheck} className="text-xl" />
-              <span>I TOOK MY PILL</span>
+              <FontAwesomeIcon icon={faCheck} className="text-lg" />
+              <span>I Took My Pill</span>
             </button>
           </div>
         ) : (
-          <div className="bg-[#22273B] rounded-3xl p-6 text-center border border-white/[0.06] shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
+          <div className="bg-[#1E2330] rounded-2xl p-6 text-center border border-white/[0.08] shadow-sm">
             <FontAwesomeIcon
               icon={faHeartPulse}
-              className="text-3xl text-[#FF725E] mx-auto mb-2"
+              className="text-3xl text-[#FF5733] mx-auto mb-2"
             />
-            <h3 className="text-base font-black text-white tracking-tight">All Medications Completed!</h3>
-            <p className="text-xs text-[#8A92A6] mt-1 font-medium">
+            <h3 className="text-base font-semibold text-white tracking-[-0.01em]">All Medications Completed</h3>
+            <p className="text-xs text-slate-300 mt-1 font-normal leading-relaxed">
               All {schedule.length} scheduled doses for today are logged. Rest well!
             </p>
           </div>

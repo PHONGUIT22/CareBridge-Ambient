@@ -54,24 +54,24 @@ export function DoseNoteModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#121420]/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#22273B] w-full max-w-md rounded-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/[0.08] text-white transform transition-all animate-scaleUp">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151922]/80 backdrop-blur-md animate-fadeIn">
+      <div className="bg-[#1E2330] w-full max-w-md rounded-3xl p-6 shadow-2xl border border-white/[0.08] text-white transform transition-all animate-scaleUp">
         {/* HEADER */}
         <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#FF725E]/15 text-[#FF725E] border border-[#FF725E]/30 flex items-center justify-center shadow-[0_0_15px_rgba(255,114,94,0.25)]">
+            <div className="w-10 h-10 rounded-xl bg-[#151922] text-[#FF5733] border border-[#FF5733]/30 flex items-center justify-center">
               <FontAwesomeIcon icon={faNotesMedical} className="text-base" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-white tracking-tight">Clinical Intake Note</h3>
-              <p className="text-xs text-[#8A92A6] font-medium">
-                {medicineName} • {scheduledTime}
+              <h3 className="text-lg font-semibold text-white tracking-tight">Clinical intake note</h3>
+              <p className="text-xs text-slate-400 font-normal">
+                {medicineName} - {scheduledTime}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/10 text-[#8A92A6] hover:text-white transition-colors"
+            className="p-2 rounded-xl bg-[#151922] hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
           >
             <FontAwesomeIcon icon={faXmark} className="text-base" />
           </button>
@@ -79,9 +79,9 @@ export function DoseNoteModal({
 
         {/* 1-TOUCH CLINICAL TAGS */}
         <div className="mt-4">
-          <label className="flex items-center gap-1.5 text-xs font-bold text-[#8A92A6] uppercase tracking-wider mb-2">
-            <FontAwesomeIcon icon={faTag} className="text-xs text-[#FF725E]" />
-            <span>Quick Clinical Tags (1-Touch)</span>
+          <label className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-2">
+            <FontAwesomeIcon icon={faTag} className="text-xs text-[#FF5733]" />
+            <span>Quick clinical tags</span>
           </label>
           <div className="flex flex-wrap gap-2">
             {QUICK_TAGS.map((tag) => {
@@ -91,10 +91,10 @@ export function DoseNoteModal({
                   key={tag}
                   type="button"
                   onClick={() => handleToggleTag(tag)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
                     isSelected
-                      ? 'bg-[#FF725E] text-white border-[#FF725E] shadow-[0_0_12px_rgba(255,114,94,0.35)]'
-                      : 'bg-[#181B2A] hover:bg-[#1F2438] text-[#8A92A6] hover:text-white border-white/[0.08]'
+                      ? 'bg-[#FF5733] text-white border-[#FF5733]'
+                      : 'bg-[#151922] hover:bg-[#1E2330] text-slate-300 hover:text-white border-white/[0.08]'
                   }`}
                 >
                   {tag}
@@ -106,15 +106,15 @@ export function DoseNoteModal({
 
         {/* TEXTAREA GHI CHÚ TỰ DO */}
         <div className="mt-4">
-          <label className="block text-xs font-bold text-[#8A92A6] uppercase tracking-wider mb-2">
-            Detailed Observations / Symptoms
+          <label className="block text-xs font-medium text-slate-400 mb-2">
+            Detailed observations and symptoms
           </label>
           <textarea
             rows={3}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="e.g., Felt slight lightheadedness 15 mins after taking, drank water and resolved."
-            className="w-full px-4 py-3 rounded-2xl bg-[#181B2A] border border-white/[0.08] focus:outline-none focus:border-[#FF725E]/60 focus:ring-1 focus:ring-[#FF725E]/40 text-sm text-white placeholder-[#8A92A6] resize-none shadow-inner transition-colors"
+            className="w-full px-3.5 py-2.5 rounded-xl bg-[#151922] border border-white/[0.08] focus:outline-none focus:border-[#FF5733] text-xs text-white placeholder-slate-400 resize-none shadow-inner transition-colors leading-relaxed"
           />
         </div>
 
@@ -123,17 +123,17 @@ export function DoseNoteModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-[#8A92A6] hover:text-white hover:bg-white/[0.05] transition-colors"
+            className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-white/[0.05] transition-colors"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="px-6 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-[#FF725E] to-[#FF8A71] hover:opacity-95 text-white shadow-[0_4px_15px_rgba(255,114,94,0.35)] active:scale-[0.98] transition-all flex items-center gap-2"
+            className="px-5 py-2 rounded-xl text-xs font-semibold bg-[#FF5733] hover:bg-[#E64D2E] text-white active:scale-[0.98] transition-all flex items-center gap-2 shadow-md"
           >
-            <FontAwesomeIcon icon={faCheck} className="text-xs font-black" />
-            <span>Save Observation</span>
+            <FontAwesomeIcon icon={faCheck} className="text-xs" />
+            <span>Save observation</span>
           </button>
         </div>
       </div>

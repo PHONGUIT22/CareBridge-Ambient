@@ -143,42 +143,39 @@ export function AuthGate({ onLogin }: AuthGateProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#121420] text-white flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden select-none font-sans">
-      {/* NỀN QUANG PHỔ HIỆN ĐẠI SMART HOME */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[450px] bg-[radial-gradient(ellipse_at_top,rgba(255,114,94,0.12)_0%,rgba(77,139,255,0.08)_50%,transparent_80%)] pointer-events-none" />
-
+    <div className="min-h-screen bg-[#151922] text-white flex flex-col items-center justify-center p-4 sm:p-6 relative select-none font-sans">
       {/* KHUNG AUTHENTICATION CHÍNH */}
-      <div className="relative z-10 w-full max-w-xl bg-[#22273B] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+      <div className="relative z-10 w-full max-w-xl bg-[#1E2330] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-2xl">
         {/* 1. BRAND HEADER */}
         <div className="flex flex-col items-center text-center pb-5 border-b border-white/[0.08]">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FF725E] to-[#FFA08C] flex items-center justify-center text-white shadow-[0_0_25px_rgba(255,114,94,0.4)] mb-3">
-            <FontAwesomeIcon icon={faHeartPulse} className="text-2xl" />
+          <div className="w-12 h-12 rounded-xl bg-[#FF5733] flex items-center justify-center text-white mb-3">
+            <FontAwesomeIcon icon={faHeartPulse} className="text-xl" />
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#181B2A] border border-white/[0.08] text-[10.5px] font-mono font-bold tracking-widest text-slate-300 uppercase mb-2">
-            <span className="w-2 h-2 rounded-full bg-[#FF725E] shadow-[0_0_8px_#FF725E] animate-pulse" />
-            <span>CAREBRIDGE AMBIENT OS</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#151922] border border-white/[0.08] text-xs font-mono font-medium text-slate-300 mb-2">
+            <span className="w-2 h-2 rounded-full bg-[#FF5733] animate-pulse" />
+            <span>CareBridge Ambient OS</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
             Clinical Ambient Companion
           </h1>
-          <p className="text-xs text-[#8A92A6] mt-1 font-medium">
-            Ambient Voice & Touch-First Telehealth for Seniors and Families
+          <p className="text-xs text-slate-400 mt-1 font-normal leading-relaxed">
+            Ambient voice and touch-first telehealth for seniors and families
           </p>
         </div>
 
         {/* 2. EVALUATOR FAST-TRACK BANNER (DÀNH CHO BAN GIÁM KHẢO) */}
-        <div className="mt-5 p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-[#FF725E]/15 to-transparent border border-amber-500/35 relative overflow-hidden">
+        <div className="mt-5 p-4 rounded-2xl bg-[#151922] border border-white/[0.08] relative overflow-hidden">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-base">🧑‍⚖️</span>
-              <span className="text-xs font-black text-amber-300 tracking-wide uppercase">
-                Evaluator Sandbox
+              <FontAwesomeIcon icon={faShieldHalved} className="text-xs text-amber-300" />
+              <span className="text-xs font-semibold text-amber-300 tracking-normal">
+                Evaluator sandbox
               </span>
             </div>
-            <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-mono font-bold">
-              PRE-CONFIGURED
+            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-mono font-medium">
+              Pre-configured
             </span>
           </div>
 
@@ -189,7 +186,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
           <button
             onClick={handleFastTrackDemo}
             disabled={isLoading}
-            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#FF725E] to-[#FF8A71] hover:opacity-95 active:scale-[0.98] text-white font-black text-xs tracking-wider uppercase shadow-[0_4px_20px_rgba(255,114,94,0.35)] transition-all flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] active:scale-[0.98] text-white font-semibold text-xs transition-all flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
@@ -199,7 +196,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
             ) : (
               <>
                 <FontAwesomeIcon icon={faBolt} className="text-xs" />
-                <span>Sign In with Demo (1-Click Evaluator Pass)</span>
+                <span>Sign in with demo (1-click evaluator pass)</span>
               </>
             )}
           </button>
@@ -207,7 +204,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
 
         {/* 3. 1-TOUCH PERSONA SWITCHER */}
         <div className="mt-5">
-          <label className="block text-[11px] font-extrabold text-[#8A92A6] uppercase tracking-wider mb-2.5">
+          <label className="block text-xs font-medium text-slate-400 mb-2.5">
             Select Ambient Persona
           </label>
 
@@ -219,23 +216,23 @@ export function AuthGate({ onLogin }: AuthGateProps) {
                 handlePersonaLogin('senior');
               }}
               disabled={isLoading}
-              className={`p-3.5 rounded-2xl text-left border transition-all alexa-card-interactive ${
+              className={`p-3.5 rounded-2xl text-left border transition-all ${
                 selectedPersona === 'senior'
-                  ? 'bg-[#181B2A] border-[#FF725E]/80 shadow-[0_0_15px_rgba(255,114,94,0.2)]'
-                  : 'bg-[#181B2A]/70 border-white/[0.06] hover:border-white/15'
+                  ? 'bg-[#151922] border-[#FF5733]'
+                  : 'bg-[#151922]/70 border-white/[0.06] hover:border-white/15'
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-[#FF725E]/15 border border-[#FF725E]/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
-                  👵
+                <div className="w-9 h-9 rounded-xl bg-[#1E2330] border border-white/[0.08] flex items-center justify-center text-slate-200 shrink-0">
+                  <FontAwesomeIcon icon={faUser} className="text-sm text-[#FF5733]" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-white">Eleanor Vance</h4>
-                  <p className="text-[10px] text-[#FF725E] font-bold">Age 78 • Patient</p>
+                  <h4 className="text-xs font-semibold text-white">Eleanor Vance</h4>
+                  <p className="text-xs text-[#FF5733] font-mono font-medium">Age 78 - Patient</p>
                 </div>
               </div>
-              <p className="text-[10px] text-[#8A92A6] mt-2 leading-relaxed">
-                Bedside Desk Clock, giant voice prompts & 1-touch pill confirmation.
+              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                Bedside Desk Clock, high-contrast voice prompts, and 1-touch pill confirmation.
               </p>
             </button>
 
@@ -246,23 +243,23 @@ export function AuthGate({ onLogin }: AuthGateProps) {
                 handlePersonaLogin('caregiver');
               }}
               disabled={isLoading}
-              className={`p-3.5 rounded-2xl text-left border transition-all alexa-card-interactive ${
+              className={`p-3.5 rounded-2xl text-left border transition-all ${
                 selectedPersona === 'caregiver'
-                  ? 'bg-[#181B2A] border-[#4D8BFF]/80 shadow-[0_0_15px_rgba(77,139,255,0.2)]'
-                  : 'bg-[#181B2A]/70 border-white/[0.06] hover:border-white/15'
+                  ? 'bg-[#151922] border-[#FF5733]'
+                  : 'bg-[#151922]/70 border-white/[0.06] hover:border-white/15'
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-[#4D8BFF]/15 border border-[#4D8BFF]/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
-                  👩‍⚕️
+                <div className="w-9 h-9 rounded-xl bg-[#1E2330] border border-white/[0.08] flex items-center justify-center text-slate-200 shrink-0">
+                  <FontAwesomeIcon icon={faUserDoctor} className="text-sm text-slate-300" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-white">Sarah Connor</h4>
-                  <p className="text-[10px] text-[#4D8BFF] font-bold">Daughter & Caregiver</p>
+                  <h4 className="text-xs font-semibold text-white">Sarah Connor</h4>
+                  <p className="text-xs text-slate-300 font-mono font-medium">Daughter & Caregiver</p>
                 </div>
               </div>
-              <p className="text-[10px] text-[#8A92A6] mt-2 leading-relaxed">
-                Clinical Hub: 30-day matrix, biometrics telemetry & doctor PDF audits.
+              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                Clinical Hub: 30-day matrix, biometrics telemetry, and doctor PDF audits.
               </p>
             </button>
           </div>
@@ -271,9 +268,9 @@ export function AuthGate({ onLogin }: AuthGateProps) {
         {/* 4. SENIOR-FRIENDLY BEDSIDE PIN PAD */}
         <div className="mt-5 pt-4 border-t border-white/[0.08]">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-extrabold text-[#8A92A6] uppercase tracking-wider flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faLock} className="text-[#FF725E] text-xs" />
-              <span>Bedside Touch PIN Pad</span>
+            <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faLock} className="text-[#FF5733] text-xs" />
+              <span>Bedside touch PIN pad</span>
             </span>
 
             {/* Display PIN Dots */}
@@ -281,10 +278,10 @@ export function AuthGate({ onLogin }: AuthGateProps) {
               {[0, 1, 2, 3].map((idx) => (
                 <div
                   key={idx}
-                  className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
                     pin.length > idx
-                      ? 'bg-[#FF725E] shadow-[0_0_8px_#FF725E] scale-110'
-                      : 'bg-[#181B2A] border border-white/20'
+                      ? 'bg-[#FF5733] scale-110'
+                      : 'bg-[#151922] border border-white/20'
                   }`}
                 />
               ))}
@@ -303,7 +300,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
                 type="button"
                 onClick={() => handlePinInput(digit)}
                 disabled={isLoading}
-                className="h-12 rounded-xl bg-[#181B2A] border border-white/[0.08] hover:border-white/20 hover:bg-[#202538] active:scale-95 text-white font-black text-lg transition-all shadow-inner flex items-center justify-center"
+                className="h-12 rounded-xl bg-[#151922] border border-white/[0.08] hover:border-white/20 hover:bg-[#1E2330] active:scale-95 text-white font-mono font-bold text-lg transition-all flex items-center justify-center"
               >
                 {digit}
               </button>
@@ -313,7 +310,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
               type="button"
               onClick={handleClearPin}
               disabled={isLoading}
-              className="h-12 rounded-xl bg-[#181B2A] border border-white/[0.08] hover:bg-rose-500/20 text-[#8A92A6] hover:text-rose-300 active:scale-95 font-bold text-xs transition-all flex items-center justify-center"
+              className="h-12 rounded-xl bg-[#151922] border border-white/[0.08] hover:bg-rose-500/10 text-slate-400 hover:text-rose-300 active:scale-95 font-medium text-xs transition-all flex items-center justify-center"
             >
               Clear
             </button>
@@ -322,7 +319,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
               type="button"
               onClick={() => handlePinInput('0')}
               disabled={isLoading}
-              className="h-12 rounded-xl bg-[#181B2A] border border-white/[0.08] hover:border-white/20 hover:bg-[#202538] active:scale-95 text-white font-black text-lg transition-all shadow-inner flex items-center justify-center"
+              className="h-12 rounded-xl bg-[#151922] border border-white/[0.08] hover:border-white/20 hover:bg-[#1E2330] active:scale-95 text-white font-mono font-bold text-lg transition-all flex items-center justify-center"
             >
               0
             </button>
@@ -331,7 +328,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
               type="button"
               onClick={() => handleVerifyPin()}
               disabled={isLoading}
-              className="h-12 rounded-xl bg-gradient-to-r from-[#FF725E] to-[#FF8A71] hover:opacity-90 active:scale-95 text-white font-black text-sm transition-all shadow-[0_2px_10px_rgba(255,114,94,0.3)] flex items-center justify-center gap-1.5"
+              className="h-12 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] active:scale-95 text-white font-semibold text-sm transition-all flex items-center justify-center gap-1.5"
             >
               <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
               <span>Enter</span>
@@ -340,9 +337,9 @@ export function AuthGate({ onLogin }: AuthGateProps) {
         </div>
 
         {/* FOOTER METADATA */}
-        <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[10px] text-[#8A92A6]">
-          <span>AWS Bedrock • Claude 3.5 Sonnet</span>
-          <span className="font-mono">SQLite WAL • MCP SSE</span>
+        <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-slate-400 font-mono">
+          <span>AWS Bedrock - Claude 3.5 Sonnet</span>
+          <span>SQLite WAL - MCP SSE</span>
         </div>
       </div>
     </div>
