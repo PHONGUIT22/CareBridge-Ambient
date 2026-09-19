@@ -155,8 +155,8 @@
 
 | Submission Question | Evaluative Feedback |
 | :--- | :--- |
-| **Tools & SDKs Used** | `@modelcontextprotocol/sdk`, `@aws-sdk/client-bedrock-runtime`, `better-sqlite3`, `Next.js 15`, `Web Speech API`. |
-| **What Worked Well** | The MCP specification provides a clean, language-agnostic interface for AI agents to query device state and trigger operations. AWS Bedrock Claude Haiku 4.5 delivers rapid sub-500ms clinical triage analysis with high domain comprehension. |
+| **Tools & SDKs Used** | `@modelcontextprotocol/sdk`, `@aws-sdk/client-bedrock-runtime`, `@aws-sdk/client-polly`, `better-sqlite3`, `Next.js 15`, `Web Speech API`. |
+| **What Worked Well** | The MCP specification provides a clean, language-agnostic interface for AI agents to query device state and trigger operations. AWS Bedrock Claude Haiku 4.5 delivers rapid sub-500ms clinical triage analysis, seamlessly paired with AWS Polly Neural engine (`Ruth`) for warm, natural senior voice synthesis. |
 | **What Needs Work** | Better tooling for debugging Streamable HTTP SSE connections, cross-region model ID discoverability in Bedrock, and native structured JSON mode on Bedrock runtime endpoints. |
 | **Onboarding Experience** | Setup was straightforward, but bridging MCP SSE transport with standard HTTP clients required significant boilerplate session management code. |
 | **Would You Build With These Tools Again?** | **Yes.** The combination of ambient voice control, tool-calling agents via MCP, and responsive local state offers the most natural interface model for geriatric healthcare computing. |

@@ -35,6 +35,7 @@ import { getTodayScheduleTool } from './tools/getTodaySchedule.js';
 import { logDoseStatusTool } from './tools/logDoseStatus.js';
 import { recordVitalsTool } from './tools/recordVitals.js';
 import { clinicalAdvisorTool } from './tools/clinicalAdvisor.js';
+import { synthesizeSpeech } from './aws/pollyClient.js';
 
 const app = express();
 const PORT = Number(process.env.MCP_PORT || process.env.PORT) || 3001;
@@ -299,6 +300,47 @@ app.post('/api/advisor', async (req: Request, res: Response) => {
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Endpoint tổng hợp giọng nói AWS Polly Neural TTS cho Alexa & Echo Show Smart Displays
+app.post('/api/tts', async (req: Request, res: Response) => {
+  try {
+    const { text, voiceId } = req.body;
+    if (!text || typeof text !== 'string') {
+      res.status(400).json({ success: false, error: 'Thiếu nội dung văn bản (text).' });
+      return;
+    }
+
+    const audioBuffer = await synthesizeSpeech(text, voiceId);
+    if (!audioBuffer) {
+      res.status(200).json({
+        success: false,
+        fallback: true,
+        message: 'AWS Polly không khả dụng hoặc chưa cấu hình credentials. Chuyển sang Web Speech API fallback.',
+      });
+      return;
+    }
+
+    if (req.headers.accept === 'audio/mpeg' || req.query.format === 'binary') {
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', audioBuffer.length);
+      res.end(audioBuffer);
+    } else {
+      res.json({
+        success: true,
+        fallback: false,
+        mimeType: 'audio/mpeg',
+        audioBase64: audioBuffer.toString('base64'),
+      });
+    }
+  } catch (error: any) {
+    console.error('[Server TTS Error]:', error);
+    res.status(200).json({
+      success: false,
+      fallback: true,
+      error: error.message,
+    });
   }
 });
 

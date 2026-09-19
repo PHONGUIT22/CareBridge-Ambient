@@ -112,7 +112,12 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
           processVoiceQueryRef.current(trimmed);
         };
 
-        recognition.onerror = () => setIsListening(false);
+        recognition.onerror = (e: any) => {
+          if (e.error !== 'no-speech' && e.error !== 'aborted') {
+            console.warn('[useAlexaAgent] Recognition error:', e.error);
+          }
+          setIsListening(false);
+        };
         recognition.onend = () => setIsListening(false);
 
         recognitionRef.current = recognition;
@@ -135,8 +140,14 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
     }
 
     if (isBusyRef.current && !isListening) {
-      console.warn('[useAlexaAgent] Cannot toggle listening while agent is busy');
-      return;
+      // Nếu trợ lý đang nói (Polly/SpeechSynthesis), cho phép người dùng ngắt lời tức thì
+      if (speechService.isSpeaking()) {
+        speechService.cancel();
+        isBusyRef.current = false;
+      } else {
+        console.warn('[useAlexaAgent] Cannot toggle listening while agent is thinking');
+        return;
+      }
     }
 
     if (isListening) {
@@ -167,7 +178,8 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
       isBusyRef.current = true;
       setIsThinking(true);
 
-      // 2. Mute microphone immediately
+      // 2. Mute microphone immediately & cancel any prior speech
+      speechService.cancel();
       try {
         recognitionRef.current?.abort();
       } catch (_) {}
@@ -194,7 +206,10 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
           speechService.speak(replyText, {
             onEnd: () => {
               clearTimeout(safetyTimer);
-              isBusyRef.current = false;
+              // Khoảng đệm 150ms chống vang âm thanh loa vào mic (Acoustic Echo Guard)
+              setTimeout(() => {
+                isBusyRef.current = false;
+              }, 150);
             },
           });
         } else {
