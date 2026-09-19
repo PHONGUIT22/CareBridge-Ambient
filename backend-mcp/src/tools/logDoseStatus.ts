@@ -1,4 +1,6 @@
 import { LogRepo } from '../database/logRepo.js';
+import { MedicineRepo } from '../database/medicineRepo.js';
+import { getDatabase } from '../database/db.js';
 
 export const logDoseStatusTool = {
   definition: {
@@ -68,9 +70,39 @@ export const logDoseStatusTool = {
 
     await LogRepo.updateStatusDirect(targetLogId, status, args.notes);
 
-    const speechText = status === 'taken'
-      ? `Wonderful! I have recorded your ${matchedMedName} as taken.${args.notes ? ' I also saved your note.' : ''}`
-      : `I have marked your ${matchedMedName} as skipped.`;
+    // Kiểm tra tồn kho sau khi đã trừ liều vừa uống
+    let remainingStock: number | null = null;
+    let lowStockWarning = false;
+    const priceStr = '$12.50';
+
+    if (status === 'taken') {
+      try {
+        const db = getDatabase();
+        const logRow = db.prepare('SELECT medicine_id FROM intake_logs WHERE id = ?').get(targetLogId) as any;
+        if (logRow) {
+          const med = await MedicineRepo.getMedicineById(logRow.medicine_id);
+          if (med) {
+            remainingStock = med.stockCount;
+            if (remainingStock <= 5) {
+              lowStockWarning = true;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[logDoseStatus] Could not check updated stock:', e);
+      }
+    }
+
+    let speechText = '';
+    if (status === 'taken') {
+      if (lowStockWarning && remainingStock !== null) {
+        speechText = `Logged as taken. Heads up: you only have ${remainingStock} pills left of ${matchedMedName}. Would you like me to order a 30-day refill via Amazon Pharmacy for ${priceStr}?`;
+      } else {
+        speechText = `Wonderful! I have recorded your ${matchedMedName} as taken.${args.notes ? ' I also saved your note.' : ''}`;
+      }
+    } else {
+      speechText = `I have marked your ${matchedMedName} as skipped.`;
+    }
 
     return {
       success: true,
@@ -78,6 +110,16 @@ export const logDoseStatusTool = {
       medicineName: matchedMedName,
       newStatus: status,
       notes: args.notes || null,
+      remainingStock,
+      lowStockAlert: lowStockWarning
+        ? {
+            medicineName: matchedMedName,
+            remainingStock,
+            price: priceStr,
+            refillSuggested: true,
+            suggestedAction: 'orderRefill',
+          }
+        : null,
       speechText,
     };
   },

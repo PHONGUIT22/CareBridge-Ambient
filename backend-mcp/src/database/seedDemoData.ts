@@ -50,7 +50,7 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
       dosage: '20mg - Evening',
       reminderTimes: ['20:00'],
       daysOfWeek: ['ALL'],
-      stockCount: 18,
+      stockCount: 4,
       type: 'medication' as const,
     },
     {

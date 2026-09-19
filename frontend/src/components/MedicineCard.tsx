@@ -114,8 +114,15 @@ export function MedicineCard({
 
       {/* Footer: Stock pill and clinical note icon */}
       <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.06] text-xs">
-        <span className="px-2.5 py-0.5 rounded-md bg-[#151922] border border-white/[0.08] text-slate-200 font-mono tabular-nums text-xs font-medium">
-          {item.stockCount ?? 30} pills left
+        <span
+          className={`px-2.5 py-0.5 rounded-md border font-mono tabular-nums text-xs font-medium ${
+            (item.stockCount ?? 30) <= 5
+              ? 'bg-amber-500/15 border-amber-500/30 text-amber-300 animate-pulse'
+              : 'bg-[#151922] border-white/[0.08] text-slate-200'
+          }`}
+          title={(item.stockCount ?? 30) <= 5 ? 'Low stock! Say "Alexa, order refill"' : undefined}
+        >
+          {(item.stockCount ?? 30) <= 5 ? `⚠️ ${item.stockCount ?? 30} left` : `${item.stockCount ?? 30} pills left`}
         </span>
 
         <button

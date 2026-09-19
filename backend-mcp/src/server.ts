@@ -35,6 +35,7 @@ import { getTodayScheduleTool } from './tools/getTodaySchedule.js';
 import { logDoseStatusTool } from './tools/logDoseStatus.js';
 import { recordVitalsTool } from './tools/recordVitals.js';
 import { clinicalAdvisorTool } from './tools/clinicalAdvisor.js';
+import { orderRefillTool } from './tools/orderRefill.js';
 import { synthesizeSpeech } from './aws/pollyClient.js';
 
 const app = express();
@@ -69,6 +70,7 @@ const registeredTools = [
   logDoseStatusTool,
   recordVitalsTool,
   clinicalAdvisorTool,
+  orderRefillTool,
 ];
 
 // Định nghĩa handler khi Alexa/Agent hỏi danh sách Tool
@@ -98,6 +100,10 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
       case 'clinicalAdvisor': {
         const result = await clinicalAdvisorTool.handler(toolArgs as any);
+        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      }
+      case 'orderRefill': {
+        const result = await orderRefillTool.handler(toolArgs as any);
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
       }
       default:
@@ -194,6 +200,16 @@ app.post('/api/toggle', async (req: Request, res: Response) => {
 app.post('/api/dose', async (req: Request, res: Response) => {
   try {
     const result = await logDoseStatusTool.handler(req.body);
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Đặt thuốc bổ sung qua Amazon Pharmacy 1-Click
+app.post('/api/refill', async (req: Request, res: Response) => {
+  try {
+    const result = await orderRefillTool.handler(req.body);
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });

@@ -148,4 +148,16 @@ export const MedicineRepo = {
     });
     deleteTx();
   },
+
+  async findByName(query: string): Promise<MedicineRecord | null> {
+    const all = await this.getAllMedicines();
+    const q = query.toLowerCase().trim();
+    return (
+      all.find(
+        (m) =>
+          m.name.toLowerCase().includes(q) ||
+          q.includes(m.name.toLowerCase().split(' ')[0])
+      ) || null
+    );
+  },
 };

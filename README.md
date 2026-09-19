@@ -78,6 +78,11 @@ flowchart LR
    - 30-day compliance punch-card matrix tracking adherence streaks.
    - Single-click export for physician consultations generated via `jsPDF`.
 
+5. **Amazon Pharmacy 1-Click Refill (`orderRefill` Tool)**
+   - Proactive low-stock threshold detection ($\le 5$ pills remaining) triggered directly after dose confirmation.
+   - Autonomous multi-turn voice order placement generating official Amazon Order IDs (`114-XXXXXXX-XXXXXXX`).
+   - High-contrast `AmazonOrderCard` featuring Prime 2-Day free delivery estimations and instant SQLite stock replenishment (+30 tablets).
+
 ---
 
 ## 🛠️ Tech Stack

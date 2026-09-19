@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { mcpClient } from '../services/mcpClient';
 import { speechService } from '../services/speechService';
-import { ClinicalAdviceResponse } from '../types';
+import { ClinicalAdviceResponse, AmazonRefillOrder } from '../types';
 
 export interface ToolExecutionLog {
   timestamp: string;
@@ -37,6 +37,7 @@ export interface ChatMessage {
 export interface UseAlexaAgentOptions {
   onDoseLogged?: () => void;
   onClinicalAdviceTriggered?: (advice: ClinicalAdviceResponse) => void;
+  onOrderRefillTriggered?: (order: AmazonRefillOrder) => void;
 }
 
 export function useAlexaAgent(options?: UseAlexaAgentOptions) {
@@ -84,6 +85,7 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
   const isBusyRef = useRef<boolean>(false);
   const recognitionRef = useRef<any>(null);
   const processVoiceQueryRef = useRef<(text: string) => Promise<void>>(async () => {});
+  const lastLowStockMedRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -278,6 +280,11 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
           });
           const latency = Math.round(performance.now() - startTime);
 
+          // Ghi nhớ thuốc sắp hết để nếu người dùng nói "Yes, order it" sẽ tự động đặt đúng thuốc
+          if (res.lowStockAlert) {
+            lastLowStockMedRef.current = res.lowStockAlert.medicineName;
+          }
+
           setToolLogs((prev) => [
             {
               timestamp: now,
@@ -383,6 +390,94 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
             },
           ]);
           speakAndRelease(reply);
+        } else if (
+          lower.includes('order it') ||
+          lower.includes('yes, order') ||
+          lower.includes('yes order') ||
+          lower.includes('order refill') ||
+          lower.includes('refill') ||
+          lower.includes('pharmacy') ||
+          lower.includes('order medicine') ||
+          lower.includes('place order') ||
+          lower.includes('buy more') ||
+          lower.includes('order my')
+        ) {
+          // 3. AMAZON PHARMACY 1-CLICK REFILL INTENT
+          let refillMed = lastLowStockMedRef.current;
+          if (lower.includes('atorvastatin') || lower.includes('lipitor')) {
+            refillMed = 'Atorvastatin (Lipitor)';
+          } else if (lower.includes('amlodipine') || lower.includes('norvasc')) {
+            refillMed = 'Amlodipine (Norvasc)';
+          } else if (lower.includes('metformin')) {
+            refillMed = 'Metformin HCl';
+          } else if (lower.includes('aspirin')) {
+            refillMed = 'Baby Aspirin Cardio';
+          }
+
+          if (!refillMed) {
+            refillMed = 'Atorvastatin (Lipitor)';
+          }
+
+          setToolLogs((prev) => [
+            {
+              timestamp: now,
+              toolName: 'orderRefill (Amazon Pharmacy 1-Click)',
+              args: { medicineName: refillMed, quantity: 30 },
+              result: 'Dispatching Amazon Pharmacy 1-Click order...',
+              status: 'invoking',
+            },
+            ...prev,
+          ]);
+
+          const orderRes = await mcpClient.orderRefill({
+            medicineName: refillMed,
+            quantity: 30,
+          });
+          const latency = Math.round(performance.now() - startTime);
+
+          setToolLogs((prev) => [
+            {
+              timestamp: now,
+              toolName: 'orderRefill',
+              args: { medicineName: refillMed, quantity: 30 },
+              result: orderRes,
+              status: 'success',
+              latencyMs: latency,
+            },
+            ...prev.slice(1),
+          ]);
+
+          const reply =
+            orderRes.speechText ||
+            `I have placed your Amazon Pharmacy 1-Click order for ${refillMed}. It will arrive with Prime Two-Day free shipping.`;
+
+          setConversation((prev) => [...prev, { sender: 'alexa', text: reply }]);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `alexa_${Date.now()}`,
+              sender: 'alexa',
+              text: reply,
+              timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+              toolCall: {
+                toolName: 'orderRefill (Amazon Pharmacy)',
+                args: { medicineName: refillMed, quantity: 30 },
+                result: orderRes,
+                status: 'success',
+                latencyMs: latency,
+              },
+            },
+          ]);
+
+          speakAndRelease(reply);
+
+          if (options?.onOrderRefillTriggered) {
+            options.onOrderRefillTriggered(orderRes);
+          }
+
+          if (options?.onDoseLogged) {
+            options.onDoseLogged();
+          }
         } else {
           // DEFAULT / FALLBACK INTENT (All other queries -> AWS Bedrock Claude Haiku 4.5)
           setToolLogs((prev) => [

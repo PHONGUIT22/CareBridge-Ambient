@@ -4,6 +4,7 @@ import {
   MedicinesResponse,
   DoseActionResponse,
   ClinicalAdviceResponse,
+  AmazonRefillOrder,
   VitalsRecord,
   LogStatus,
 } from '../types';
@@ -218,6 +219,24 @@ export const mcpClient = {
     });
     if (!res.ok) {
       throw new Error(`Failed to delete medicine: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
+  /**
+   * POST /api/refill (Amazon Pharmacy 1-Click Refill MCP Tool)
+   */
+  async orderRefill(params: {
+    medicineName: string;
+    quantity?: number;
+  }): Promise<AmazonRefillOrder> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/api/refill`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to place Amazon Pharmacy refill: ${res.statusText}`);
     }
     return res.json();
   },

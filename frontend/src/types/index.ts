@@ -83,6 +83,14 @@ export interface DoseActionResponse {
   notes?: string | null;
   speechText?: string;
   message?: string;
+  remainingStock?: number | null;
+  lowStockAlert?: {
+    medicineName: string;
+    remainingStock: number;
+    price: string;
+    refillSuggested: boolean;
+    suggestedAction: string;
+  } | null;
   error?: string;
 }
 
@@ -106,6 +114,34 @@ export interface ClinicalAdviceResponse {
     recommendedAction?: string;
   };
   bedrockModelUsed?: string;
+  error?: string;
+}
+
+export interface AmazonRefillOrder {
+  success: boolean;
+  orderId: string;
+  medicineName: string;
+  dosage: string;
+  quantityAdded: number;
+  previousStock: number;
+  newStockCount: number;
+  estimatedDelivery: string;
+  totalPrice: string;
+  pharmacyName: string;
+  shippingMethod: string;
+  speechText: string;
+  richCard?: {
+    type: string;
+    orderId: string;
+    medicineName: string;
+    dosage: string;
+    quantity: number;
+    totalPrice: string;
+    estimatedDelivery: string;
+    shippingMethod: string;
+    pharmacyName: string;
+    newStockCount: number;
+  };
   error?: string;
 }
 

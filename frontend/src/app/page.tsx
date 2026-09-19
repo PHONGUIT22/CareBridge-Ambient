@@ -8,9 +8,11 @@ import { DeskModeView } from '../screens/DeskModeView';
 import { AlexaAgentConsole } from '../components/AlexaAgentConsole';
 import { PillVisualCard } from '../components/RichCards/PillVisualCard';
 import { ClinicalAdviceCard } from '../components/RichCards/ClinicalAdviceCard';
+import { AmazonOrderCard } from '../components/RichCards/AmazonOrderCard';
 import { ToastContainer, ToastMessage } from '../components/Toast';
 import { AuthGate, AuthSession } from '../components/AuthGate';
 import { PaywallModal } from '../components/PaywallModal';
+import { AmazonRefillOrder } from '../types';
 import { mcpClient } from '../services/mcpClient';
 import { speechService } from '../services/speechService';
 import { useAlexaAgent } from '../hooks/useAlexaAgent';
@@ -39,6 +41,8 @@ export default function Home() {
   const [selectedMedForCard, setSelectedMedForCard] = useState('Amlodipine (Blood Pressure)');
   const [clinicalAdviceOpen, setClinicalAdviceOpen] = useState(false);
   const [clinicalAdviceData, setClinicalAdviceData] = useState<any>(null);
+  const [amazonOrderCardOpen, setAmazonOrderCardOpen] = useState(false);
+  const [amazonOrderData, setAmazonOrderData] = useState<AmazonRefillOrder | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -152,6 +156,17 @@ export default function Home() {
     setClinicalAdviceOpen(true);
   };
 
+  // Kích hoạt Amazon Pharmacy Order Card khi đặt thuốc thành công
+  const handleTriggerAmazonOrder = (order: AmazonRefillOrder) => {
+    setAmazonOrderData(order);
+    setAmazonOrderCardOpen(true);
+    addToast({
+      type: 'success',
+      title: 'Amazon Pharmacy Order Placed',
+      message: `${order.quantityAdded || 30} tabs of ${order.medicineName} arriving ${order.estimatedDelivery}`,
+    });
+  };
+
   // Single Source of Truth: Voice Agent & Bedrock Multi-Turn Orchestration
   const alexaAgent = useAlexaAgent({
     onDoseLogged: () => {
@@ -159,6 +174,9 @@ export default function Home() {
     },
     onClinicalAdviceTriggered: (advice) => {
       handleTriggerClinicalAdvice(advice);
+    },
+    onOrderRefillTriggered: (order) => {
+      handleTriggerAmazonOrder(order);
     },
   });
 
@@ -511,6 +529,20 @@ export default function Home() {
           clinicalAdviceData?.assessment ||
           'Transient orthostatic hypotension may occur shortly after taking anti-hypertensive medication.'
         }
+      />
+
+      {/* RICH CARD ĐƠN HÀNG AMAZON PHARMACY 1-CLICK REFILL */}
+      <AmazonOrderCard
+        isOpen={amazonOrderCardOpen}
+        onClose={() => setAmazonOrderCardOpen(false)}
+        order={amazonOrderData}
+        onTrackOrder={(orderId) => {
+          addToast({
+            type: 'info',
+            title: 'Amazon Logistics',
+            message: `Tracking shipment for Order #${orderId}. Carrier: Amazon Prime Delivery.`,
+          });
+        }}
       />
 
       {/* PRO PAYWALL MODAL */}

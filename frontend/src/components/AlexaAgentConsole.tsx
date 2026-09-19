@@ -39,6 +39,14 @@ const QUICK_PROMPTS = [
     prompt: "Alexa, what's my medicine schedule today?",
   },
   {
+    label: 'Took Atorvastatin (Low Stock)',
+    prompt: 'Alexa, I just took my Atorvastatin pill.',
+  },
+  {
+    label: 'Yes, Order Refill (Amazon)',
+    prompt: 'Alexa, yes, order my Atorvastatin refill via Amazon Pharmacy.',
+  },
+  {
     label: 'Took Amlodipine',
     prompt: 'Alexa, I just took my morning Amlodipine pill.',
   },
