@@ -48,10 +48,10 @@ export function MedicineCard({
 
   return (
     <div
-      className={`rounded-2xl p-4 transition-all duration-300 relative flex flex-col justify-between alexa-card-interactive ${
+      className={`rounded-3xl p-4 transition-all duration-300 relative flex flex-col justify-between alexa-card-interactive ${
         isTaken
           ? 'bg-[#22273B] border-2 border-[#FF725E]/80 shadow-[0_0_20px_rgba(255,114,94,0.25),0_10px_25px_rgba(0,0,0,0.3)] ring-0'
-          : 'bg-[#22273B] border border-white/[0.06] shadow-[0_10px_25px_rgba(0,0,0,0.3)] hover:border-white/[0.15]'
+          : 'bg-[#22273B] border border-white/[0.08] shadow-[0_10px_25px_rgba(0,0,0,0.3)] hover:border-white/[0.15]'
       }`}
     >
       {/* HÀNG TRÊN CÙNG: NHÃN TRẠNG THÁI TUÂN THỦ (TAKEN / PENDING) & NÚT GẠT PHONG CÁCH SMART HOME */}
@@ -93,12 +93,12 @@ export function MedicineCard({
 
       {/* PHẦN THÂN GIỮA (TRUNG TÂM CỦA THẺ - CĂN GIỮA TOÀN BỘ) */}
       <div className="flex flex-col items-center justify-center text-center my-3.5 w-full">
-        {/* Khung squircle bo góc lớn (w-14 h-14 rounded-2xl) */}
+        {/* Khung squircle bo góc lớn (w-14 h-14 rounded-2xl bg-[#1C2030]) */}
         <div
           className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${
             isTaken
               ? 'bg-[#FF725E]/15 border border-[#FF725E]/40 text-[#FF725E] shadow-[0_0_15px_rgba(255,114,94,0.2)]'
-              : 'bg-[#181B2A] border border-white/[0.06] text-[#8A92A6] shadow-inner'
+              : 'bg-[#1C2030] border border-white/[0.08] text-[#8A92A6] shadow-inner'
           }`}
         >
           {item.imageUri ? (

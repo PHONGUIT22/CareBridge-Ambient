@@ -183,7 +183,7 @@ export function DeskModeView({
             {/* Nút bấm siêu lớn Warm Coral Gradient */}
             <button
               onClick={handleTakePill}
-              className="w-full py-4 sm:py-5 rounded-2xl bg-gradient-to-r from-[#FF725E] to-[#FF8A71] hover:opacity-95 text-white font-black text-lg tracking-wide flex items-center justify-center gap-3 shadow-[0_8px_25px_rgba(255,114,94,0.45)] active:scale-98 transition-all"
+              className="w-full py-4 sm:py-5 rounded-2xl bg-gradient-to-r from-[#FF725E] to-[#FF8A71] hover:opacity-95 text-white font-black text-lg tracking-wide flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(255,114,94,0.4)] active:scale-98 transition-all"
             >
               <FontAwesomeIcon icon={faCheck} className="text-xl" />
               <span>I TOOK MY PILL</span>

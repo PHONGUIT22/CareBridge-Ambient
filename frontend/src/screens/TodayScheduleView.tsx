@@ -175,7 +175,7 @@ export function TodayScheduleView({
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-[#22273B] border border-white/[0.06] rounded-2xl p-3.5 flex flex-col justify-between alexa-card-interactive group relative overflow-hidden text-left cursor-pointer shadow-[0_10px_25px_rgba(0,0,0,0.3)] hover:border-white/[0.12]"
+              className="bg-[#22273B] border border-white/[0.08] rounded-2xl p-3.5 flex flex-col justify-between alexa-card-interactive group relative overflow-hidden text-left cursor-pointer shadow-[0_10px_25px_rgba(0,0,0,0.3)] hover:border-white/[0.15]"
             >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#8A92A6]">
@@ -199,7 +199,7 @@ export function TodayScheduleView({
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-[#22273B] border border-white/[0.06] rounded-2xl p-3.5 flex flex-col justify-between alexa-card-interactive group relative overflow-hidden text-left cursor-pointer shadow-[0_10px_25px_rgba(0,0,0,0.3)] hover:border-white/[0.12]"
+              className="bg-[#22273B] border border-white/[0.08] rounded-2xl p-3.5 flex flex-col justify-between alexa-card-interactive group relative overflow-hidden text-left cursor-pointer shadow-[0_10px_25px_rgba(0,0,0,0.3)] hover:border-white/[0.15]"
             >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#8A92A6]">
@@ -221,7 +221,7 @@ export function TodayScheduleView({
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-[#22273B] border border-white/[0.06] rounded-2xl p-3.5 flex flex-col justify-between alexa-card-interactive group relative overflow-hidden text-left cursor-pointer shadow-[0_10px_25px_rgba(0,0,0,0.3)] hover:border-white/[0.12]"
+              className="bg-[#22273B] border border-white/[0.08] rounded-2xl p-3.5 flex flex-col justify-between alexa-card-interactive group relative overflow-hidden text-left cursor-pointer shadow-[0_10px_25px_rgba(0,0,0,0.3)] hover:border-white/[0.15]"
             >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#8A92A6]">
@@ -242,7 +242,7 @@ export function TodayScheduleView({
         </div>
 
         {/* 3. HERO COMPLIANCE BAR */}
-        <div className="p-4 rounded-2xl bg-[#22273B] border border-white/[0.06] shadow-[0_10px_25px_rgba(0,0,0,0.3)] relative overflow-hidden">
+        <div className="p-4 rounded-2xl bg-[#22273B] border border-white/[0.08] shadow-[0_10px_25px_rgba(0,0,0,0.3)] relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="font-display text-[11px] font-extrabold text-[#8A92A6] tracking-wider uppercase">
               Today's Regimen Progress

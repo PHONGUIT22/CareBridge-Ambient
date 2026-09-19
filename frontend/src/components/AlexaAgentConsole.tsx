@@ -164,7 +164,7 @@ export function AlexaAgentConsole({
             <button
               key={idx}
               onClick={() => processVoiceQuery(item.prompt)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#22273B] hover:bg-[#2A3048] border border-white/[0.06] text-[10.5px] text-[#8A92A6] hover:text-white whitespace-nowrap transition-all shrink-0 active:scale-95"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] hover:border-[#FF725E]/50 border border-white/[0.08] text-[10.5px] text-[#8A92A6] hover:text-white whitespace-nowrap transition-all shrink-0 active:scale-95"
             >
               <span>{item.icon}</span>
               <span className="font-medium">"{item.label}"</span>
@@ -189,7 +189,7 @@ export function AlexaAgentConsole({
           if (isUser) {
             return (
               <div key={msg.id} className="flex justify-end animate-fadeIn">
-                <div className="max-w-[85%] bg-[#22273B] text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 text-xs shadow-sm border border-white/[0.06]">
+                <div className="max-w-[85%] bg-[#2A314A] text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 text-xs shadow-sm border border-white/[0.08]">
                   <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                   <span className="block text-[9px] text-[#8A92A6] text-right mt-1 font-mono">
                     {msg.timestamp}
@@ -268,7 +268,7 @@ export function AlexaAgentConsole({
               )}
 
               {/* Conversational Text Bubble */}
-              <div className="bg-[#22273B] border border-white/[0.06] rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-xs text-white leading-relaxed shadow-sm w-full">
+              <div className="bg-[#1F2438] border border-white/[0.08] rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-xs text-white leading-relaxed shadow-sm w-full">
                 <p className="whitespace-pre-wrap">{msg.text}</p>
 
                 {/* Structured Action Guidance */}

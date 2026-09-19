@@ -263,7 +263,7 @@ export default function Home() {
 
               {/* 3. FLOATING BOTTOM NAVIGATION BAR VỚI NÚT MICRO ELEVATED Ở TRUNG TÂM */}
               <div className="sticky bottom-4 left-0 right-0 w-full px-4 z-30 pointer-events-auto">
-                <nav className="relative bg-[#22273B]/95 backdrop-blur-xl rounded-full px-3 py-2 flex items-center justify-between shadow-[0_15px_35px_rgba(0,0,0,0.6)] border border-white/[0.08]">
+                <nav className="relative bg-[#1E2235]/95 backdrop-blur-xl rounded-full px-3 py-2 flex items-center justify-between shadow-[0_15px_35px_rgba(0,0,0,0.6)] border border-white/10">
                   {/* 2 Tab bên trái */}
                   <div className="flex items-center gap-4 pl-2">
                     {/* Tab 1: Caregiver */}
@@ -297,7 +297,7 @@ export default function Home() {
                   <div className="relative -top-5 flex items-center justify-center">
                     {/* Feedback giọng nói trực quan ngay trên Mic Orb */}
                     {voiceQueryFeedback && (
-                      <div className="absolute -top-11 px-3.5 py-1.5 rounded-full bg-[#22273B]/95 border border-[#FF725E]/50 text-white text-[11px] font-display font-semibold shadow-[0_0_20px_rgba(255,114,94,0.3)] backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none transition-all">
+                      <div className="absolute -top-11 px-3.5 py-1.5 rounded-full bg-[#1E2235]/95 border border-[#FF725E]/50 text-white text-[11px] font-display font-semibold shadow-[0_0_20px_rgba(255,114,94,0.3)] backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none transition-all">
                         <span className="w-2 h-2 rounded-full bg-[#FF725E] animate-ping shrink-0" />
                         <span className="max-w-[220px] truncate">{voiceQueryFeedback}</span>
                       </div>
@@ -317,8 +317,8 @@ export default function Home() {
                       }}
                       className={`relative z-10 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 ${
                         isVoiceActive
-                          ? 'bg-gradient-to-tr from-[#FF725E] to-[#FF8A71] text-white scale-110'
-                          : 'bg-gradient-to-tr from-[#FF725E] to-[#FF8A71] text-white border-2 border-white/20 hover:scale-105'
+                          ? 'bg-gradient-to-tr from-[#FF725E] to-[#FFA08C] text-white scale-110 shadow-[0_8px_25px_rgba(255,114,94,0.45)] animate-pulse'
+                          : 'bg-gradient-to-tr from-[#FF725E] to-[#FFA08C] text-white border-2 border-white/20 hover:scale-105 shadow-[0_8px_25px_rgba(255,114,94,0.45)]'
                       }`}
                       title="Nhấn để nói với trợ lý Alexa Ambient"
                     >
