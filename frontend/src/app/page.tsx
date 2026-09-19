@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TodayScheduleView } from '../screens/TodayScheduleView';
 import { HistoryMatrixView } from '../screens/HistoryMatrixView';
 import { AnalyticsView } from '../screens/AnalyticsView';
@@ -9,6 +9,8 @@ import { AlexaAgentConsole } from '../components/AlexaAgentConsole';
 import { PillVisualCard } from '../components/RichCards/PillVisualCard';
 import { ClinicalAdviceCard } from '../components/RichCards/ClinicalAdviceCard';
 import { ToastContainer, ToastMessage } from '../components/Toast';
+import { AuthGate, AuthSession } from '../components/AuthGate';
+import { PaywallModal } from '../components/PaywallModal';
 import { mcpClient } from '../services/mcpClient';
 import { speechService } from '../services/speechService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -22,6 +24,8 @@ import {
   faDesktop,
   faMobileScreen,
   faXmark,
+  faCrown,
+  faRightFromBracket,
 } from '@fortawesome/free-solid-svg-icons';
 
 type ScreenTab = 'caregiver' | 'history' | 'analytics' | 'deskClock';
@@ -37,6 +41,88 @@ export default function Home() {
   const [voiceQueryFeedback, setVoiceQueryFeedback] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  // Authentication & Pro Paywall State
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
+  const [isAuthLoaded, setIsAuthLoaded] = useState(false);
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('carebridge_auth');
+      if (saved) {
+        const parsed: AuthSession = JSON.parse(saved);
+        if (parsed?.isAuthenticated) {
+          setAuthSession(parsed);
+          if (parsed.role === 'senior') {
+            setActiveTab('deskClock');
+          } else {
+            setActiveTab('caregiver');
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('LocalStorage read error:', e);
+    } finally {
+      setIsAuthLoaded(true);
+    }
+  }, []);
+
+  const handleLogin = (session: AuthSession) => {
+    setAuthSession(session);
+    if (session.role === 'senior') {
+      setActiveTab('deskClock');
+    } else {
+      setActiveTab('caregiver');
+    }
+    addToast({
+      type: 'success',
+      title: `Welcome, ${session.user.split(' ')[0]}`,
+      message: `Signed in as ${session.role === 'senior' ? 'Senior (Bedside Mode)' : 'Primary Caregiver'}.`,
+    });
+  };
+
+  const handleSignOut = () => {
+    try {
+      localStorage.removeItem('carebridge_auth');
+    } catch (e) {}
+    setAuthSession(null);
+    addToast({
+      type: 'info',
+      title: 'Signed Out',
+      message: 'Returned to CareBridge Ambient Auth Gate.',
+    });
+  };
+
+  const handleActivatePro = () => {
+    if (authSession) {
+      const updated: AuthSession = { ...authSession, isPro: true };
+      setAuthSession(updated);
+      try {
+        localStorage.setItem('carebridge_auth', JSON.stringify(updated));
+      } catch (e) {}
+    }
+    addToast({
+      type: 'success',
+      title: 'CareBridge Pro Unlocked',
+      message: 'Evaluator Pass active! Unlimited slots & AI telemetry enabled.',
+    });
+  };
+
+  const handleResetFreePlan = () => {
+    if (authSession) {
+      const updated: AuthSession = { ...authSession, isPro: false };
+      setAuthSession(updated);
+      try {
+        localStorage.setItem('carebridge_auth', JSON.stringify(updated));
+      } catch (e) {}
+    }
+    addToast({
+      type: 'info',
+      title: 'Reset to Free Plan',
+      message: 'Gated restrictions are now active for testing.',
+    });
+  };
 
   const addToast = (toast: Omit<ToastMessage, 'id'>) => {
     const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`;
@@ -164,11 +250,35 @@ export default function Home() {
     }
   };
 
+  // Khi chưa đọc xong localStorage, hiển thị dark loading skeleton để tránh hydration mismatch
+  if (!isAuthLoaded) {
+    return (
+      <div className="min-h-screen bg-[#121420] text-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-[#FF725E]/20 border border-[#FF725E]/40 flex items-center justify-center animate-pulse">
+            <FontAwesomeIcon icon={faHouseMedical} className="text-[#FF725E]" />
+          </div>
+          <p className="text-xs text-[#8A92A6] font-mono tracking-wider">Loading CareBridge Ambient OS...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Nếu chưa đăng nhập, hiển thị Authentication Gate & Evaluator Sandbox
+  if (!authSession?.isAuthenticated) {
+    return (
+      <>
+        <AuthGate onLogin={handleLogin} />
+        <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      </>
+    );
+  }
+
   return (
     <main className="min-h-screen text-slate-100 font-sans selection:bg-[#FF725E] selection:text-white flex flex-col justify-between">
       {/* 1. THANH ĐIỀU KHIỂN HACKATHON SIMULATOR TRÊN CÙNG */}
-      <header className="bg-[#181B2A]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 py-3 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-2.5">
+      <header className="bg-[#181B2A]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 py-2.5 flex items-center justify-between sticky top-0 z-40 gap-3">
+        <div className="flex items-center gap-2.5 shrink-0">
           {/* Logo Smart Home Ambient faHouseMedical */}
           <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-[#FF725E] to-[#FF8A71] flex items-center justify-center shadow-[0_0_15px_rgba(255,114,94,0.35)]">
             <FontAwesomeIcon icon={faHouseMedical} className="text-white text-sm" />
@@ -181,30 +291,72 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Nút chuyển đổi Echo Show 10 Dual View / Single Frame View */}
-        <div className="flex items-center gap-2">
+        {/* Persona Indicator & Pro Badge & Sign Out Button */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          {/* Active Profile Pill */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#22273B] border border-white/[0.08] text-xs shadow-sm">
+            <span className="text-sm">{authSession.role === 'senior' ? '👵' : '👩‍⚕️'}</span>
+            <div className="leading-tight flex items-center gap-1.5">
+              <span className="font-bold text-white whitespace-nowrap">
+                {authSession.role === 'senior' ? 'Eleanor Vance (Senior Mode)' : 'Sarah Connor (Caregiver)'}
+              </span>
+              {authSession.isPro && (
+                <span className="px-1.5 py-0.5 text-[9px] font-black rounded bg-[#FF725E]/20 text-[#FF725E] border border-[#FF725E]/40 font-mono">
+                  PRO
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Pro Badge / Upgrade Button */}
+          <button
+            onClick={() => setIsPaywallOpen(true)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm active:scale-95 ${
+              authSession.isPro
+                ? 'bg-[#FF725E]/15 border border-[#FF725E]/40 text-[#FF725E] shadow-[0_0_12px_rgba(255,114,94,0.2)]'
+                : 'bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25'
+            }`}
+            title="CareBridge Ambient Subscription Status"
+          >
+            <FontAwesomeIcon icon={faCrown} className="text-xs" />
+            <span className="hidden xs:inline">{authSession.isPro ? 'PRO ACTIVE' : 'UPGRADE PRO'}</span>
+          </button>
+
+          {/* Switch Profile / Sign Out */}
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#22273B] hover:bg-[#2A314A] border border-white/[0.08] text-xs font-bold text-[#8A92A6] hover:text-white transition-all shadow-sm active:scale-95"
+            title="Switch Profile / Sign Out"
+          >
+            <FontAwesomeIcon icon={faRightFromBracket} className="text-xs" />
+            <span className="hidden md:inline">Switch Profile / Sign Out</span>
+          </button>
+
+          {/* Nút chuyển đổi Echo Show 10 Dual View / Single Frame View */}
           <button
             onClick={() => setIsDualMode(true)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
               isDualMode
                 ? 'bg-gradient-to-r from-[#FF725E] to-[#FF8A71] text-white shadow-[0_0_15px_rgba(255,114,94,0.35)]'
                 : 'bg-[#22273B] border border-white/[0.06] text-[#8A92A6] hover:text-white'
             }`}
+            title="Echo Show 10 Dual View"
           >
             <FontAwesomeIcon icon={faDesktop} className="text-xs" />
-            <span className="hidden sm:inline">Dual Frame</span>
+            <span className="hidden lg:inline">Dual Frame</span>
           </button>
 
           <button
             onClick={() => setIsDualMode(false)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
               !isDualMode
                 ? 'bg-gradient-to-r from-[#FF725E] to-[#FF8A71] text-white shadow-[0_0_15px_rgba(255,114,94,0.35)]'
                 : 'bg-[#22273B] border border-white/[0.06] text-[#8A92A6] hover:text-white'
             }`}
+            title="Single Device (430px) Mobile View"
           >
             <FontAwesomeIcon icon={faMobileScreen} className="text-xs" />
-            <span className="hidden sm:inline">Single Device (430px)</span>
+            <span className="hidden lg:inline">Single Device</span>
           </button>
         </div>
       </header>
@@ -239,9 +391,7 @@ export default function Home() {
                     refreshTrigger={refreshTrigger}
                     onDoseToggled={triggerGlobalRefresh}
                     onSwitchToDeskMode={() => setActiveTab('deskClock')}
-                    onOpenPaywall={() =>
-                      alert('CareBridge Pro: Đã mở khoá Không giới hạn Thẻ thuốc và Báo cáo Y Tế Bác Sĩ!')
-                    }
+                    onOpenPaywall={() => setIsPaywallOpen(true)}
                   />
                 )}
 
@@ -428,6 +578,16 @@ export default function Home() {
           'Transient orthostatic hypotension may occur shortly after taking anti-hypertensive medication.'
         }
       />
+
+      {/* PRO PAYWALL MODAL */}
+      <PaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        onActivatePro={handleActivatePro}
+        onResetFreePlan={handleResetFreePlan}
+        isPro={Boolean(authSession?.isPro)}
+      />
+
       {/* TOAST NOTIFICATION CONTAINER (NON-BLOCKING RESILIENT WARNINGS) */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </main>

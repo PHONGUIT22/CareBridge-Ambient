@@ -18,6 +18,7 @@ import {
   faHeartPulse,
   faDroplet,
   faClock,
+  faCrown,
 } from '@fortawesome/free-solid-svg-icons';
 
 interface TodayScheduleViewProps {
@@ -137,6 +138,16 @@ export function TodayScheduleView({
             >
               <FontAwesomeIcon icon={faMoon} className="text-xs" />
             </button>
+            {onOpenPaywall && (
+              <button
+                onClick={onOpenPaywall}
+                className="px-2.5 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 hover:border-amber-400/60 text-amber-300 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                title="CareBridge Pro Features"
+              >
+                <FontAwesomeIcon icon={faCrown} className="text-xs" />
+                <span>Pro</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 if (onOpenAddModal) onOpenAddModal();
