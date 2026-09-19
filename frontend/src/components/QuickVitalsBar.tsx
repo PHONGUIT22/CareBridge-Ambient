@@ -21,33 +21,33 @@ export function QuickVitalsBar({
   return (
     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
       {/* 1. Chip Huyết áp (Blood Pressure) */}
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-white text-xs font-bold whitespace-nowrap shadow-sm">
-        <Heart className="w-3.5 h-3.5 text-rose-300 fill-rose-300" />
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#22273B] border border-white/[0.08] text-white text-xs font-bold whitespace-nowrap shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+        <Heart className="w-3.5 h-3.5 text-[#FF725E] fill-[#FF725E]/30" />
         <span>
-          {systolic && diastolic ? `${systolic}/${diastolic}` : '--/--'} <span className="text-[10px] font-medium text-white/70">BP</span>
+          {systolic && diastolic ? `${systolic}/${diastolic}` : '--/--'} <span className="text-[10px] font-medium text-[#8A92A6]">BP</span>
         </span>
       </div>
 
       {/* 2. Chip Đường huyết (Blood Sugar) */}
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-white text-xs font-bold whitespace-nowrap shadow-sm">
-        <Droplets className="w-3.5 h-3.5 text-sky-300 fill-sky-300" />
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#22273B] border border-white/[0.08] text-white text-xs font-bold whitespace-nowrap shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+        <Droplets className="w-3.5 h-3.5 text-[#4D8BFF] fill-[#4D8BFF]/30" />
         <span>
-          {bloodSugar ?? '--'} <span className="text-[10px] font-medium text-white/70">Sugar</span>
+          {bloodSugar ?? '--'} <span className="text-[10px] font-medium text-[#8A92A6]">Sugar</span>
         </span>
       </div>
 
       {/* 3. Chip Nhịp tim (Heart Rate) */}
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-white text-xs font-bold whitespace-nowrap shadow-sm">
-        <Activity className="w-3.5 h-3.5 text-emerald-300" />
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#22273B] border border-white/[0.08] text-white text-xs font-bold whitespace-nowrap shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+        <Activity className="w-3.5 h-3.5 text-emerald-400" />
         <span>
-          {heartRate ?? '--'} <span className="text-[10px] font-medium text-white/70">BPM</span>
+          {heartRate ?? '--'} <span className="text-[10px] font-medium text-[#8A92A6]">BPM</span>
         </span>
       </div>
 
       {/* 4. Nút bấm ghi nhanh (+ Log) */}
       <button
         onClick={onOpenLogModal}
-        className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/25 hover:bg-white/35 active:scale-95 border border-white/30 text-white text-xs font-bold whitespace-nowrap shadow-sm transition-all ml-auto"
+        className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FF725E] to-[#FF8A71] hover:opacity-95 active:scale-95 text-white text-xs font-bold whitespace-nowrap shadow-[0_2px_10px_rgba(255,114,94,0.3)] transition-all ml-auto"
       >
         <Plus className="w-3.5 h-3.5 stroke-[3]" />
         <span>Log</span>

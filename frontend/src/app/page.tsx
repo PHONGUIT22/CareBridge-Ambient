@@ -165,18 +165,18 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen text-slate-100 font-sans selection:bg-[#00CAFF] selection:text-slate-950 flex flex-col justify-between">
+    <main className="min-h-screen text-slate-100 font-sans selection:bg-[#FF725E] selection:text-white flex flex-col justify-between">
       {/* 1. THANH ĐIỀU KHIỂN HACKATHON SIMULATOR TRÊN CÙNG */}
-      <header className="bg-[#071117]/80 backdrop-blur-xl border-b border-white/10 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+      <header className="bg-[#181B2A]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 py-3 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
-          {/* Logo Font Awesome Y tế thông minh faHouseMedical */}
-          <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-[#00CAFF] to-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(0,202,255,0.45)]">
-            <FontAwesomeIcon icon={faHouseMedical} className="text-slate-950 text-sm" />
+          {/* Logo Smart Home Ambient faHouseMedical */}
+          <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-[#FF725E] to-[#FF8A71] flex items-center justify-center shadow-[0_0_15px_rgba(255,114,94,0.35)]">
+            <FontAwesomeIcon icon={faHouseMedical} className="text-white text-sm" />
           </div>
           <div>
-            <span className="font-display font-extrabold text-sm tracking-wider text-white uppercase flex items-center gap-1.5">
+            <span className="font-display font-black text-sm tracking-tight text-white uppercase flex items-center gap-1.5">
               <span>CareBridge</span>
-              <span className="text-[#00CAFF] font-display font-bold text-xs">Ambient OS</span>
+              <span className="text-[#FF725E] font-display font-bold text-xs">Ambient OS</span>
             </span>
           </div>
         </div>
@@ -187,8 +187,8 @@ export default function Home() {
             onClick={() => setIsDualMode(true)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               isDualMode
-                ? 'bg-[#00CAFF] text-slate-950 shadow-[0_0_20px_rgba(0,202,255,0.45)]'
-                : 'alexa-card text-slate-300 hover:text-white'
+                ? 'bg-gradient-to-r from-[#FF725E] to-[#FF8A71] text-white shadow-[0_0_15px_rgba(255,114,94,0.35)]'
+                : 'bg-[#22273B] border border-white/[0.06] text-[#8A92A6] hover:text-white'
             }`}
           >
             <FontAwesomeIcon icon={faDesktop} className="text-xs" />
@@ -199,8 +199,8 @@ export default function Home() {
             onClick={() => setIsDualMode(false)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               !isDualMode
-                ? 'bg-[#00CAFF] text-slate-950 shadow-[0_0_20px_rgba(0,202,255,0.45)]'
-                : 'alexa-card text-slate-300 hover:text-white'
+                ? 'bg-gradient-to-r from-[#FF725E] to-[#FF8A71] text-white shadow-[0_0_15px_rgba(255,114,94,0.35)]'
+                : 'bg-[#22273B] border border-white/[0.06] text-[#8A92A6] hover:text-white'
             }`}
           >
             <FontAwesomeIcon icon={faMobileScreen} className="text-xs" />
@@ -222,10 +222,10 @@ export default function Home() {
           <div
             className={`${
               isDualMode ? 'lg:col-span-7 xl:col-span-8' : 'w-full'
-            } relative rounded-[36px] p-2 sm:p-2.5 bg-gradient-to-b from-white/20 via-white/5 to-white/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_rgba(0,202,255,0.12)] border border-white/15`}
+            } relative rounded-[36px] p-2 sm:p-2.5 bg-gradient-to-b from-white/[0.12] via-white/[0.03] to-white/[0.08] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] border border-white/[0.08]`}
           >
             {/* INNER SCREEN CONTAINER */}
-            <div className="relative rounded-[28px] overflow-hidden bg-gradient-to-b from-[#0F222F]/90 via-[#0A1720]/95 to-[#071117] border border-white/10 shadow-inner min-h-[720px] max-h-[850px] flex flex-col justify-between">
+            <div className="relative rounded-[28px] overflow-hidden bg-[#181B2A] border border-white/[0.06] shadow-inner min-h-[720px] max-h-[850px] flex flex-col justify-between">
               {/* TOP STATUS NOTCH / AMBIENT GLOW BAR */}
               <div className="w-full flex items-center justify-center pt-2.5 pb-1 relative z-20">
                 <div className="w-24 h-1.5 rounded-full bg-white/20 shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
@@ -261,9 +261,9 @@ export default function Home() {
                 )}
               </div>
 
-              {/* 3. FLOATING BOTTOM NAVIGATION BAR VỚI NÚT MICRO ALEXA ELEVATED Ở TRUNG TÂM */}
+              {/* 3. FLOATING BOTTOM NAVIGATION BAR VỚI NÚT MICRO ELEVATED Ở TRUNG TÂM */}
               <div className="sticky bottom-4 left-0 right-0 w-full px-4 z-30 pointer-events-auto">
-                <nav className="relative alexa-card rounded-full px-3 py-2 flex items-center justify-between shadow-[0_15px_35px_rgba(0,0,0,0.7)] border border-white/15">
+                <nav className="relative bg-[#22273B]/95 backdrop-blur-xl rounded-full px-3 py-2 flex items-center justify-between shadow-[0_15px_35px_rgba(0,0,0,0.6)] border border-white/[0.08]">
                   {/* 2 Tab bên trái */}
                   <div className="flex items-center gap-4 pl-2">
                     {/* Tab 1: Caregiver */}
@@ -271,8 +271,8 @@ export default function Home() {
                       onClick={() => setActiveTab('caregiver')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'caregiver'
-                          ? 'text-[#00CAFF] scale-105 drop-shadow-[0_0_10px_rgba(0,202,255,0.7)]'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'text-[#FF725E] scale-105 drop-shadow-[0_0_8px_rgba(255,114,94,0.6)]'
+                          : 'text-[#8A92A6] hover:text-white'
                       }`}
                     >
                       <FontAwesomeIcon icon={faShieldHalved} className="text-base" />
@@ -284,8 +284,8 @@ export default function Home() {
                       onClick={() => setActiveTab('history')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'history'
-                          ? 'text-[#00CAFF] scale-105 drop-shadow-[0_0_10px_rgba(0,202,255,0.7)]'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'text-[#FF725E] scale-105 drop-shadow-[0_0_8px_rgba(255,114,94,0.6)]'
+                          : 'text-[#8A92A6] hover:text-white'
                       }`}
                     >
                       <FontAwesomeIcon icon={faTableCells} className="text-base" />
@@ -293,36 +293,36 @@ export default function Home() {
                     </button>
                   </div>
 
-                  {/* NÚT MICRO ALEXA NHÔ CAO PHÁT SÁNG VỚI CYAN DROP-SHADOW Ở TRUNG TÂM */}
+                  {/* NÚT MICRO ELEVATED Ở TRUNG TÂM THEO STYLE SMART HOME */}
                   <div className="relative -top-5 flex items-center justify-center">
                     {/* Feedback giọng nói trực quan ngay trên Mic Orb */}
                     {voiceQueryFeedback && (
-                      <div className="absolute -top-11 px-3.5 py-1.5 rounded-full bg-[#07151E]/95 border border-[#00CAFF]/50 text-white text-[11px] font-display font-semibold shadow-[0_0_20px_rgba(0,202,255,0.4)] backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none transition-all">
-                        <span className="w-2 h-2 rounded-full bg-[#00CAFF] animate-ping shrink-0" />
+                      <div className="absolute -top-11 px-3.5 py-1.5 rounded-full bg-[#22273B]/95 border border-[#FF725E]/50 text-white text-[11px] font-display font-semibold shadow-[0_0_20px_rgba(255,114,94,0.3)] backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none transition-all">
+                        <span className="w-2 h-2 rounded-full bg-[#FF725E] animate-ping shrink-0" />
                         <span className="max-w-[220px] truncate">{voiceQueryFeedback}</span>
                       </div>
                     )}
 
                     {/* Vòng hào quang lan tỏa khi đang nghe */}
                     {isVoiceActive && (
-                      <div className="absolute w-20 h-20 rounded-full bg-[#00CAFF]/40 blur-md animate-ping" />
+                      <div className="absolute w-20 h-20 rounded-full bg-[#FF725E]/40 blur-md animate-ping" />
                     )}
 
                     <button
                       onClick={handleCenterMicClick}
                       style={{
                         boxShadow: isVoiceActive
-                          ? '0 0 40px rgba(0, 202, 255, 0.9)'
-                          : '0 0 35px rgba(0, 202, 255, 0.6)',
+                          ? '0 0 35px rgba(255, 114, 94, 0.85)'
+                          : '0 8px 25px rgba(255, 114, 94, 0.45)',
                       }}
                       className={`relative z-10 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 ${
                         isVoiceActive
-                          ? 'bg-gradient-to-tr from-[#00CAFF] to-cyan-200 text-slate-950 scale-110'
-                          : 'bg-gradient-to-tr from-[#00CAFF] via-[#0096BE] to-[#0E2838] text-slate-950 border-2 border-white/60 hover:scale-105'
+                          ? 'bg-gradient-to-tr from-[#FF725E] to-[#FF8A71] text-white scale-110'
+                          : 'bg-gradient-to-tr from-[#FF725E] to-[#FF8A71] text-white border-2 border-white/20 hover:scale-105'
                       }`}
                       title="Nhấn để nói với trợ lý Alexa Ambient"
                     >
-                      <FontAwesomeIcon icon={faMicrophone} className="text-xl text-slate-950" />
+                      <FontAwesomeIcon icon={faMicrophone} className="text-xl text-white" />
                     </button>
                   </div>
 
@@ -333,8 +333,8 @@ export default function Home() {
                       onClick={() => setActiveTab('analytics')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'analytics'
-                          ? 'text-[#00CAFF] scale-105 drop-shadow-[0_0_10px_rgba(0,202,255,0.7)]'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'text-[#FF725E] scale-105 drop-shadow-[0_0_8px_rgba(255,114,94,0.6)]'
+                          : 'text-[#8A92A6] hover:text-white'
                       }`}
                     >
                       <FontAwesomeIcon icon={faChartLine} className="text-base" />
@@ -346,8 +346,8 @@ export default function Home() {
                       onClick={() => setActiveTab('deskClock')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'deskClock'
-                          ? 'text-[#00CAFF] scale-105 drop-shadow-[0_0_10px_rgba(0,202,255,0.7)]'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'text-[#FF725E] scale-105 drop-shadow-[0_0_8px_rgba(255,114,94,0.6)]'
+                          : 'text-[#8A92A6] hover:text-white'
                       }`}
                     >
                       <FontAwesomeIcon icon={faClock} className="text-base" />
@@ -361,8 +361,8 @@ export default function Home() {
 
           {/* DEVICE MOCKUP FRAME 2: ALEXA AGENT CONSOLE (DUAL VIEW) */}
           {isDualMode && (
-            <div className="lg:col-span-5 xl:col-span-4 relative rounded-[36px] p-2 sm:p-2.5 bg-gradient-to-b from-white/20 via-white/5 to-white/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_35px_rgba(0,202,255,0.08)] border border-white/15 h-[760px] flex flex-col">
-              <div className="relative rounded-[28px] overflow-hidden bg-gradient-to-b from-[#0F222F]/90 via-[#0A1720]/95 to-[#071117] border border-white/10 shadow-inner h-full flex flex-col">
+            <div className="lg:col-span-5 xl:col-span-4 relative rounded-[36px] p-2 sm:p-2.5 bg-gradient-to-b from-white/[0.12] via-white/[0.03] to-white/[0.08] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] border border-white/[0.08] h-[760px] flex flex-col">
+              <div className="relative rounded-[28px] overflow-hidden bg-[#181B2A] border border-white/[0.06] shadow-inner h-full flex flex-col">
                 <AlexaAgentConsole
                   onTriggerVisualCard={handleTriggerVisualCard}
                   onTriggerClinicalAdvice={handleTriggerClinicalAdvice}
@@ -379,14 +379,14 @@ export default function Home() {
 
       {/* POPUP PHẢN HỒI GIỌNG NÓI NHANH KHI BẤM NÚT MIC Ở TRUNG TÂM */}
       {isVoiceActive && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#0A1720]/95 border-2 border-[#00CAFF] px-6 py-3.5 rounded-2xl shadow-[0_0_40px_rgba(0,202,255,0.5)] backdrop-blur-xl flex items-center gap-3 animate-fadeIn">
-          <span className="w-3 h-3 rounded-full bg-[#00CAFF] animate-ping" />
-          <p className="text-xs font-extrabold text-white tracking-wide">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#22273B]/95 border-2 border-[#FF725E] px-6 py-3.5 rounded-2xl shadow-[0_0_35px_rgba(255,114,94,0.35)] backdrop-blur-xl flex items-center gap-3 animate-fadeIn">
+          <span className="w-3 h-3 rounded-full bg-[#FF725E] animate-ping" />
+          <p className="text-xs font-black text-white tracking-wide">
             {voiceQueryFeedback || 'Alexa Ambient Listening... Speak in English'}
           </p>
           <button
             onClick={() => setIsVoiceActive(false)}
-            className="p-1 rounded-lg text-slate-400 hover:text-white"
+            className="p-1 rounded-lg text-[#8A92A6] hover:text-white"
           >
             <FontAwesomeIcon icon={faXmark} className="text-sm" />
           </button>

@@ -17,18 +17,36 @@ const config: Config = {
         inter: ['var(--font-inter)', 'sans-serif'],
       },
       colors: {
+        smart: {
+          bg: '#181B2A',         // Deep Midnight Navy background
+          deep: '#121420',       // Darkest navy vignette
+          card: '#22273B',       // Rounded dark slate card surface
+          hover: '#2A3048',      // Card hover state
+          muted: '#8A92A6',      // Secondary/Muted typography
+          border: 'rgba(255, 255, 255, 0.06)',
+        },
+        coral: {
+          DEFAULT: '#FF725E',    // Primary Warm Accent
+          light: '#FF8A71',      // Lighter peach gradient stop
+          glow: 'rgba(255, 114, 94, 0.25)',
+        },
+        softBlue: {
+          DEFAULT: '#4D8BFF',    // Secondary Cool Accent
+          light: '#38BDF8',      // Sky blue
+          glow: 'rgba(77, 139, 255, 0.25)',
+        },
         ambient: {
-          root: '#070D14',       // Nền tổng thể sâu thẳm
-          surface: '#0B131B',    // Mặt phẳng cấp 1 (Header, Nav, Modal)
-          card: '#131F2C',       // Bề mặt thẻ thuốc squircle
-          hover: '#1A2A3C',      // Trạng thái hover
-          border: 'rgba(255, 255, 255, 0.08)',
+          root: '#121420',       // Nền tổng thể sâu thẳm
+          surface: '#181B2A',    // Mặt phẳng cấp 1 (Header, Nav, Modal)
+          card: '#22273B',       // Bề mặt thẻ thuốc squircle
+          hover: '#2A3048',      // Trạng thái hover
+          border: 'rgba(255, 255, 255, 0.06)',
         },
         alexa: {
-          cyan: '#00CAFF',       // Xanh Cyan đặc trưng của Amazon Alexa
-          cyanGlow: 'rgba(0, 202, 255, 0.45)',
-          blue: '#0070BA',
-          deep: '#030811',
+          cyan: '#FF725E',       // Primary accent mapped to warm coral
+          cyanGlow: 'rgba(255, 114, 94, 0.35)',
+          blue: '#4D8BFF',       // Cool soft blue
+          deep: '#121420',
         },
         neon: {
           emerald: '#10B981',    // Xanh ngọc bảo báo liều đã uống
@@ -38,10 +56,14 @@ const config: Config = {
         },
       },
       boxShadow: {
-        'glow-cyan': '0 0 25px rgba(0, 202, 255, 0.45)',
-        'glow-cyan-lg': '0 0 45px rgba(0, 202, 255, 0.7)',
+        'glow-coral': '0 0 20px rgba(255, 114, 94, 0.25)',
+        'glow-coral-lg': '0 0 35px rgba(255, 114, 94, 0.45)',
+        'glow-softblue': '0 0 20px rgba(77, 139, 255, 0.25)',
+        'smart-card': '0 10px 25px rgba(0, 0, 0, 0.3)',
+        'glow-cyan': '0 0 20px rgba(255, 114, 94, 0.35)',
+        'glow-cyan-lg': '0 0 35px rgba(255, 114, 94, 0.55)',
         'glow-emerald': '0 0 25px rgba(16, 185, 129, 0.45)',
-        'ambient-card': '0 10px 30px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+        'ambient-card': '0 10px 25px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
         'neumorph-inner': 'inset 2px 2px 5px rgba(0, 0, 0, 0.6), inset -2px -2px 5px rgba(255, 255, 255, 0.03)',
       },
       animation: {

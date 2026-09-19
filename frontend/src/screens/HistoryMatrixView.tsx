@@ -55,7 +55,7 @@ export function HistoryMatrixView({ refreshTrigger = 0 }: { refreshTrigger?: num
         {/* HEADER SECTION */}
         <div className="flex items-start justify-between pt-1">
           <div>
-            <span className="font-display text-[11px] font-extrabold tracking-widest text-[#00CAFF] uppercase">
+            <span className="font-display text-[11px] font-extrabold tracking-widest text-[#4D8BFF] uppercase">
               CareBridge Compliance Matrix
             </span>
             <h1 className="font-display text-2xl font-black text-white tracking-tight mt-0.5">
@@ -66,7 +66,7 @@ export function HistoryMatrixView({ refreshTrigger = 0 }: { refreshTrigger?: num
           <div className="flex items-center gap-2">
             <button
               onClick={() => refetch()}
-              className="p-2.5 rounded-2xl bg-[#131F2C] hover:bg-[#1A2A3C] border border-white/10 text-slate-300 hover:text-white transition-all shadow-sm"
+              className="p-2.5 rounded-2xl bg-[#22273B] hover:bg-[#2A3048] border border-white/[0.06] text-[#8A92A6] hover:text-white transition-all shadow-sm"
               title="Sync latest records"
             >
               <FontAwesomeIcon icon={faArrowsRotate} className="text-xs" />
@@ -76,7 +76,7 @@ export function HistoryMatrixView({ refreshTrigger = 0 }: { refreshTrigger?: num
             <button
               onClick={handleExportPDF}
               disabled={isExporting}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#131F2C] hover:bg-[#1A2A3C] border border-[#00CAFF]/40 text-[#00CAFF] text-xs sm:text-sm font-bold shadow-[0_0_15px_rgba(0,202,255,0.2)] active:scale-95 transition-all"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#22273B] hover:bg-[#2A3048] border border-[#4D8BFF]/40 text-[#4D8BFF] text-xs sm:text-sm font-bold shadow-[0_0_15px_rgba(77,139,255,0.2)] active:scale-95 transition-all"
             >
               <FontAwesomeIcon icon={faFileArrowDown} className="text-sm" />
               <span>{isExporting ? 'Generating PDF...' : 'Export Doctor PDF'}</span>
@@ -87,7 +87,7 @@ export function HistoryMatrixView({ refreshTrigger = 0 }: { refreshTrigger?: num
         {/* DANH SÁCH CÁC THẺ PUNCH-CARD POPULATED BỞI useHeatmap */}
         <div className="flex flex-col gap-4 mt-2">
           {loading && medicines.length === 0 ? (
-            <div className="alexa-card rounded-2xl p-8 text-center text-slate-400 text-xs">
+            <div className="bg-[#22273B] border border-white/[0.06] rounded-2xl p-8 text-center text-[#8A92A6] text-xs shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
               Loading verified 30-day compliance logs...
             </div>
           ) : (
@@ -108,12 +108,12 @@ export function HistoryMatrixView({ refreshTrigger = 0 }: { refreshTrigger?: num
         </div>
 
         {/* THÔNG BÁO LÂM SÀNG BẢO MẬT */}
-        <div className="bg-[#131F2C] rounded-2xl p-4 border border-white/5 flex items-center gap-3 shadow-md mt-1">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+        <div className="bg-[#22273B] rounded-2xl p-4 border border-white/[0.06] flex items-center gap-3 shadow-[0_10px_25px_rgba(0,0,0,0.3)] mt-1">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
             <FontAwesomeIcon icon={faCircleCheck} className="text-base" />
           </div>
-          <div className="text-xs text-slate-300 leading-relaxed">
-            <strong className="text-white">Clinical Audit Trail:</strong> 30-day medication adherence and biometric trends are continuously verified and formatted for physician consultation.
+          <div className="text-xs text-[#8A92A6] leading-relaxed font-medium">
+            <strong className="text-white font-bold">Clinical Audit Trail:</strong> 30-day medication adherence and biometric trends are continuously verified and formatted for physician consultation.
           </div>
         </div>
       </div>

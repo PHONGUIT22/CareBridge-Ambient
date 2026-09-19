@@ -47,16 +47,16 @@ export function MedicationPunchCard({
         }));
 
   return (
-    <div className="bg-[#131F2C] rounded-3xl p-5 text-white border border-white/5 shadow-xl hover:border-cyan-500/30 transition-all">
+    <div className="bg-[#22273B] rounded-3xl p-5 text-white border border-white/[0.06] shadow-[0_10px_25px_rgba(0,0,0,0.3)] hover:border-[#FF725E]/40 transition-all">
       {/* HEADER: ICON, TÊN THUỐC & ACTIONS */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-2xl bg-[#0B131B] border border-cyan-500/30 flex items-center justify-center text-[#00CAFF] shadow-[0_0_12px_rgba(0,202,255,0.25)] shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-[#181B2A] border border-white/[0.06] flex items-center justify-center text-[#FF725E] shadow-[0_0_12px_rgba(255,114,94,0.2)] shrink-0">
             <FontAwesomeIcon icon={faCapsules} className="text-base" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-bold text-base sm:text-lg text-white truncate">{medicineName}</h3>
-            <p className="text-xs text-slate-400 font-medium">
+            <h3 className="font-black text-base sm:text-lg text-white truncate tracking-tight">{medicineName}</h3>
+            <p className="text-xs text-[#8A92A6] font-medium">
               {dosage} • Scheduled at {scheduledTime}
             </p>
           </div>
@@ -66,23 +66,23 @@ export function MedicationPunchCard({
           {onDelete && (
             <button
               onClick={onDelete}
-              className="p-2 rounded-xl bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors"
+              className="p-2 rounded-xl bg-white/[0.04] hover:bg-rose-500/20 text-[#8A92A6] hover:text-rose-400 transition-colors"
               title="Xoá đơn thuốc"
             >
               <Trash2 className="w-4 h-4" />
             </button>
           )}
-          <div className="w-8 h-8 rounded-full bg-[#00CAFF]/20 text-[#00CAFF] flex items-center justify-center border border-[#00CAFF]/40">
+          <div className="w-8 h-8 rounded-full bg-[#4D8BFF]/20 text-[#4D8BFF] flex items-center justify-center border border-[#4D8BFF]/40">
             <Check className="w-4 h-4 stroke-[3]" />
           </div>
         </div>
       </div>
 
-      {/* MA TRẬN PUNCH-CARD: CÁC Ô NEON CYAN VÀ XÁM TRẦM */}
-      <div className="bg-[#0B131B] rounded-2xl p-3.5 border border-white/5 shadow-inner">
+      {/* MA TRẬN PUNCH-CARD: CÁC Ô CORAL VÀ XÁM TRẦM */}
+      <div className="bg-[#181B2A] rounded-2xl p-3.5 border border-white/[0.06] shadow-inner">
         <div className="flex gap-2">
           {/* Nhãn thứ trong tuần */}
-          <div className="grid grid-rows-7 gap-1.5 text-[10px] font-bold text-slate-500 select-none pr-1">
+          <div className="grid grid-rows-7 gap-1.5 text-[10px] font-bold text-[#8A92A6] select-none pr-1">
             {dayLabels.map((d, i) => (
               <span key={i} className="h-4 sm:h-5 flex items-center justify-center">
                 {d}
@@ -93,23 +93,23 @@ export function MedicationPunchCard({
           {/* Lưới ô vuông tuân thủ */}
           <div className="grid grid-rows-7 grid-flow-col gap-1.5 flex-1">
             {cells.map((cell, idx) => {
-              // 1. Ô đã uống: Neon Cyan phát sáng rực rỡ
+              // 1. Ô đã uống: Coral phát sáng rực rỡ
               if (cell.status === 'taken') {
                 return (
                   <div
                     key={idx}
-                    className="h-4 sm:h-5 rounded-[4px] bg-[#00CAFF] shadow-[0_0_8px_rgba(0,202,255,0.7)] transition-all"
+                    className="h-4 sm:h-5 rounded-[4px] bg-gradient-to-tr from-[#FF725E] to-[#FF8A71] shadow-[0_0_8px_rgba(255,114,94,0.45)] transition-all"
                     title={`Đã uống: ${cell.dateStr}`}
                   />
                 );
               }
 
-              // 2. Ô hôm nay: Viền vàng hổ phách nhấp nháy
+              // 2. Ô hôm nay: Viền Soft Blue nhấp nháy
               if (cell.status === 'today') {
                 return (
                   <div
                     key={idx}
-                    className="h-4 sm:h-5 rounded-[4px] bg-[#F59E0B]/20 border-2 border-[#F59E0B] shadow-[0_0_12px_#F59E0B] animate-pulse"
+                    className="h-4 sm:h-5 rounded-[4px] bg-[#4D8BFF]/20 border-2 border-[#4D8BFF] shadow-[0_0_10px_rgba(77,139,255,0.4)] animate-pulse"
                     title="Cữ thuốc hôm nay"
                   />
                 );
@@ -130,7 +130,7 @@ export function MedicationPunchCard({
               return (
                 <div
                   key={idx}
-                  className="h-4 sm:h-5 rounded-[4px] bg-slate-900/60 border border-white/5"
+                  className="h-4 sm:h-5 rounded-[4px] bg-[#22273B] border border-white/[0.04]"
                 />
               );
             })}
@@ -139,7 +139,7 @@ export function MedicationPunchCard({
       </div>
 
       {/* FOOTER 3 CHỈ SỐ: STREAK, COMPLETED, ADHERENCE */}
-      <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/5 text-xs font-semibold text-slate-300">
+      <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/[0.06] text-xs font-semibold text-slate-300">
         <div className="flex items-center gap-1.5 text-[#F59E0B]">
           <Flame className="w-4 h-4 fill-[#F59E0B]" />
           <span>{streakDays} Day Streak</span>
@@ -154,7 +154,7 @@ export function MedicationPunchCard({
 
         <span className="text-white/10">|</span>
 
-        <div className="flex items-center gap-1.5 text-[#00CAFF]">
+        <div className="flex items-center gap-1.5 text-[#4D8BFF]">
           <TrendingUp className="w-4 h-4" />
           <span>{adherenceRate}% Adherence</span>
         </div>

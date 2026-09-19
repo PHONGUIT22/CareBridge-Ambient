@@ -54,24 +54,24 @@ export function DoseNoteModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fadeIn">
-      <div className="alexa-card w-full max-w-md rounded-3xl p-6 shadow-2xl border border-white/15 text-white transform transition-all animate-scaleUp">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#121420]/80 backdrop-blur-md animate-fadeIn">
+      <div className="bg-[#22273B] w-full max-w-md rounded-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/[0.08] text-white transform transition-all animate-scaleUp">
         {/* HEADER */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#00CAFF]/20 text-[#00CAFF] border border-[#00CAFF]/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-[#FF725E]/15 text-[#FF725E] border border-[#FF725E]/30 flex items-center justify-center shadow-[0_0_15px_rgba(255,114,94,0.25)]">
               <FontAwesomeIcon icon={faNotesMedical} className="text-base" />
             </div>
             <div>
-              <h3 className="text-lg font-extrabold text-white">Clinical Intake Note</h3>
-              <p className="text-xs text-slate-300 font-medium">
+              <h3 className="text-lg font-black text-white tracking-tight">Clinical Intake Note</h3>
+              <p className="text-xs text-[#8A92A6] font-medium">
                 {medicineName} • {scheduledTime}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="p-2 rounded-full hover:bg-white/10 text-[#8A92A6] hover:text-white transition-colors"
           >
             <FontAwesomeIcon icon={faXmark} className="text-base" />
           </button>
@@ -79,8 +79,8 @@ export function DoseNoteModal({
 
         {/* 1-TOUCH CLINICAL TAGS */}
         <div className="mt-4">
-          <label className="flex items-center gap-1.5 text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-            <FontAwesomeIcon icon={faTag} className="text-xs text-[#00CAFF]" />
+          <label className="flex items-center gap-1.5 text-xs font-bold text-[#8A92A6] uppercase tracking-wider mb-2">
+            <FontAwesomeIcon icon={faTag} className="text-xs text-[#FF725E]" />
             <span>Quick Clinical Tags (1-Touch)</span>
           </label>
           <div className="flex flex-wrap gap-2">
@@ -93,8 +93,8 @@ export function DoseNoteModal({
                   onClick={() => handleToggleTag(tag)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
                     isSelected
-                      ? 'bg-[#00CAFF] text-slate-950 border-[#00CAFF] shadow-[0_0_10px_rgba(0,202,255,0.4)]'
-                      : 'bg-[#0A161E]/80 hover:bg-[#0A161E] text-slate-300 border-white/10'
+                      ? 'bg-[#FF725E] text-white border-[#FF725E] shadow-[0_0_12px_rgba(255,114,94,0.35)]'
+                      : 'bg-[#181B2A] hover:bg-[#1F2438] text-[#8A92A6] hover:text-white border-white/[0.08]'
                   }`}
                 >
                   {tag}
@@ -106,7 +106,7 @@ export function DoseNoteModal({
 
         {/* TEXTAREA GHI CHÚ TỰ DO */}
         <div className="mt-4">
-          <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+          <label className="block text-xs font-bold text-[#8A92A6] uppercase tracking-wider mb-2">
             Detailed Observations / Symptoms
           </label>
           <textarea
@@ -114,7 +114,7 @@ export function DoseNoteModal({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="e.g., Felt slight lightheadedness 15 mins after taking, drank water and resolved."
-            className="w-full px-4 py-3 rounded-2xl bg-[#0A161E]/90 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#00CAFF] text-sm text-white placeholder-slate-500 resize-none shadow-inner"
+            className="w-full px-4 py-3 rounded-2xl bg-[#181B2A] border border-white/[0.08] focus:outline-none focus:border-[#FF725E]/60 focus:ring-1 focus:ring-[#FF725E]/40 text-sm text-white placeholder-[#8A92A6] resize-none shadow-inner transition-colors"
           />
         </div>
 
@@ -123,14 +123,14 @@ export function DoseNoteModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-[#8A92A6] hover:text-white hover:bg-white/[0.05] transition-colors"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="px-6 py-2.5 rounded-xl text-sm font-bold bg-[#00CAFF] hover:bg-[#00CAFF]/85 text-slate-950 shadow-[0_0_15px_rgba(0,202,255,0.4)] active:scale-95 transition-all flex items-center gap-2"
+            className="px-6 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-[#FF725E] to-[#FF8A71] hover:opacity-95 text-white shadow-[0_4px_15px_rgba(255,114,94,0.35)] active:scale-[0.98] transition-all flex items-center gap-2"
           >
             <FontAwesomeIcon icon={faCheck} className="text-xs font-black" />
             <span>Save Observation</span>

@@ -59,22 +59,22 @@ export function LogVitalsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
-      <div className="alexa-card w-full max-w-md rounded-3xl p-6 shadow-2xl border border-white/15 text-white transform transition-all animate-scaleUp">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#121420]/80 backdrop-blur-md animate-fadeIn">
+      <div className="bg-[#22273B] w-full max-w-md rounded-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/[0.08] text-white transform transition-all animate-scaleUp">
         {/* HEADER */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center shadow-[0_0_12px_rgba(244,63,94,0.3)]">
+            <div className="w-10 h-10 rounded-2xl bg-[#FF725E]/15 text-[#FF725E] border border-[#FF725E]/30 flex items-center justify-center shadow-[0_0_15px_rgba(255,114,94,0.25)]">
               <FontAwesomeIcon icon={faHeartPulse} className="text-base" />
             </div>
             <div>
-              <h3 className="text-lg font-extrabold text-white">Record Vitals Reading</h3>
-              <p className="text-xs text-slate-400 font-medium">Automatic AHA Classification & Logging</p>
+              <h3 className="text-lg font-black text-white tracking-tight">Record Vitals Reading</h3>
+              <p className="text-xs text-[#8A92A6] font-medium">Automatic AHA Classification & Logging</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="p-2 rounded-full hover:bg-white/10 text-[#8A92A6] hover:text-white transition-colors"
           >
             <FontAwesomeIcon icon={faXmark} className="text-base" />
           </button>
@@ -84,7 +84,7 @@ export function LogVitalsModal({
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3.5">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-bold text-rose-400 uppercase tracking-wider mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-[#FF725E] uppercase tracking-wider mb-1">
                 <FontAwesomeIcon icon={faHeartPulse} className="text-xs" />
                 <span>Systolic (mmHg)</span>
               </label>
@@ -94,12 +94,12 @@ export function LogVitalsModal({
                 max="250"
                 value={systolic}
                 onChange={(e) => setSystolic(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#08151e] border border-white/10 text-white text-sm focus:outline-none focus:border-rose-400"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#181B2A] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-[#FF725E]/60 focus:ring-1 focus:ring-[#FF725E]/40 transition-colors"
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-bold text-rose-400 uppercase tracking-wider mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-[#FF725E] uppercase tracking-wider mb-1">
                 <FontAwesomeIcon icon={faHeartPulse} className="text-xs" />
                 <span>Diastolic (mmHg)</span>
               </label>
@@ -109,14 +109,14 @@ export function LogVitalsModal({
                 max="160"
                 value={diastolic}
                 onChange={(e) => setDiastolic(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#08151e] border border-white/10 text-white text-sm focus:outline-none focus:border-rose-400"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#181B2A] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-[#FF725E]/60 focus:ring-1 focus:ring-[#FF725E]/40 transition-colors"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-bold text-cyan-400 uppercase tracking-wider mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-[#4D8BFF] uppercase tracking-wider mb-1">
                 <FontAwesomeIcon icon={faDroplet} className="text-xs" />
                 <span>Blood Sugar (mg/dL)</span>
               </label>
@@ -127,7 +127,7 @@ export function LogVitalsModal({
                 max="500"
                 value={bloodSugar}
                 onChange={(e) => setBloodSugar(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#08151e] border border-white/10 text-white text-sm focus:outline-none focus:border-cyan-400"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#181B2A] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-[#4D8BFF]/60 focus:ring-1 focus:ring-[#4D8BFF]/40 transition-colors"
               />
             </div>
 
@@ -142,7 +142,7 @@ export function LogVitalsModal({
                 max="200"
                 value={heartRate}
                 onChange={(e) => setHeartRate(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#08151e] border border-white/10 text-white text-sm focus:outline-none focus:border-amber-400"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#181B2A] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-amber-400/60 focus:ring-1 focus:ring-amber-400/40 transition-colors"
               />
             </div>
           </div>
@@ -150,7 +150,7 @@ export function LogVitalsModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-3 py-3.5 rounded-2xl bg-[#00CAFF] hover:bg-[#00CAFF]/90 text-slate-950 font-black text-sm tracking-wide shadow-[0_0_20px_rgba(0,202,255,0.45)] active:scale-98 transition-all flex items-center justify-center gap-2"
+            className="w-full mt-3 py-3.5 rounded-2xl bg-gradient-to-r from-[#FF725E] to-[#FF8A71] hover:opacity-95 text-white font-black text-sm tracking-wide shadow-[0_4px_20px_rgba(255,114,94,0.35)] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             <FontAwesomeIcon icon={faCheck} className="text-sm font-black" />
             <span>{isSubmitting ? 'Recording Vitals...' : 'Save Vitals to SQLite WAL'}</span>

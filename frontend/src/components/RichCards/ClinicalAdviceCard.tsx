@@ -31,59 +31,54 @@ export function ClinicalAdviceCard({
 
   const urgencyColors = {
     LOW: {
-      bg: 'from-emerald-950/90 to-slate-900',
       border: 'border-emerald-500/50',
-      badgeBg: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      badgeBg: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
       icon: faCircleCheck,
     },
     MEDIUM: {
-      bg: 'from-amber-950/90 to-slate-900',
-      border: 'border-amber-500/60',
-      badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+      border: 'border-[#FF725E]/60',
+      badgeBg: 'bg-[#FF725E]/15 text-[#FF725E] border-[#FF725E]/30',
       icon: faTriangleExclamation,
     },
     HIGH: {
-      bg: 'from-rose-950/90 to-slate-900',
-      border: 'border-rose-500/60',
-      badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+      border: 'border-amber-500/60',
+      badgeBg: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
       icon: faTriangleExclamation,
     },
     EMERGENCY: {
-      bg: 'from-red-950 to-slate-950',
-      border: 'border-red-500',
-      badgeBg: 'bg-red-500/30 text-red-200 border-red-500/50 animate-pulse',
+      border: 'border-rose-500/80 shadow-[0_0_30px_rgba(244,63,94,0.3)]',
+      badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse',
       icon: faTriangleExclamation,
     },
   }[urgencyLevel] || {
-    bg: 'from-blue-950/90 to-slate-900',
-    border: 'border-cyan-500/50',
-    badgeBg: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+    border: 'border-[#4D8BFF]/50',
+    badgeBg: 'bg-[#4D8BFF]/15 text-[#4D8BFF] border-[#4D8BFF]/30',
     icon: faStethoscope,
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#121420]/80 backdrop-blur-md animate-fadeIn">
       <div
-        className={`bg-gradient-to-b ${urgencyColors.bg} border-2 ${urgencyColors.border} w-full max-w-md rounded-3xl p-6 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] relative`}
+        className={`bg-[#22273B] border-2 ${urgencyColors.border} w-full max-w-md rounded-3xl p-6 text-white shadow-[0_20px_50px_rgba(0,0,0,0.6)] relative`}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-[#8A92A6] hover:text-white transition-colors"
         >
           <FontAwesomeIcon icon={faXmark} className="text-base" />
         </button>
 
         {/* Urgency Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-display font-extrabold uppercase tracking-widest mb-4">
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-extrabold uppercase tracking-widest mb-4 ${urgencyColors.badgeBg}`}>
           <FontAwesomeIcon icon={urgencyColors.icon} className="text-xs" />
           <span>CareBridge Bedrock Triage • {urgencyLevel} Urgency</span>
         </div>
 
         {/* Title */}
-        <h3 className="text-xl font-display font-black text-white">{title}</h3>
+        <h3 className="text-xl font-black text-white tracking-tight">{title}</h3>
 
         {/* Advice box */}
-        <div className="bg-white/10 rounded-2xl p-4 border border-white/15 mt-3 shadow-inner">
+        <div className="bg-[#181B2A] rounded-2xl p-4 border border-white/[0.08] mt-3 shadow-inner">
           <p className="text-sm text-slate-100 font-semibold leading-relaxed">
             {actionAdvice}
           </p>
@@ -91,15 +86,15 @@ export function ClinicalAdviceCard({
 
         {/* Clinical Rationale */}
         {clinicalExplanation && (
-          <div className="mt-3 text-xs text-slate-300 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
-            <strong className="text-cyan-300 block mb-1">Clinical Insight:</strong>
+          <div className="mt-3 text-xs text-[#8A92A6] leading-relaxed bg-[#181B2A]/80 p-3 rounded-xl border border-white/[0.06]">
+            <strong className="text-[#FF725E] block mb-1">Clinical Insight:</strong>
             {clinicalExplanation}
           </div>
         )}
 
         <button
           onClick={onClose}
-          className="w-full mt-5 py-3.5 rounded-2xl bg-[#00CAFF] hover:bg-[#00CAFF]/90 text-slate-950 font-black text-sm tracking-wide shadow-[0_0_25px_rgba(0,202,255,0.4)] active:scale-98 transition-all flex items-center justify-center gap-2"
+          className="w-full mt-5 py-3.5 rounded-2xl bg-gradient-to-r from-[#FF725E] to-[#FF8A71] hover:opacity-95 text-white font-black text-sm tracking-wide shadow-[0_4px_20px_rgba(255,114,94,0.35)] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
         >
           <FontAwesomeIcon icon={faShieldHalved} className="text-sm" />
           <span>I Understand / Acknowledge</span>
