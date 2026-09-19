@@ -43,6 +43,7 @@ export interface UseAlexaAgentOptions {
 export function useAlexaAgent(options?: UseAlexaAgentOptions) {
   const [isListening, setIsListening] = useState<boolean>(false);
   const [isThinking, setIsThinking] = useState<boolean>(false);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>('');
   const [toolLogs, setToolLogs] = useState<ToolExecutionLog[]>([
     {
@@ -158,6 +159,8 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
       } catch (_) {}
       setIsListening(false);
     } else {
+      speechService.cancel();
+      setIsSpeaking(false);
       setTranscript('');
       try {
         recognitionRef.current.start();
@@ -182,6 +185,7 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
 
       // 2. Mute microphone immediately & cancel any prior speech
       speechService.cancel();
+      setIsSpeaking(false);
       try {
         recognitionRef.current?.abort();
       } catch (_) {}
@@ -196,9 +200,11 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
           recognitionRef.current?.abort();
         } catch (_) {}
         setIsListening(false);
+        setIsSpeaking(true);
 
         // Safety timeout to prevent permanent lock
         const safetyTimer = setTimeout(() => {
+          setIsSpeaking(false);
           if (isBusyRef.current) {
             isBusyRef.current = false;
           }
@@ -207,14 +213,21 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
         if (speechService.isSupported()) {
           speechService.speak(replyText, {
             onEnd: () => {
+              setIsSpeaking(false);
               clearTimeout(safetyTimer);
               // Khoảng đệm 150ms chống vang âm thanh loa vào mic (Acoustic Echo Guard)
               setTimeout(() => {
                 isBusyRef.current = false;
               }, 150);
             },
+            onError: () => {
+              setIsSpeaking(false);
+              clearTimeout(safetyTimer);
+              isBusyRef.current = false;
+            },
           });
         } else {
+          setIsSpeaking(false);
           clearTimeout(safetyTimer);
           isBusyRef.current = false;
         }
@@ -570,6 +583,7 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
   return {
     isListening,
     isThinking,
+    isSpeaking,
     transcript,
     toolLogs,
     conversation,

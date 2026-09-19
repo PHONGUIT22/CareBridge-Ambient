@@ -96,6 +96,10 @@ flowchart LR
    - 30-day compliance punch-card matrix tracking adherence streaks.
    - Single-click export for physician consultations generated via `jsPDF`.
 
+7. **Signature Alexa Cyan Ambient Glow (`AlexaAmbientGlow.tsx`)**
+   - Recreates the iconic physical light bar of real Amazon Echo Show smart displays.
+   - Whenever Alexa is listening, reasoning with Bedrock, or synthesizing speech with Polly, the bottom edge of the display illuminates in a vibrant, tactile Alexa Cyan (`#00CAFF`) to Deep Blue (`#0070F3`) animated gradient wave with upward diffused ambient aura.
+
 ---
 
 ## 🛠️ Tech Stack

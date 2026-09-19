@@ -26,6 +26,7 @@ export interface AlexaAgentConsoleProps {
   voiceAgent?: UseAlexaAgentReturn;
   isListening?: boolean;
   isThinking?: boolean;
+  isSpeaking?: boolean;
   transcript?: string;
   messages?: ChatMessage[];
   toolLogs?: ToolExecutionLog[];
@@ -69,6 +70,7 @@ export function AlexaAgentConsole({
   voiceAgent,
   isListening: propIsListening,
   isThinking: propIsThinking,
+  isSpeaking: propIsSpeaking,
   transcript: propTranscript,
   messages: propMessages,
   toggleListening: propToggleListening,
@@ -81,6 +83,7 @@ export function AlexaAgentConsole({
   // Nhận trực tiếp state và actions từ hook khởi tạo duy nhất tại page.tsx
   const isListening = voiceAgent ? voiceAgent.isListening : propIsListening ?? false;
   const isThinking = voiceAgent ? voiceAgent.isThinking : propIsThinking ?? false;
+  const isSpeaking = voiceAgent ? (voiceAgent as any).isSpeaking : propIsSpeaking ?? false;
   const transcript = voiceAgent ? voiceAgent.transcript : propTranscript ?? '';
   const messages = voiceAgent ? voiceAgent.messages : propMessages ?? EMPTY_MESSAGES;
   const toggleListening = voiceAgent ? voiceAgent.toggleListening : propToggleListening ?? (() => {});
@@ -171,7 +174,13 @@ export function AlexaAgentConsole({
                 Thinking
               </span>
             )}
-            {!isListening && !isThinking && (
+            {isSpeaking && (
+              <span className="px-2 py-0.5 rounded-full bg-[#00CAFF]/15 border border-[#00CAFF]/40 text-[#00CAFF] text-xs font-mono font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00CAFF] animate-pulse" />
+                Speaking
+              </span>
+            )}
+            {!isListening && !isThinking && !isSpeaking && (
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium">
                 Live
               </span>
@@ -365,13 +374,13 @@ export function AlexaAgentConsole({
 
           {/* Action Buttons Pinned to Right Edge */}
           <div className="absolute right-1.5 flex items-center gap-1">
-            {/* Tactile Signal Coral Mic */}
+            {/* Tactile Signal Coral Mic with Alexa Cyan Glow */}
             <button
               type="button"
               onClick={toggleListening}
               className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
                 isListening
-                  ? 'bg-[#FF5733] text-white'
+                  ? 'bg-[#FF5733] text-white ring-2 ring-[#00CAFF]/70 shadow-[0_0_10px_rgba(0,202,255,0.6)]'
                   : 'bg-[#151922] text-[#FF5733] hover:bg-[#FF5733]/20 border border-[#FF5733]/40'
               }`}
               title={isListening ? 'Click to stop listening' : 'Speak with Alexa'}
@@ -391,6 +400,13 @@ export function AlexaAgentConsole({
           </div>
         </form>
       </div>
+
+      {/* Alexa Cyan Ambient Light Bar at the bottom of the console */}
+      <div
+        className={`w-full h-[2.5px] transition-all duration-300 ${
+          isListening || isThinking || isSpeaking ? 'opacity-100 alexa-lightbar' : 'opacity-0'
+        }`}
+      />
     </div>
   );
 }

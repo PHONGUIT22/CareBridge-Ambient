@@ -12,6 +12,7 @@ import { AmazonOrderCard } from '../components/RichCards/AmazonOrderCard';
 import { ToastContainer, ToastMessage } from '../components/Toast';
 import { AuthGate, AuthSession } from '../components/AuthGate';
 import { PaywallModal } from '../components/PaywallModal';
+import { AlexaAmbientGlow } from '../components/AlexaAmbientGlow';
 import { AmazonRefillOrder } from '../types';
 import { mcpClient } from '../services/mcpClient';
 import { speechService } from '../services/speechService';
@@ -388,18 +389,22 @@ export default function Home() {
                   {/* NÚT MICRO ELEVATED Ở TRUNG TÂM THEO STYLE HARDWARE */}
                   <div className="relative -top-4 flex items-center justify-center">
                     {/* Feedback giọng nói trực quan ngay trên Mic */}
-                    {(alexaAgent.isListening || alexaAgent.isThinking) && (
-                      <div className="absolute -top-11 px-3 py-1.5 rounded-xl bg-[#1E2330] border border-white/[0.12] text-white text-xs font-medium shadow-lg backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none">
+                    {(alexaAgent.isListening || alexaAgent.isThinking || alexaAgent.isSpeaking) && (
+                      <div className="absolute -top-11 px-3 py-1.5 rounded-xl bg-[#1E2330] border border-[#00CAFF]/40 text-white text-xs font-medium shadow-lg backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none animate-fadeIn">
                         <span
                           className={`w-2 h-2 rounded-full shrink-0 ${
                             alexaAgent.isThinking
                               ? 'bg-[#4D8BFF] animate-spin'
-                              : 'bg-[#FF5733] animate-ping'
+                              : alexaAgent.isListening
+                              ? 'bg-[#00CAFF] animate-ping'
+                              : 'bg-[#00F5FF] animate-pulse'
                           }`}
                         />
                         <span className="max-w-[220px] truncate">
                           {alexaAgent.isThinking
                             ? 'Analyzing with Bedrock...'
+                            : alexaAgent.isSpeaking
+                            ? 'Speaking response...'
                             : alexaAgent.transcript
                             ? `"${alexaAgent.transcript}"`
                             : 'Listening to speech...'}
@@ -411,16 +416,18 @@ export default function Home() {
                       onClick={handleCenterMicClick}
                       className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-md active:scale-95 ${
                         alexaAgent.isListening
-                          ? 'bg-[#FF5733] text-white ring-4 ring-[#FF5733]/30 shadow-lg shadow-[#FF5733]/25'
+                          ? 'bg-[#FF5733] text-white ring-4 ring-[#00CAFF]/70 shadow-[0_0_24px_rgba(0,202,255,0.75)]'
                           : alexaAgent.isThinking
-                          ? 'bg-[#4D8BFF] text-white ring-4 ring-[#4D8BFF]/30 animate-pulse'
+                          ? 'bg-[#4D8BFF] text-white ring-4 ring-[#00CAFF]/60 shadow-[0_0_20px_rgba(0,202,255,0.6)] animate-pulse'
+                          : alexaAgent.isSpeaking
+                          ? 'bg-[#00CAFF] text-slate-900 ring-4 ring-[#00CAFF]/50 shadow-[0_0_20px_rgba(0,202,255,0.6)]'
                           : 'bg-[#FF5733] hover:bg-[#E64D2E] text-white'
                       }`}
                       title={alexaAgent.isListening ? 'Click to stop listening' : 'Speak with Alexa Ambient assistant'}
                     >
                       <FontAwesomeIcon
                         icon={alexaAgent.isThinking ? faCircleNotch : faMicrophone}
-                        className={`text-lg text-white ${alexaAgent.isThinking ? 'animate-spin' : ''}`}
+                        className={`text-lg ${alexaAgent.isSpeaking ? 'text-slate-900' : 'text-white'} ${alexaAgent.isThinking ? 'animate-spin' : ''}`}
                       />
                     </button>
                   </div>
@@ -455,6 +462,14 @@ export default function Home() {
                   </div>
                 </nav>
               </div>
+
+              {/* 4. SIGNATURE ECHO SHOW 10 ALEXA CYAN AMBIENT GLOW LIGHT BAR */}
+              <AlexaAmbientGlow
+                isListening={alexaAgent.isListening}
+                isThinking={alexaAgent.isThinking}
+                isSpeaking={alexaAgent.isSpeaking}
+                transcript={alexaAgent.transcript}
+              />
             </div>
           </div>
 
@@ -569,6 +584,15 @@ export default function Home() {
 
       {/* TOAST NOTIFICATION CONTAINER (NON-BLOCKING RESILIENT WARNINGS) */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
+      {/* GLOBAL VIEWPORT ALEXA CYAN LIGHT BAR (FULLSCREEN / MOBILE ECHO SHOW RUNNER) */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 h-[3.5px] z-50 pointer-events-none transition-all duration-500 ease-out ${
+          alexaAgent.isListening || alexaAgent.isThinking || alexaAgent.isSpeaking
+            ? 'opacity-100 alexa-lightbar'
+            : 'opacity-0'
+        }`}
+      />
     </main>
   );
 }

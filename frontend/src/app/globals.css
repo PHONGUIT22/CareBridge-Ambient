@@ -74,4 +74,80 @@ body {
     border-radius: 1rem;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
+
+  /* ==========================================================================
+     ALEXA CYAN AMBIENT GLOW (ECHO SHOW 10 HARDWARE LIGHT BAR SIGNATURE)
+     ========================================================================== */
+
+  .alexa-lightbar {
+    background: linear-gradient(
+      90deg,
+      #00CAFF 0%,
+      #0070F3 25%,
+      #00F5FF 50%,
+      #0A84FF 75%,
+      #00CAFF 100%
+    );
+    background-size: 250% 100%;
+    animation: alexaCyanFlow 3s ease-in-out infinite;
+    box-shadow: 0 0 16px rgba(0, 202, 255, 0.75), 0 0 32px rgba(0, 112, 243, 0.45);
+  }
+
+  .alexa-aura-plume {
+    background: radial-gradient(
+      ellipse 85% 100% at 50% 100%,
+      rgba(0, 202, 255, 0.5) 0%,
+      rgba(0, 112, 243, 0.25) 42%,
+      rgba(0, 0, 0, 0) 75%
+    );
+    animation: alexaAuraPulse 2.4s ease-in-out infinite;
+  }
+
+  .alexa-traveling-beam {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.9) 50%,
+      transparent 100%
+    );
+    animation: alexaLightSweep 2s ease-in-out infinite;
+  }
+}
+
+@keyframes alexaCyanFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes alexaAuraPulse {
+  0%, 100% {
+    opacity: 0.65;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scaleY(1.3);
+  }
+}
+
+@keyframes alexaLightSweep {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateX(100%);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(-100%);
+    opacity: 0.2;
+  }
 }

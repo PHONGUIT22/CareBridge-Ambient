@@ -16,6 +16,7 @@ export interface SpeechOptions {
   voiceId?: string; // 'Ruth' | 'Matthew' | 'Danielle' | 'Amy'
   onStart?: () => void;
   onEnd?: () => void;
+  onError?: (err?: any) => void;
 }
 
 class SpeechService {
