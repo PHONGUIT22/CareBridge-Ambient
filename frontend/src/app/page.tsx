@@ -13,6 +13,7 @@ import { AuthGate, AuthSession } from '../components/AuthGate';
 import { PaywallModal } from '../components/PaywallModal';
 import { mcpClient } from '../services/mcpClient';
 import { speechService } from '../services/speechService';
+import { useAlexaAgent } from '../hooks/useAlexaAgent';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHeartPulse,
@@ -21,6 +22,7 @@ import {
   faChartLine,
   faClock,
   faMicrophone,
+  faCircleNotch,
   faDesktop,
   faMobileScreen,
   faXmark,
@@ -37,8 +39,6 @@ export default function Home() {
   const [selectedMedForCard, setSelectedMedForCard] = useState('Amlodipine (Blood Pressure)');
   const [clinicalAdviceOpen, setClinicalAdviceOpen] = useState(false);
   const [clinicalAdviceData, setClinicalAdviceData] = useState<any>(null);
-  const [isVoiceActive, setIsVoiceActive] = useState(false);
-  const [voiceQueryFeedback, setVoiceQueryFeedback] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -152,102 +152,19 @@ export default function Home() {
     setClinicalAdviceOpen(true);
   };
 
+  // Single Source of Truth: Voice Agent & Bedrock Multi-Turn Orchestration
+  const alexaAgent = useAlexaAgent({
+    onDoseLogged: () => {
+      triggerGlobalRefresh();
+    },
+    onClinicalAdviceTriggered: (advice) => {
+      handleTriggerClinicalAdvice(advice);
+    },
+  });
+
   // Kích hoạt giọng nói trực tiếp từ nút Mic nổi ở giữa Bottom Bar
   const handleCenterMicClick = () => {
-    setIsVoiceActive((prev) => !prev);
-    if (!isVoiceActive) {
-      setVoiceQueryFeedback('Listening to voice query...');
-      if (typeof window !== 'undefined') {
-        const SpeechRec =
-          (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (SpeechRec) {
-          const rec = new SpeechRec();
-          rec.lang = 'en-US';
-          rec.start();
-          rec.onresult = async (e: any) => {
-            let finalTranscript = '';
-            for (let i = e.resultIndex; i < e.results.length; ++i) {
-              if (e.results[i].isFinal) {
-                finalTranscript += e.results[i][0].transcript;
-              }
-            }
-            const speech = (finalTranscript || e.results[0][0].transcript || '').trim();
-            if (!speech) return;
-            setVoiceQueryFeedback(`"${speech}"`);
-
-            const lower = speech.toLowerCase();
-            try {
-              // 1. Check Dose Action Intent: took, taken, swallowed, had my, just take, skipped
-              const isDoseAction =
-                lower.includes('took') ||
-                lower.includes('taken') ||
-                lower.includes('swallowed') ||
-                lower.includes('had my') ||
-                lower.includes('just take') ||
-                lower.includes('skipped');
-
-              // 2. Check Schedule Intent: schedule, upcoming, what medicine, what pill, when do i take, calendar
-              const isScheduleAction =
-                lower.includes('schedule') ||
-                lower.includes('upcoming') ||
-                lower.includes('what medicine') ||
-                lower.includes('what pill') ||
-                lower.includes('when do i take') ||
-                lower.includes('calendar');
-
-              if (isDoseAction) {
-                let med = undefined;
-                if (lower.includes('amlodipine')) med = 'Amlodipine (Norvasc)';
-                else if (lower.includes('aspirin')) med = 'Baby Aspirin Cardio';
-                else if (lower.includes('metformin')) med = 'Metformin HCl';
-                else if (lower.includes('atorvastatin') || lower.includes('lipitor'))
-                  med = 'Atorvastatin (Lipitor)';
-
-                const status: 'taken' | 'skipped' = lower.includes('skipped') ? 'skipped' : 'taken';
-                const res = await mcpClient.logDoseStatus({ medicineName: med, status });
-                const reply =
-                  res.speechText ||
-                  (status === 'skipped'
-                    ? `Recorded ${med || 'your medication'} as skipped. Caregiver has been notified.`
-                    : `Recorded ${med || 'your medication'} as taken. Caregiver Sarah has been notified.`);
-                speechService.speak(reply);
-                triggerGlobalRefresh();
-              } else if (isScheduleAction) {
-                const todayData = await mcpClient.getTodayData();
-                const pending = todayData.schedule.filter((s) => s.status === 'pending');
-                const reply =
-                  pending.length > 0
-                    ? `You have ${todayData.schedule.length} doses scheduled today. Next is ${pending[0].name} at ${pending[0].scheduledTime}.`
-                    : `All ${todayData.schedule.length} scheduled doses for today are completed! Your adherence rate is ${todayData.adherenceRate}%.`;
-                speechService.speak(reply);
-              } else {
-                // DEFAULT / FALLBACK INTENT (All other queries -> AWS Bedrock Claude Haiku 4.5)
-                const res = await mcpClient.askClinicalAdvisor(speech);
-                setClinicalAdviceData(res);
-                setClinicalAdviceOpen(true);
-                const reply =
-                  res.speechResponse ||
-                  res.actionAdvice ||
-                  res.assessment ||
-                  'I have processed your request. Please review the guidance on screen.';
-                speechService.speak(reply);
-              }
-            } catch (err) {
-              console.warn('Voice command fallback:', err);
-            }
-
-            setTimeout(() => {
-              setIsVoiceActive(false);
-              setVoiceQueryFeedback(null);
-            }, 3000);
-          };
-          rec.onerror = () => setIsVoiceActive(false);
-          rec.onend = () => setIsVoiceActive(false);
-        }
-      }
-    } else {
-      setVoiceQueryFeedback(null);
-    }
+    alexaAgent.toggleListening();
   };
 
   // Khi chưa đọc xong localStorage, hiển thị dark loading skeleton để tránh hydration mismatch
@@ -445,23 +362,40 @@ export default function Home() {
                   {/* NÚT MICRO ELEVATED Ở TRUNG TÂM THEO STYLE HARDWARE */}
                   <div className="relative -top-4 flex items-center justify-center">
                     {/* Feedback giọng nói trực quan ngay trên Mic */}
-                    {voiceQueryFeedback && (
+                    {(alexaAgent.isListening || alexaAgent.isThinking) && (
                       <div className="absolute -top-11 px-3 py-1.5 rounded-xl bg-[#1E2330] border border-white/[0.12] text-white text-xs font-medium shadow-lg backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none">
-                        <span className="w-2 h-2 rounded-full bg-[#FF5733] animate-ping shrink-0" />
-                        <span className="max-w-[220px] truncate">{voiceQueryFeedback}</span>
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 ${
+                            alexaAgent.isThinking
+                              ? 'bg-[#4D8BFF] animate-spin'
+                              : 'bg-[#FF5733] animate-ping'
+                          }`}
+                        />
+                        <span className="max-w-[220px] truncate">
+                          {alexaAgent.isThinking
+                            ? 'Analyzing with Bedrock...'
+                            : alexaAgent.transcript
+                            ? `"${alexaAgent.transcript}"`
+                            : 'Listening to speech...'}
+                        </span>
                       </div>
                     )}
 
                     <button
                       onClick={handleCenterMicClick}
                       className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-md active:scale-95 ${
-                        isVoiceActive
-                          ? 'bg-[#FF5733] text-white ring-2 ring-white/40 ring-offset-2 ring-offset-[#151922]'
+                        alexaAgent.isListening
+                          ? 'bg-[#FF5733] text-white ring-4 ring-[#FF5733]/30 shadow-lg shadow-[#FF5733]/25'
+                          : alexaAgent.isThinking
+                          ? 'bg-[#4D8BFF] text-white ring-4 ring-[#4D8BFF]/30 animate-pulse'
                           : 'bg-[#FF5733] hover:bg-[#E64D2E] text-white'
                       }`}
-                      title="Speak with Alexa Ambient assistant"
+                      title={alexaAgent.isListening ? 'Click to stop listening' : 'Speak with Alexa Ambient assistant'}
                     >
-                      <FontAwesomeIcon icon={faMicrophone} className="text-lg text-white" />
+                      <FontAwesomeIcon
+                        icon={alexaAgent.isThinking ? faCircleNotch : faMicrophone}
+                        className={`text-lg text-white ${alexaAgent.isThinking ? 'animate-spin' : ''}`}
+                      />
                     </button>
                   </div>
 
@@ -503,6 +437,7 @@ export default function Home() {
             <div className="lg:col-span-5 xl:col-span-4 relative rounded-[32px] p-2 sm:p-2.5 bg-[#1E2330]/40 border border-white/[0.08] shadow-2xl h-[760px] flex flex-col">
               <div className="relative rounded-[24px] overflow-hidden bg-[#151922] border border-white/[0.08] h-full flex flex-col">
                 <AlexaAgentConsole
+                  voiceAgent={alexaAgent}
                   onTriggerVisualCard={handleTriggerVisualCard}
                   onTriggerClinicalAdvice={handleTriggerClinicalAdvice}
                   onRefreshData={() => {
@@ -516,19 +451,29 @@ export default function Home() {
         </div>
       </div>
 
-      {/* POPUP PHẢN HỒI GIỌNG NÓI NHANH KHI BẤM NÚT MIC Ở TRUNG TÂM */}
-      {isVoiceActive && (
+      {/* POPUP PHẢN HỒI GIỌNG NÓI NHANH KHI ĐANG LẮNG NGHE / SUY NGHĨ */}
+      {alexaAgent.isListening && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#1E2330] border border-[#FF5733] px-5 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-fadeIn">
           <span className="w-2.5 h-2.5 rounded-full bg-[#FF5733] animate-ping" />
           <p className="text-xs font-medium text-white tracking-wide">
-            {voiceQueryFeedback || 'Alexa Ambient listening... Speak in English'}
+            {alexaAgent.transcript ? `"${alexaAgent.transcript}"` : 'Alexa Ambient listening... Speak in English'}
           </p>
           <button
-            onClick={() => setIsVoiceActive(false)}
+            onClick={alexaAgent.toggleListening}
             className="p-1 rounded-lg text-slate-400 hover:text-white"
+            title="Stop listening"
           >
             <FontAwesomeIcon icon={faXmark} className="text-sm" />
           </button>
+        </div>
+      )}
+
+      {alexaAgent.isThinking && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#1E2330] border border-[#4D8BFF] px-5 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-fadeIn">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#4D8BFF] animate-spin" />
+          <p className="text-xs font-medium text-white tracking-wide">
+            Synthesizing clinical triage with Bedrock...
+          </p>
         </div>
       )}
 

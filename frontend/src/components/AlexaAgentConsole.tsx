@@ -16,13 +16,21 @@ import {
   faTriangleExclamation,
   faCircleNotch,
 } from '@fortawesome/free-solid-svg-icons';
-import { useAlexaAgent, ChatMessage } from '../hooks/useAlexaAgent';
+import { UseAlexaAgentReturn, ChatMessage, ToolExecutionLog } from '../hooks/useAlexaAgent';
 import { ClinicalAdviceResponse } from '../types';
 
-interface AlexaAgentConsoleProps {
+export interface AlexaAgentConsoleProps {
   onTriggerVisualCard?: (medName: string) => void;
   onTriggerClinicalAdvice?: (advice: ClinicalAdviceResponse) => void;
   onRefreshData?: () => void;
+  voiceAgent?: UseAlexaAgentReturn;
+  isListening?: boolean;
+  isThinking?: boolean;
+  transcript?: string;
+  messages?: ChatMessage[];
+  toolLogs?: ToolExecutionLog[];
+  toggleListening?: () => void;
+  processVoiceQuery?: (query: string) => Promise<void>;
 }
 
 const QUICK_PROMPTS = [
@@ -44,34 +52,31 @@ const QUICK_PROMPTS = [
   },
 ];
 
+const EMPTY_MESSAGES: ChatMessage[] = [];
+
 export function AlexaAgentConsole({
   onTriggerVisualCard,
   onTriggerClinicalAdvice,
   onRefreshData,
+  voiceAgent,
+  isListening: propIsListening,
+  isThinking: propIsThinking,
+  transcript: propTranscript,
+  messages: propMessages,
+  toggleListening: propToggleListening,
+  processVoiceQuery: propProcessVoiceQuery,
 }: AlexaAgentConsoleProps) {
   const [expandedJsonIds, setExpandedJsonIds] = useState<Record<string, boolean>>({});
   const [inputQuery, setInputQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const {
-    isListening,
-    isThinking,
-    transcript,
-    messages,
-    toggleListening,
-    processVoiceQuery,
-  } = useAlexaAgent({
-    onDoseLogged: () => {
-      if (onRefreshData) onRefreshData();
-    },
-    onClinicalAdviceTriggered: (advice) => {
-      if (onTriggerClinicalAdvice) {
-        onTriggerClinicalAdvice(advice);
-      } else if (onTriggerVisualCard) {
-        onTriggerVisualCard('Amlodipine (Norvasc)');
-      }
-    },
-  });
+  // Nhận trực tiếp state và actions từ hook khởi tạo duy nhất tại page.tsx
+  const isListening = voiceAgent ? voiceAgent.isListening : propIsListening ?? false;
+  const isThinking = voiceAgent ? voiceAgent.isThinking : propIsThinking ?? false;
+  const transcript = voiceAgent ? voiceAgent.transcript : propTranscript ?? '';
+  const messages = voiceAgent ? voiceAgent.messages : propMessages ?? EMPTY_MESSAGES;
+  const toggleListening = voiceAgent ? voiceAgent.toggleListening : propToggleListening ?? (() => {});
+  const processVoiceQuery = voiceAgent ? voiceAgent.processVoiceQuery : propProcessVoiceQuery ?? (async () => {});
 
   const toggleJson = (id: string) => {
     setExpandedJsonIds((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -145,9 +150,25 @@ export function AlexaAgentConsole({
               </p>
             </div>
           </div>
-          <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium">
-            Live
-          </span>
+          <div className="flex items-center gap-1.5">
+            {isListening && (
+              <span className="px-2 py-0.5 rounded-full bg-[#FF5733]/15 border border-[#FF5733]/30 text-[#FF5733] text-xs font-mono font-medium flex items-center gap-1 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FF5733] animate-ping" />
+                Listening
+              </span>
+            )}
+            {isThinking && (
+              <span className="px-2 py-0.5 rounded-full bg-[#4D8BFF]/15 border border-[#4D8BFF]/30 text-[#4D8BFF] text-xs font-mono font-medium flex items-center gap-1">
+                <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-[10px]" />
+                Thinking
+              </span>
+            )}
+            {!isListening && !isThinking && (
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium">
+                Live
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Compact horizontal scrolling quick-test chips */}

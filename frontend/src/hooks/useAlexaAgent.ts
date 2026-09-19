@@ -34,7 +34,7 @@ export interface ChatMessage {
   clinicalExplanation?: string;
 }
 
-interface UseAlexaAgentOptions {
+export interface UseAlexaAgentOptions {
   onDoseLogged?: () => void;
   onClinicalAdviceTriggered?: (advice: ClinicalAdviceResponse) => void;
 }
@@ -97,7 +97,7 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
 
         recognition.onresult = (event: any) => {
           // Drop voice input if agent is already analyzing or speaking
-          if (isBusyRef.current) return;
+          if (isBusyRef.current || speechService.isSpeaking()) return;
 
           let finalTranscript = '';
           for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -483,3 +483,5 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
     processVoiceQuery,
   };
 }
+
+export type UseAlexaAgentReturn = ReturnType<typeof useAlexaAgent>;
