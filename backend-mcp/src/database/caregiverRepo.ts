@@ -3,6 +3,7 @@ import { getDatabase } from './db.js';
 export interface CaregiverProfile {
   name: string;
   email: string;
+  phone?: string;
 }
 
 export function parseCaregiverName(email?: string): string {
@@ -21,6 +22,7 @@ export function parseCaregiverName(email?: string): string {
 let cachedProfile: CaregiverProfile = {
   name: 'Sarah Connor (Daughter)',
   email: 'sarah.c@carebridge.health',
+  phone: process.env.CAREGIVER_PHONE || '+1 (555) 0199',
 };
 
 export const CaregiverRepo = {
@@ -37,6 +39,7 @@ export const CaregiverRepo = {
         cachedProfile = {
           name: row.name,
           email: row.email || 'sarah.c@carebridge.health',
+          phone: row.phone || process.env.CAREGIVER_PHONE || '+1 (555) 0199',
         };
       }
     } catch (e) {

@@ -40,4 +40,6 @@ lerna-debug.log*
 Thumbs.db
 .gemini/
 .impeccable/
+.agents/
+skills-lock.json
 *.local.json

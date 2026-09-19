@@ -42,4 +42,5 @@ export interface VitalsRecord {
 export interface CaregiverProfile {
   name: string;
   email: string;
+  phone?: string;
 }

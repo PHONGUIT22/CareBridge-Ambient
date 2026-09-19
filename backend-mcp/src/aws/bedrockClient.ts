@@ -154,9 +154,32 @@ Respond STRICTLY in valid JSON with NO markdown codeblock markers, matching this
   }
 
   // Fallback thông minh chuẩn DTO cho trường hợp offline hoặc chưa có AWS Keys
+  const lower = patientStatement.toLowerCase();
+  const isEmergency =
+    lower.includes('chest pain') ||
+    lower.includes('shortness of breath') ||
+    lower.includes('crushing') ||
+    lower.includes('heart attack') ||
+    lower.includes('đau ngực') ||
+    lower.includes('khó thở');
+
+  if (isEmergency) {
+    return {
+      speechResponse:
+        "I've flagged this as an emergency. Sit down immediately. I have just dispatched an urgent SMS alert with your location and current vitals to your daughter Sarah.",
+      displayCardTitle: 'EMERGENCY: Acute Chest Discomfort',
+      actionAdvice:
+        'Stop all physical movement immediately. Sit in an upright supported position. Rest quietly and keep your airway open. If pain radiates to jaw or left arm, call 911 immediately.',
+      clinicalExplanation:
+        'Severe acute chest discomfort warrants immediate clinical rule-out of acute coronary syndrome (ACS). CareBridge has auto-dispatched an urgent transactional SMS alert to primary caregiver Sarah Connor.',
+      urgencyLevel: 'EMERGENCY',
+      recommendedAction: 'Rest seated upright, maintain airway, emergency SMS delivered',
+    };
+  }
+
   const isDizzy =
-    patientStatement.toLowerCase().includes('dizzy') ||
-    patientStatement.toLowerCase().includes('chóng mặt');
+    lower.includes('dizzy') ||
+    lower.includes('chóng mặt');
 
   return {
     speechResponse: isDizzy

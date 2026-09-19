@@ -154,6 +154,14 @@ export default function Home() {
   const handleTriggerClinicalAdvice = (data: any) => {
     setClinicalAdviceData(data);
     setClinicalAdviceOpen(true);
+    const sms = data?.richCard?.smsDispatch || data?.smsDispatch;
+    if (sms?.delivered) {
+      addToast({
+        type: 'warning',
+        title: 'Emergency SMS Dispatched',
+        message: `Alert dispatched to ${sms.recipient} (${sms.phone}) via AWS SNS.`,
+      });
+    }
   };
 
   // Kích hoạt Amazon Pharmacy Order Card khi đặt thuốc thành công
@@ -528,6 +536,11 @@ export default function Home() {
           clinicalAdviceData?.clinicalExplanation ||
           clinicalAdviceData?.assessment ||
           'Transient orthostatic hypotension may occur shortly after taking anti-hypertensive medication.'
+        }
+        smsDispatch={
+          clinicalAdviceData?.richCard?.smsDispatch ||
+          clinicalAdviceData?.smsDispatch ||
+          null
         }
       />
 

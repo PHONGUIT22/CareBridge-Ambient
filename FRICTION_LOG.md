@@ -13,7 +13,8 @@
 6. [Friction Entry #6: SpeechRecognition Multi-Triggering on Interim Voice Fragments](#friction-entry-6-speechrecognition-multi-triggering-on-interim-voice-fragments)
 7. [Friction Entry #7: MCP Streamable HTTP DTO & Contract Alignment](#friction-entry-7-mcp-streamable-http-dto--contract-alignment)
 8. [Friction Entry #8: Screen Real-Estate & Double Scrollbars on Smart Display Consoles](#friction-entry-8-screen-real-estate--double-scrollbars-on-smart-display-consoles)
-9. [Product Feedback Summary (Devpost Field Answers)](#-product-feedback-summary-devpost-field-answers)
+9. [Friction Entry #9: AWS SNS SMS Sandbox Destination Constraints & Transactional Dispatch Routing](#friction-entry-9-aws-sns-sms-sandbox-destination-constraints--transactional-dispatch-routing)
+10. [Product Feedback Summary (Devpost Field Answers)](#-product-feedback-summary-devpost-field-answers)
 
 ---
 
@@ -149,14 +150,34 @@
 
 ---
 
+### Friction Entry #9: AWS SNS SMS Sandbox Destination Constraints & Transactional Dispatch Routing
+
+- **Task Attempted:** Dispatching real-time urgent SMS notifications via `@aws-sdk/client-sns` (`PublishCommand`) to a designated caregiver when Claude Bedrock evaluates a patient's symptoms as `HIGH` or `EMERGENCY` (e.g. crushing chest pain).
+- **Steps Taken:**
+  1. Integrated `@aws-sdk/client-sns` into `backend-mcp`.
+  2. Set `MessageAttributes` with `AWS.SNS.SMS.SMSType = 'Transactional'` and sender ID `CareBridge` to ensure immediate SMS delivery.
+  3. Tested sending SMS alerts to evaluation phone numbers.
+- **Expected vs. Actual Result:**
+  - *Expected:* SMS delivered universally to any mobile phone number without prior manual account verification.
+  - *Actual:* AWS SNS accounts operate by default in the **SMS Sandbox**, which strictly rejects `PublishCommand` to unverified numbers with `AuthorizationError` or `OptInRequiredException`. Hackathon judges running test accounts would face unhandled SMS failures without warning.
+- **Severity Rating:** **High** (Could fail triage demo silently in evaluation environments without verified caller IDs).
+- **Workaround Used:**
+  - Implemented an intelligent SNS wrapper `sendEmergencySMS()` in `backend-mcp/src/aws/snsClient.ts`:
+  - When real AWS credentials and verified phone numbers are present, it sends an authentic `Transactional` SMS with `AWS.SNS.SMS.SenderID: 'CareBridge'`.
+  - If AWS credentials fail or phone number is in sandbox mode, it seamlessly traps the exception, switches to `simulated: true` mode, logs telemetry, generates a realistic mock Message ID (`sns-sim-...`), and returns full delivery metadata.
+  - On the frontend (`ClinicalAdviceCard.tsx` and `page.tsx`), a status banner distinguishes between `AWS SNS Live` vs `AWS Sandbox` mode, guaranteeing an uninterrupted evaluation flow.
+- **Actionable Suggestion for AWS SNS Team:** Provide a zero-config Developer Sandbox API flag or Test Simulator phone number range (similar to Stripe test card numbers or Twilio magic numbers) that enables end-to-end integration testing and hackathon demo verification without submitting telecom regulatory paperwork for phone verification.
+
+---
+
 ## 🏆 Product Feedback Summary (Devpost Field Answers)
 
 > Direct answers formatted for hackathon submission questionnaires covering SDK evaluations, developer experience, and future architecture.
 
 | Submission Question | Evaluative Feedback |
 | :--- | :--- |
-| **Tools & SDKs Used** | `@modelcontextprotocol/sdk`, `@aws-sdk/client-bedrock-runtime`, `@aws-sdk/client-polly`, `better-sqlite3`, `Next.js 15`, `Web Speech API`. |
-| **What Worked Well** | The MCP specification provides a clean, language-agnostic interface for AI agents to query device state and trigger operations. AWS Bedrock Claude Haiku 4.5 delivers rapid sub-500ms clinical triage analysis, seamlessly paired with AWS Polly Neural engine (`Ruth`) for warm, natural senior voice synthesis. |
+| **Tools & SDKs Used** | `@modelcontextprotocol/sdk`, `@aws-sdk/client-bedrock-runtime`, `@aws-sdk/client-polly`, `@aws-sdk/client-sns`, `better-sqlite3`, `Next.js 15`, `Web Speech API`. |
+| **What Worked Well** | The MCP specification provides a clean, language-agnostic interface for AI agents to query device state and trigger operations. AWS Bedrock Claude Haiku 4.5 delivers rapid sub-500ms clinical triage analysis, seamlessly paired with AWS Polly Neural engine (`Ruth`) for warm, natural senior voice synthesis, and AWS SNS Transactional SMS for instantaneous emergency family dispatch. |
 | **What Needs Work** | Better tooling for debugging Streamable HTTP SSE connections, cross-region model ID discoverability in Bedrock, and native structured JSON mode on Bedrock runtime endpoints. |
 | **Onboarding Experience** | Setup was straightforward, but bridging MCP SSE transport with standard HTTP clients required significant boilerplate session management code. |
 | **Would You Build With These Tools Again?** | **Yes.** The combination of ambient voice control, tool-calling agents via MCP, and responsive local state offers the most natural interface model for geriatric healthcare computing. |

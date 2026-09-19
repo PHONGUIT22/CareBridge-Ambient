@@ -36,19 +36,27 @@ flowchart LR
         F["clinicalAdvisorTool"]
         G["logDoseStatusTool"]
         H["getTodayScheduleTool"]
-        I["SQLite WAL Engine"]
+        I["orderRefillTool"]
+        J["SQLite WAL Engine"]
     end
 
-    subgraph Cloud["AWS Cloud Infrastructure"]
-        J["AWS Bedrock Runtime"]
-        K["Claude Haiku 4.5 (ap-southeast-2)"]
+    subgraph AWSCloud["AWS Multi-Service Pipeline (AWS Builder)"]
+        K["AWS Bedrock (Claude Haiku 4.5)"]
+        L["AWS Polly (Neural TTS - Ruth)"]
+        M["AWS SNS (Transactional SMS Dispatch)"]
+    end
+
+    subgraph AmazonEcosystem["Amazon Ecosystem"]
+        N["Amazon Pharmacy 1-Click Refill"]
     end
 
     SeniorView -->|Touch / Voice| AgenticCore
-    AgenticCore -->|Streamable HTTP / JSON-RPC| Backend
-    Backend -->|Model Invocation| J
-    J --> K
-    Backend --> I
+    AgenticCore -->|Streamable HTTP / SSE| Backend
+    Backend -->|Clinical Reasoning| K
+    Backend -->|Voice Synthesis| L
+    Backend -->|Emergency Dispatch| M
+    Backend -->|Autonomous Replenishment| N
+    Backend --> J
 ```
 
 ---
@@ -71,17 +79,22 @@ flowchart LR
 
 3. **Clinical AI Symptom & Interaction Triage**
    - Dispatches natural-language patient queries directly to AWS Bedrock Anthropic Claude Haiku 4.5.
-   - Categorizes risk into clinical triage levels (`LOW`, `MODERATE`, `HIGH`, `EMERGENCY`).
+   - Categorizes risk into clinical triage levels (`LOW`, `MEDIUM`, `HIGH`, `EMERGENCY`).
    - Plain-English action advice, clinical rationale, and automated caregiver alert triggers.
 
-4. **Caregiver Matrix & PDF Export (`HistoryMatrixView`)**
-   - 30-day compliance punch-card matrix tracking adherence streaks.
-   - Single-click export for physician consultations generated via `jsPDF`.
+4. **Emergency Triage SMS Dispatch via AWS SNS (`clinicalAdvisor` Tool)**
+   - When Bedrock evaluates symptoms as `HIGH` or `EMERGENCY` (e.g., crushing chest pain or severe shortness of breath), CareBridge automatically triggers **AWS Simple Notification Service (SNS)**.
+   - Dispatches an instantaneous high-priority `Transactional` SMS alert to the designated family caregiver (Sarah Connor, `+1 555-0199`) containing patient vitals, symptom description, and ambient status.
+   - Visual `ClinicalAdviceCard` presents a live telemetry banner with message ID, carrier status, and delivery timestamps.
 
 5. **Amazon Pharmacy 1-Click Refill (`orderRefill` Tool)**
    - Proactive low-stock threshold detection ($\le 5$ pills remaining) triggered directly after dose confirmation.
    - Autonomous multi-turn voice order placement generating official Amazon Order IDs (`114-XXXXXXX-XXXXXXX`).
    - High-contrast `AmazonOrderCard` featuring Prime 2-Day free delivery estimations and instant SQLite stock replenishment (+30 tablets).
+
+6. **Caregiver Matrix & Adherence Telemetry (`HistoryMatrixView`)**
+   - 30-day compliance punch-card matrix tracking adherence streaks.
+   - Single-click export for physician consultations generated via `jsPDF`.
 
 ---
 
@@ -89,9 +102,12 @@ flowchart LR
 
 - **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, FontAwesome, Recharts, Canvas Confetti.
 - **Typography:** Dual-font pairing with **Geist** (display, numerals, badges) and **Inter** (clinical readability).
-- **Backend:** Node.js, Express, TypeScript, `@aws-sdk/client-bedrock-runtime`, Better-SQLite3 (WAL mode).
+- **Backend:** Node.js, Express, TypeScript, Better-SQLite3 (WAL mode).
+- **AWS Cloud Pipeline:**
+  - **AWS Bedrock Runtime:** `@aws-sdk/client-bedrock-runtime` (`au.anthropic.claude-haiku-4-5-20251001-v1:0` in Sydney `ap-southeast-2`).
+  - **AWS Polly:** `@aws-sdk/client-polly` (Neural TTS engine, voice `Ruth`).
+  - **AWS SNS:** `@aws-sdk/client-sns` (Transactional SMS emergency dispatch).
 - **Protocol:** Model Context Protocol (MCP) Streamable HTTP Tools.
-- **AI Model:** Anthropic Claude Haiku 4.5 (`au.anthropic.claude-haiku-4-5-20251001-v1:0`) in `ap-southeast-2`.
 
 ---
 

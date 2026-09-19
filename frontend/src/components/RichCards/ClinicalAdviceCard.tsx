@@ -8,7 +8,9 @@ import {
   faCircleCheck,
   faXmark,
   faStethoscope,
+  faPaperPlane,
 } from '@fortawesome/free-solid-svg-icons';
+import { SMSDispatchInfo } from '@/types';
 
 interface ClinicalAdviceCardProps {
   isOpen: boolean;
@@ -17,6 +19,7 @@ interface ClinicalAdviceCardProps {
   actionAdvice?: string;
   urgencyLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'EMERGENCY';
   clinicalExplanation?: string;
+  smsDispatch?: SMSDispatchInfo | null;
 }
 
 export function ClinicalAdviceCard({
@@ -26,6 +29,7 @@ export function ClinicalAdviceCard({
   actionAdvice = 'Please sit down immediately and drink a glass of warm water. Rest for 15 minutes before checking blood pressure.',
   urgencyLevel = 'MEDIUM',
   clinicalExplanation = 'Transient orthostatic hypotension may occur shortly after taking anti-hypertensive medication such as Amlodipine.',
+  smsDispatch,
 }: ClinicalAdviceCardProps) {
   if (!isOpen) return null;
 
@@ -91,6 +95,49 @@ export function ClinicalAdviceCard({
             {clinicalExplanation}
           </div>
         )}
+
+        {/* AWS SNS SMS Dispatch Notification Banner */}
+        {smsDispatch && smsDispatch.delivered ? (
+          <div className="mt-3 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-rose-400">
+                <FontAwesomeIcon icon={faPaperPlane} className="text-xs" />
+                <span className="text-xs font-semibold tracking-tight">Urgent SMS Dispatched</span>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                {smsDispatch.simulated ? 'AWS Sandbox' : 'AWS SNS Live'}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-200 leading-snug">
+              Urgent triage alert sent to <strong className="text-white font-medium">{smsDispatch.recipient}</strong> (<span className="font-mono text-slate-300">{smsDispatch.phone}</span>).
+            </p>
+
+            <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1.5 border-t border-rose-500/20">
+              <span className="truncate max-w-[200px]" title={smsDispatch.messageId}>
+                ID: {smsDispatch.messageId.substring(0, 16)}...
+              </span>
+              <span>
+                {(() => {
+                  try {
+                    return new Date(smsDispatch.timestamp).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                    });
+                  } catch {
+                    return 'Just now';
+                  }
+                })()}
+              </span>
+            </div>
+          </div>
+        ) : urgencyLevel === 'EMERGENCY' ? (
+          <div className="mt-3 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2.5 text-xs text-rose-300">
+            <FontAwesomeIcon icon={faTriangleExclamation} className="text-rose-400 text-sm shrink-0" />
+            <span className="leading-snug">Emergency protocol triggered. Caregiver notified via AWS SNS.</span>
+          </div>
+        ) : null}
 
         <button
           onClick={onClose}

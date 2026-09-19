@@ -1,6 +1,8 @@
 import { analyzeClinicalQuery, ClinicalAnalysisResult } from '../aws/bedrockClient.js';
 import { MedicineRepo } from '../database/medicineRepo.js';
 import { VitalsRepo } from '../database/vitalsRepo.js';
+import { CaregiverRepo } from '../database/caregiverRepo.js';
+import { sendEmergencySMS, SendSMSResult } from '../aws/snsClient.js';
 
 export const clinicalAdvisorTool = {
   definition: {
@@ -38,6 +40,31 @@ export const clinicalAdvisorTool = {
       recentVitals,
     });
 
+    // Nếu urgencyLevel là HIGH hoặc EMERGENCY, tự động kích hoạt AWS SNS Dispatch SMS khẩn cấp
+    let smsDispatchResult: SendSMSResult | null = null;
+    const isEmergencyRisk = analysis.urgencyLevel === 'EMERGENCY' || analysis.urgencyLevel === 'HIGH';
+
+    if (isEmergencyRisk) {
+      try {
+        const caregiver = await CaregiverRepo.getCaregiver();
+        const caregiverName = caregiver?.name || 'Sarah Connor';
+        const caregiverPhone = caregiver?.phone || '+1 (555) 0199';
+
+        const alertBody = `[CareBridge EMERGENCY ALERT] Eleanor reported severe symptoms: "${args.query}". Risk Level: ${analysis.urgencyLevel}. Current Vitals: ${recentVitals}. Immediate family assistance requested. Ambient station active.`;
+        smsDispatchResult = await sendEmergencySMS(caregiverPhone, alertBody, caregiverName);
+
+        // Đảm bảo lời thoại phản hồi thông báo rõ ràng về việc đã gửi SMS khẩn cấp tới người thân
+        if (analysis.urgencyLevel === 'EMERGENCY') {
+          analysis.speechResponse =
+            `I've flagged this as an emergency. Sit down immediately. I have just dispatched an urgent SMS alert with your location and current vitals to your daughter Sarah.`;
+        } else if (!analysis.speechResponse.toLowerCase().includes('sarah')) {
+          analysis.speechResponse += ` An urgent SMS notification has been dispatched to your caregiver ${caregiverName.split(' ')[0]}.`;
+        }
+      } catch (err) {
+        console.warn('[clinicalAdvisor] Failed to dispatch emergency SMS via AWS SNS:', err);
+      }
+    }
+
     return {
       success: true,
       query: args.query,
@@ -48,6 +75,16 @@ export const clinicalAdvisorTool = {
       displayCardTitle: analysis.displayCardTitle,
       urgencyLevel: analysis.urgencyLevel,
       recommendedAction: analysis.recommendedAction,
+      smsDispatch: smsDispatchResult
+        ? {
+            delivered: true,
+            recipient: smsDispatchResult.recipient,
+            phone: smsDispatchResult.phone,
+            timestamp: smsDispatchResult.timestamp,
+            messageId: smsDispatchResult.messageId,
+            simulated: smsDispatchResult.simulated,
+          }
+        : null,
       richCard: {
         type: 'clinical_triage',
         title: analysis.displayCardTitle,
@@ -56,6 +93,16 @@ export const clinicalAdvisorTool = {
         clinicalExplanation: analysis.clinicalExplanation,
         urgencyLevel: analysis.urgencyLevel,
         recommendedAction: analysis.recommendedAction,
+        smsDispatch: smsDispatchResult
+          ? {
+              delivered: true,
+              recipient: smsDispatchResult.recipient,
+              phone: smsDispatchResult.phone,
+              timestamp: smsDispatchResult.timestamp,
+              messageId: smsDispatchResult.messageId,
+              simulated: smsDispatchResult.simulated,
+            }
+          : undefined,
       },
       bedrockModelUsed:
         process.env.BEDROCK_MODEL_ID || 'au.anthropic.claude-haiku-4-5-20251001-v1:0',

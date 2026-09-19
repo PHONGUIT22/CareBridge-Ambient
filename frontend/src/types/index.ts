@@ -94,6 +94,15 @@ export interface DoseActionResponse {
   error?: string;
 }
 
+export interface SMSDispatchInfo {
+  delivered: boolean;
+  recipient: string;
+  phone: string;
+  timestamp: string;
+  messageId: string;
+  simulated?: boolean;
+}
+
 export interface ClinicalAdviceResponse {
   success: boolean;
   query?: string;
@@ -104,6 +113,7 @@ export interface ClinicalAdviceResponse {
   displayCardTitle?: string;
   urgencyLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'EMERGENCY';
   recommendedAction?: string;
+  smsDispatch?: SMSDispatchInfo | null;
   richCard?: {
     type?: string;
     title: string;
@@ -112,6 +122,7 @@ export interface ClinicalAdviceResponse {
     clinicalExplanation?: string;
     urgencyLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EMERGENCY';
     recommendedAction?: string;
+    smsDispatch?: SMSDispatchInfo;
   };
   bedrockModelUsed?: string;
   error?: string;
