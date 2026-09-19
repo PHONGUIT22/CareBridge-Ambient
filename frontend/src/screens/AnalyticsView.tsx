@@ -33,6 +33,11 @@ interface VitalPoint {
 export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number }) {
   const [activeTab, setActiveTab] = useState<MetricTab>('bloodPressure');
   const [vitalsData, setVitalsData] = useState<VitalPoint[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Lấy dữ liệu 30 ngày từ Backend qua mcpClient
   useEffect(() => {
@@ -118,7 +123,7 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
           >
             <FontAwesomeIcon
               icon={faDroplet}
-              className={`text-xs ${activeTab === 'bloodSugar' ? 'text-white' : 'text-[#4D8BFF]'}`}
+              className={`text-xs ${activeTab === 'bloodSugar' ? 'text-white' : 'text-[#FFB347]'}`}
             />
             <span className="truncate">Blood Sugar</span>
           </button>
@@ -134,7 +139,7 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
           >
             <FontAwesomeIcon
               icon={faHeartPulse}
-              className={`text-xs ${activeTab === 'heartRate' ? 'text-white' : 'text-amber-400'}`}
+              className={`text-xs ${activeTab === 'heartRate' ? 'text-white' : 'text-[#10B981]'}`}
             />
             <span className="truncate">Heart Rate</span>
           </button>
@@ -165,13 +170,13 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
               )}
               {activeTab === 'bloodSugar' && (
                 <div className="flex items-center gap-1.5 text-[#8A92A6]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#4D8BFF]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#FFB347]" />
                   <span>mg/dL</span>
                 </div>
               )}
               {activeTab === 'heartRate' && (
                 <div className="flex items-center gap-1.5 text-[#8A92A6]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
                   <span>BPM</span>
                 </div>
               )}
@@ -179,58 +184,59 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
           </div>
 
           <div className="h-64 sm:h-72 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={vitalsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="systolicGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#FF725E" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#FF725E" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="diastolicGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4D8BFF" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#4D8BFF" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="sugarGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4D8BFF" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#4D8BFF" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="heartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
+            {isMounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={vitalsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="systolicGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#FF725E" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#FF725E" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="diastolicGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4D8BFF" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#4D8BFF" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="sugarGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#FFB347" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#FFB347" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="heartGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
 
-                <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="rgba(255,255,255,0.06)" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="rgba(255,255,255,0.06)" />
 
-                <XAxis
-                  dataKey="date"
-                  tickLine={false}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                  tick={{ fill: '#8A92A6', fontSize: 10, fontWeight: 600 }}
-                />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                    tick={{ fill: '#8A92A6', fontSize: 10, fontWeight: 600 }}
+                  />
 
-                <YAxis
-                  domain={activeTab === 'bloodPressure' ? [65, 140] : ['auto', 'auto']}
-                  tickLine={false}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                  tick={{ fill: '#8A92A6', fontSize: 10, fontWeight: 600 }}
-                />
+                  <YAxis
+                    domain={activeTab === 'bloodPressure' ? [65, 140] : ['auto', 'auto']}
+                    tickLine={false}
+                    axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                    tick={{ fill: '#8A92A6', fontSize: 10, fontWeight: 600 }}
+                  />
 
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#181B2A',
-                    borderRadius: '16px',
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-                  }}
-                />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#181B2A',
+                      borderRadius: '16px',
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                    }}
+                  />
 
-                {activeTab === 'bloodPressure' && (
-                  <>
+                  {activeTab === 'bloodPressure' && (
                     <Area
+                      key="systolic"
                       type="monotone"
                       dataKey="systolic"
                       stroke="#FF725E"
@@ -238,8 +244,12 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
                       fill="url(#systolicGradient)"
                       dot={{ r: 2, fill: '#FF725E' }}
                       activeDot={{ r: 5 }}
+                      isAnimationActive={false}
                     />
+                  )}
+                  {activeTab === 'bloodPressure' && (
                     <Area
+                      key="diastolic"
                       type="monotone"
                       dataKey="diastolic"
                       stroke="#4D8BFF"
@@ -247,35 +257,44 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
                       fill="url(#diastolicGradient)"
                       dot={{ r: 2, fill: '#4D8BFF' }}
                       activeDot={{ r: 5 }}
+                      isAnimationActive={false}
                     />
-                  </>
-                )}
+                  )}
 
-                {activeTab === 'bloodSugar' && (
-                  <Area
-                    type="monotone"
-                    dataKey="bloodSugar"
-                    stroke="#4D8BFF"
-                    strokeWidth={2.5}
-                    fill="url(#sugarGradient)"
-                    dot={{ r: 2, fill: '#4D8BFF' }}
-                    activeDot={{ r: 5 }}
-                  />
-                )}
+                  {activeTab === 'bloodSugar' && (
+                    <Area
+                      key="bloodSugar"
+                      type="monotone"
+                      dataKey="bloodSugar"
+                      stroke="#FFB347"
+                      strokeWidth={2.5}
+                      fill="url(#sugarGradient)"
+                      dot={{ r: 2, fill: '#FFB347' }}
+                      activeDot={{ r: 5 }}
+                      isAnimationActive={false}
+                    />
+                  )}
 
-                {activeTab === 'heartRate' && (
-                  <Area
-                    type="monotone"
-                    dataKey="heartRate"
-                    stroke="#f59e0b"
-                    strokeWidth={2.5}
-                    fill="url(#heartGradient)"
-                    dot={{ r: 2, fill: '#f59e0b' }}
-                    activeDot={{ r: 5 }}
-                  />
-                )}
-              </AreaChart>
-            </ResponsiveContainer>
+                  {activeTab === 'heartRate' && (
+                    <Area
+                      key="heartRate"
+                      type="monotone"
+                      dataKey="heartRate"
+                      stroke="#10B981"
+                      strokeWidth={2.5}
+                      fill="url(#heartGradient)"
+                      dot={{ r: 2, fill: '#10B981' }}
+                      activeDot={{ r: 5 }}
+                      isAnimationActive={false}
+                    />
+                  )}
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-[#8A92A6] text-xs font-mono">
+                Loading biometric chart...
+              </div>
+            )}
           </div>
         </div>
 

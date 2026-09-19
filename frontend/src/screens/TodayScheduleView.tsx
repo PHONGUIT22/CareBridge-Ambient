@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MedicineCard, MedicineCardItem } from '../components/MedicineCard';
 import { DoseNoteModal } from '../components/DoseNoteModal';
 import { AddMedicineModal } from '../components/AddMedicineModal';
@@ -54,22 +54,6 @@ export function TodayScheduleView({
   useEffect(() => {
     refetch();
   }, [refreshTrigger, refetch]);
-
-  // Nhóm phác đồ cữ thuốc theo từng khung giờ (Grouped by hour)
-  const groupedSchedule = useMemo(() => {
-    const groups: Record<string, MedicineCardItem[]> = {};
-    const sorted = [...schedule].sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
-
-    sorted.forEach((item) => {
-      const timeKey = item.scheduledTime;
-      if (!groups[timeKey]) {
-        groups[timeKey] = [];
-      }
-      groups[timeKey].push(item);
-    });
-
-    return groups;
-  }, [schedule]);
 
   const handleSaveNote = async (noteText: string) => {
     if (!activeNoteItem) return;
@@ -282,44 +266,47 @@ export function TodayScheduleView({
           </div>
         </div>
 
-        {/* 4. SCHEDULED REGIMENS GROUPED BY HOUR */}
-        <div className="flex flex-col gap-4">
+        {/* 4. SCHEDULED REGIMENS (2-COLUMN SMART HOME GRID) */}
+        <div className="flex flex-col gap-3.5">
           <div className="flex items-center justify-between">
-            <h3 className="font-display text-sm font-extrabold text-white tracking-wide">
-              Scheduled Regimens
-            </h3>
-            <span className="text-xs text-[#8A92A6] font-medium">Grouped by Hour</span>
+            <div className="flex items-center gap-2">
+              <h3 className="font-display text-sm font-extrabold text-white tracking-wide">
+                Scheduled Regimens
+              </h3>
+              <span className="px-2 py-0.5 rounded-full bg-[#181B2A] border border-white/[0.08] text-[10px] font-bold text-[#8A92A6]">
+                {schedule.length} Total
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10.5px] font-bold">
+                {takenCount} Taken
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-[#FF725E]/15 border border-[#FF725E]/30 text-[#FF725E] text-[10.5px] font-bold">
+                {schedule.length - takenCount} Pending
+              </span>
+            </div>
           </div>
 
-          {Object.keys(groupedSchedule).length === 0 ? (
+          {schedule.length === 0 ? (
             <div className="bg-[#22273B] border border-white/[0.06] rounded-2xl p-6 text-center text-[#8A92A6] text-xs shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
               No medications scheduled for today.
             </div>
           ) : (
-            Object.entries(groupedSchedule).map(([hour, items]) => (
-              <div key={hour} className="flex flex-col gap-2">
-                {/* Hour Header */}
-                <div className="flex items-center gap-2 text-xs font-bold text-[#8A92A6] uppercase tracking-wider pl-1">
-                  <FontAwesomeIcon icon={faClock} className="text-[#FF725E] text-[10px]" />
-                  <span>Scheduled for {hour}</span>
-                </div>
-
-                {/* Grid of cards for this hour */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {items.map((item) => (
-                    <MedicineCard
-                      key={item.logId}
-                      item={item}
-                      onToggleStatus={async (logId, status) => {
-                        await toggleDoseStatus(logId, status);
-                        if (onDoseToggled) onDoseToggled();
-                      }}
-                      onOpenNoteModal={(selected) => setActiveNoteItem(selected)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))
+            <div className="grid grid-cols-2 gap-3.5">
+              {[...schedule]
+                .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime))
+                .map((item) => (
+                  <MedicineCard
+                    key={item.logId}
+                    item={item}
+                    onToggleStatus={async (logId, status) => {
+                      await toggleDoseStatus(logId, status);
+                      if (onDoseToggled) onDoseToggled();
+                    }}
+                    onOpenNoteModal={(selected) => setActiveNoteItem(selected)}
+                  />
+                ))}
+            </div>
           )}
         </div>
       </div>

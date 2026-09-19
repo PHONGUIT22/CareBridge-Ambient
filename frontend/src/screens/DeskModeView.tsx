@@ -12,7 +12,7 @@ import {
   faCapsules,
   faShieldHalved,
   faChevronRight,
-  faHouseMedical,
+  faHeartPulse,
 } from '@fortawesome/free-solid-svg-icons';
 import confetti from 'canvas-confetti';
 
@@ -192,7 +192,7 @@ export function DeskModeView({
         ) : (
           <div className="bg-[#22273B] rounded-3xl p-6 text-center border border-white/[0.06] shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
             <FontAwesomeIcon
-              icon={faHouseMedical}
+              icon={faHeartPulse}
               className="text-3xl text-[#FF725E] mx-auto mb-2"
             />
             <h3 className="text-base font-black text-white tracking-tight">All Medications Completed!</h3>

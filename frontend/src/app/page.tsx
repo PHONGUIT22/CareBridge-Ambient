@@ -15,7 +15,7 @@ import { mcpClient } from '../services/mcpClient';
 import { speechService } from '../services/speechService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faHouseMedical,
+  faHeartPulse,
   faShieldHalved,
   faTableCells,
   faChartLine,
@@ -255,8 +255,8 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-[#121420] text-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#FF725E]/20 border border-[#FF725E]/40 flex items-center justify-center animate-pulse">
-            <FontAwesomeIcon icon={faHouseMedical} className="text-[#FF725E]" />
+          <div className="w-10 h-10 rounded-2xl bg-[#FF725E]/20 border border-[#FF725E]/40 flex items-center justify-center animate-pulse shadow-[0_0_15px_rgba(255,114,94,0.35)]">
+            <FontAwesomeIcon icon={faHeartPulse} className="text-[#FF725E]" />
           </div>
           <p className="text-xs text-[#8A92A6] font-mono tracking-wider">Loading CareBridge Ambient OS...</p>
         </div>
@@ -279,9 +279,9 @@ export default function Home() {
       {/* 1. THANH ĐIỀU KHIỂN HACKATHON SIMULATOR TRÊN CÙNG */}
       <header className="bg-[#181B2A]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 py-2.5 flex items-center justify-between sticky top-0 z-40 gap-3">
         <div className="flex items-center gap-2.5 shrink-0">
-          {/* Logo Smart Home Ambient faHouseMedical */}
+          {/* Logo Smart Home Ambient faHeartPulse */}
           <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-[#FF725E] to-[#FF8A71] flex items-center justify-center shadow-[0_0_15px_rgba(255,114,94,0.35)]">
-            <FontAwesomeIcon icon={faHouseMedical} className="text-white text-sm" />
+            <FontAwesomeIcon icon={faHeartPulse} className="text-white text-sm" />
           </div>
           <div>
             <span className="font-display font-black text-sm tracking-tight text-white uppercase flex items-center gap-1.5">

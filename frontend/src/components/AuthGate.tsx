@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faHouseMedical,
+  faHeartPulse,
   faShieldHalved,
   faKey,
   faUser,
@@ -152,7 +152,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
         {/* 1. BRAND HEADER */}
         <div className="flex flex-col items-center text-center pb-5 border-b border-white/[0.08]">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FF725E] to-[#FFA08C] flex items-center justify-center text-white shadow-[0_0_25px_rgba(255,114,94,0.4)] mb-3">
-            <FontAwesomeIcon icon={faHouseMedical} className="text-2xl" />
+            <FontAwesomeIcon icon={faHeartPulse} className="text-2xl" />
           </div>
 
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#181B2A] border border-white/[0.08] text-[10.5px] font-mono font-bold tracking-widest text-slate-300 uppercase mb-2">
