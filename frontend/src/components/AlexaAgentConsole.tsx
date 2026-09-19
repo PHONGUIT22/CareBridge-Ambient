@@ -167,7 +167,7 @@ export function AlexaAgentConsole({
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] hover:border-[#FF725E]/50 border border-white/[0.08] text-[10.5px] text-[#8A92A6] hover:text-white whitespace-nowrap transition-all shrink-0 active:scale-95"
             >
               <span>{item.icon}</span>
-              <span className="font-medium">"{item.label}"</span>
+              <span className="font-medium">&ldquo;{item.label}&rdquo;</span>
             </button>
           ))}
         </div>

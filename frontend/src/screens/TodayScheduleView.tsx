@@ -256,7 +256,7 @@ export function TodayScheduleView({
         <div className="p-4 rounded-2xl bg-[#22273B] border border-white/[0.08] shadow-[0_10px_25px_rgba(0,0,0,0.3)] relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="font-display text-[11px] font-extrabold text-[#8A92A6] tracking-wider uppercase">
-              Today's Regimen Progress
+              Today&apos;s Regimen Progress
             </span>
             <span className="font-display text-sm font-black text-[#FF725E]">
               {adherenceRate !== undefined ? adherenceRate : calculatedAdherence}%

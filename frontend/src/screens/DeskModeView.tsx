@@ -138,7 +138,7 @@ export function DeskModeView({
         {/* Thanh tiến độ tuân thủ */}
         <div className="bg-[#22273B] rounded-2xl p-3.5 border border-white/[0.06] shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
           <div className="flex items-center justify-between text-xs font-bold mb-2">
-            <span className="text-[#8A92A6] uppercase tracking-wider">Today's Adherence</span>
+            <span className="text-[#8A92A6] uppercase tracking-wider">Today&apos;s Adherence</span>
             <span className="text-[#4D8BFF] font-mono">
               {completedDoses} / {totalDoses} Doses ({progressPercent}%)
             </span>
