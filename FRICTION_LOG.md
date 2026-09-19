@@ -13,6 +13,7 @@
 6. [Friction Entry #6: SpeechRecognition Multi-Triggering on Interim Voice Fragments](#friction-entry-6-speechrecognition-multi-triggering-on-interim-voice-fragments)
 7. [Friction Entry #7: MCP Streamable HTTP DTO & Contract Alignment](#friction-entry-7-mcp-streamable-http-dto--contract-alignment)
 8. [Friction Entry #8: Screen Real-Estate & Double Scrollbars on Smart Display Consoles](#friction-entry-8-screen-real-estate--double-scrollbars-on-smart-display-consoles)
+9. [Product Feedback Summary (Devpost Field Answers)](#-product-feedback-summary-devpost-field-answers)
 
 ---
 
@@ -145,3 +146,17 @@
 - **Severity Rating:** **Medium** (Degraded developer experience and visual polish during technical reviews).
 - **Workaround Used:** Redesigned `AlexaAgentConsole.tsx` into a full-height Copilot chat timeline inspired by Claude & ChatGPT. Converted judge simulation buttons into horizontal scrolling chips and collapsed raw JSON payloads into inline `⚡ toolName [</> JSON]` pills with `break-all` styling.
 - **Actionable Suggestion for Amazon Smart Display Developer Tools:** Release official React/Tailwind design presets for ambient multi-modal devices that include ready-to-use developer inspection sidebars and responsive split-screen containers.
+
+---
+
+## 🏆 Product Feedback Summary (Devpost Field Answers)
+
+> Direct answers formatted for hackathon submission questionnaires covering SDK evaluations, developer experience, and future architecture.
+
+| Submission Question | Evaluative Feedback |
+| :--- | :--- |
+| **Tools & SDKs Used** | `@modelcontextprotocol/sdk`, `@aws-sdk/client-bedrock-runtime`, `better-sqlite3`, `Next.js 15`, `Web Speech API`. |
+| **What Worked Well** | The MCP specification provides a clean, language-agnostic interface for AI agents to query device state and trigger operations. AWS Bedrock Claude Haiku 4.5 delivers rapid sub-500ms clinical triage analysis with high domain comprehension. |
+| **What Needs Work** | Better tooling for debugging Streamable HTTP SSE connections, cross-region model ID discoverability in Bedrock, and native structured JSON mode on Bedrock runtime endpoints. |
+| **Onboarding Experience** | Setup was straightforward, but bridging MCP SSE transport with standard HTTP clients required significant boilerplate session management code. |
+| **Would You Build With These Tools Again?** | **Yes.** The combination of ambient voice control, tool-calling agents via MCP, and responsive local state offers the most natural interface model for geriatric healthcare computing. |
