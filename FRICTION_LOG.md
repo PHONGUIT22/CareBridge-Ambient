@@ -6,10 +6,11 @@
 
 ## 📑 Table of Contents
 1. [Friction Entry #1: AWS Bedrock Cross-Region Inference Profile Validation (ap-southeast-2)](#friction-entry-1-aws-bedrock-cross-region-inference-profile-validation-ap-southeast-2)
-2. [Friction Entry #2: Audio Feedback & Echo Loop in Smart Display Environments](#friction-entry-2-audio-feedback--echo-loop-in-smart-display-environments)
-3. [Friction Entry #3: SpeechRecognition Multi-Triggering on Interim Voice Fragments](#friction-entry-3-speechrecognition-multi-triggering-on-interim-voice-fragments)
-4. [Friction Entry #4: MCP Streamable HTTP DTO & Contract Alignment](#friction-entry-4-mcp-streamable-http-dto--contract-alignment)
-5. [Friction Entry #5: Screen Real-Estate & Double Scrollbars on Smart Display Consoles](#friction-entry-5-screen-real-estate--double-scrollbars-on-smart-display-consoles)
+2. [Friction Entry #2: Streamable HTTP Transport (SSEServerTransport) Multi-Turn Session Persistence](#friction-entry-2-streamable-http-transport-sseservertransport-multi-turn-session-persistence)
+3. [Friction Entry #3: Audio Feedback & Echo Loop in Smart Display Environments](#friction-entry-3-audio-feedback--echo-loop-in-smart-display-environments)
+4. [Friction Entry #4: SpeechRecognition Multi-Triggering on Interim Voice Fragments](#friction-entry-4-speechrecognition-multi-triggering-on-interim-voice-fragments)
+5. [Friction Entry #5: MCP Streamable HTTP DTO & Contract Alignment](#friction-entry-5-mcp-streamable-http-dto--contract-alignment)
+6. [Friction Entry #6: Screen Real-Estate & Double Scrollbars on Smart Display Consoles](#friction-entry-6-screen-real-estate--double-scrollbars-on-smart-display-consoles)
 
 ---
 
@@ -19,7 +20,7 @@
 - **Steps Taken:**
   1. Configured AWS SDK credentials and region `ap-southeast-2` in environment variables.
   2. Attempted to dispatch `InvokeModelCommand` using standard direct foundation model IDs (e.g., `anthropic.claude-3-haiku-20240307-v1:0`).
-  3. Executed diagnostic script `test-bedrock.ts` via CLI.
+  3. Executed diagnostic script `scripts/test-bedrock.ts` via CLI.
 - **Expected vs. Actual Result:**
   - *Expected:* Model invocation succeeds directly using standard foundation model ARN or shorthand ID.
   - *Actual:* AWS Bedrock rejected the request with `ValidationException: The provided model ID is not supported in region ap-southeast-2; cross-region system profile required.`
@@ -29,7 +30,25 @@
 
 ---
 
-### Friction Entry #2: Audio Feedback & Echo Loop in Smart Display Environments
+### Friction Entry #2: Streamable HTTP Transport (SSEServerTransport) Multi-Turn Session Persistence
+
+- **Task Attempted:** Hosting an MCP Server over Streamable HTTP (SSE) to handle Alexa+ Agent Skills tool-calling via `/sse` and `/message` endpoints.
+- **Steps Taken:**
+  1. Initialized `@modelcontextprotocol/sdk/server/index.js` and `SSEServerTransport`.
+  2. Attached `SSEServerTransport` to Express `/sse` stream and mapped incoming POST requests to `/message?sessionId=...`.
+  3. Executed simultaneous test calls from web client and agentic simulator.
+- **Expected vs. Actual Result:**
+  - *Expected:* SDK maintains active session states or provides built-in multi-session reconnect pooling without external session mapping.
+  - *Actual:* If client drops connection or fires concurrent tool invocations without waiting for SSE stream acknowledgment, sessionId lookups fail with `404 Session not found or expired`.
+- **Severity Rating:** **Medium** (Degrades voice conversational continuity if connections drop).
+- **Workaround Used:** Implemented a dual-transport architecture in `backend-mcp/src/server.ts`:
+  - Maintained an explicit server-side memory map `sseTransports = new Map<string, SSEServerTransport>()` to clean up stale socket references upon connection close.
+  - Exposed fallback REST endpoints (`/api/dose`, `/api/today`, `/api/vitals`, `/api/advisor`) mirroring each MCP tool, allowing the web client to maintain optimistic UI state updates even during SSE transport reconnections.
+- **Actionable Suggestion for Amazon MCP Team:** Provide an official, turn-key Express/FastAPI adapter in `@modelcontextprotocol/sdk` with built-in heartbeat/keep-alive management and reconnect recovery tokens for streaming HTTP transports.
+
+---
+
+### Friction Entry #3: Audio Feedback & Echo Loop in Smart Display Environments
 
 - **Task Attempted:** Enabling continuous ambient voice interaction where an elderly patient speaks to Alexa and receives verbal feedback via Text-to-Speech (`speechService.speak()`).
 - **Steps Taken:**
@@ -40,14 +59,14 @@
   - *Actual:* The microphone immediately picked up the synthesized voice output emitted from the device speakers, re-interpreting Alexa's own speech as a new patient voice query. This launched an infinite recursive feedback loop of Bedrock LLM queries.
 - **Severity Rating:** **High** (Causes runaway API token consumption, excessive audio stuttering, and confusing user experience).
 - **Workaround Used:**
-  - Introduced an `isBusyRef` state lock that flips to `true` the moment query processing starts.
+  - Introduced an `isBusyRef` state lock in `useAlexaAgent.ts` that flips to `true` the moment query processing starts.
   - Explicitly aborted and muted the microphone (`recognition.abort()`, `setIsListening(false)`) before invoking TTS.
   - Bound `speechSynthesisUtterance.onend` and `onerror` to release `isBusyRef = false` only after voice playback terminates, backed by a 12-second safety timeout.
 - **Actionable Suggestion for AWS/Amazon:** Provide native acoustic echo-cancellation (AEC) awareness or an `onAssistantSpeechStart` / `onAssistantSpeechEnd` event hook in the ambient SDK to automatically suppress microphone intake while the device is generating audio output.
 
 ---
 
-### Friction Entry #3: SpeechRecognition Multi-Triggering on Interim Voice Fragments
+### Friction Entry #4: SpeechRecognition Multi-Triggering on Interim Voice Fragments
 
 - **Task Attempted:** Capturing patient voice queries reliably without stuttering or duplicate execution.
 - **Steps Taken:** Attached `recognition.onresult = (event) => processVoiceQuery(event.results[0][0].transcript)`.
@@ -70,7 +89,7 @@
 
 ---
 
-### Friction Entry #4: MCP Streamable HTTP DTO & Contract Alignment
+### Friction Entry #5: MCP Streamable HTTP DTO & Contract Alignment
 
 - **Task Attempted:** Transmitting structured medical triage recommendations from backend Model Context Protocol (MCP) server to the Next.js frontend.
 - **Steps Taken:** Implemented `clinicalAdvisorTool` returning JSON objects with `actionAdvice`, `clinicalExplanation`, and `urgencyLevel`.
@@ -83,7 +102,7 @@
 
 ---
 
-### Friction Entry #5: Screen Real-Estate & Double Scrollbars on Smart Display Consoles
+### Friction Entry #6: Screen Real-Estate & Double Scrollbars on Smart Display Consoles
 
 - **Task Attempted:** Presenting both a senior-facing ambient display and an agentic copilot tool stream simultaneously for hackathon judge inspection (Echo Show 10 dual-view).
 - **Steps Taken:** Nested a monospace tool log container inside the secondary panel.
