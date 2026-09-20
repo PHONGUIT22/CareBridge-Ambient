@@ -270,325 +270,134 @@ function toConciseSpokenSummary(text: string): string {
         }
       };
 
-      setConversation((prev) => [...prev, { sender: 'user', text: queryText }]);
+      const trimmed = queryText.trim();
+      if (!trimmed) return;
+
+      setConversation((prev) => [...prev, { sender: 'user', text: trimmed }]);
       setMessages((prev) => [
         ...prev,
         {
           id: `user_${Date.now()}`,
           sender: 'user',
-          text: queryText,
+          text: trimmed,
           timestamp: now,
         },
       ]);
-      const lower = queryText.toLowerCase();
+
+      // Ghi nhận trạng thái bắt đầu gọi Bedrock Native Tool-Use Orchestrator
+      setToolLogs((prev) => [
+        {
+          timestamp: now,
+          toolName: 'Claude Native Tool-Use Orchestrator',
+          args: { query: trimmed },
+          result: 'Evaluating intent with AWS Bedrock Claude Haiku 4.5...',
+          status: 'invoking',
+        },
+        ...prev,
+      ]);
 
       try {
-        // 1. Check Dose Action Intent:
-        // Match if text contains: took, taken, swallowed, had my, just take, skipped
-        const isDoseAction =
-          lower.includes('took') ||
-          lower.includes('taken') ||
-          lower.includes('swallowed') ||
-          lower.includes('had my') ||
-          lower.includes('just take') ||
-          lower.includes('skipped');
+        // TOÀN BỘ Ý ĐỊNH ĐƯỢC PHÂN TÍCH QUA BEDROCK AGENTIC LOOP TẬP TRUNG
+        const turnRes = await mcpClient.executeAgentTurn(trimmed);
+        const latency = Math.round(performance.now() - startTime);
 
-        // 2. Check Schedule Intent:
-        // Match if text strictly asks for schedule/time: schedule, upcoming, what medicine, what pill, when do i take, calendar
-        const isScheduleAction =
-          lower.includes('schedule') ||
-          lower.includes('upcoming') ||
-          lower.includes('what medicine') ||
-          lower.includes('what pill') ||
-          lower.includes('when do i take') ||
-          lower.includes('calendar');
+        const toolName = turnRes.toolName;
+        const toolResult = turnRes.toolResult;
+        const toolArgs = turnRes.toolArgs || {};
+        const reply =
+          turnRes.speechResponse ||
+          "I have noted your observation. Please let me know if you need anything else.";
 
-        if (isDoseAction) {
-          let med: string | undefined = undefined;
-          if (lower.includes('amlodipine')) med = 'Amlodipine (Norvasc)';
-          else if (lower.includes('aspirin')) med = 'Baby Aspirin Cardio';
-          else if (lower.includes('metformin')) med = 'Metformin HCl';
-          else if (lower.includes('atorvastatin') || lower.includes('lipitor'))
-            med = 'Atorvastatin (Lipitor)';
-
-          const status: 'taken' | 'skipped' = lower.includes('skipped') ? 'skipped' : 'taken';
-
+        // Cập nhật Tool Execution Log hiển thị rõ bước suy luận của Claude
+        if (toolName) {
           setToolLogs((prev) => [
             {
               timestamp: now,
-              toolName: 'logDoseStatus',
-              args: { medicineName: med || 'Earliest Pending', status },
-              result: 'Updating SQLite WAL mode...',
-              status: 'invoking',
-            },
-            ...prev,
-          ]);
-
-          const res = await mcpClient.logDoseStatus({
-            medicineName: med,
-            status,
-          });
-          const latency = Math.round(performance.now() - startTime);
-
-          // Ghi nhớ thuốc sắp hết để nếu người dùng nói "Yes, order it" sẽ tự động đặt đúng thuốc
-          if (res.lowStockAlert) {
-            lastLowStockMedRef.current = res.lowStockAlert.medicineName;
-          }
-
-          setToolLogs((prev) => [
-            {
-              timestamp: now,
-              toolName: 'logDoseStatus',
-              args: { medicineName: med || 'Earliest Pending', status },
-              result: res,
+              toolName: `🧠 Claude Reasoned Tool: ${toolName}`,
+              args: toolArgs,
+              result: toolResult,
               status: 'success',
               latencyMs: latency,
             },
             ...prev.slice(1),
           ]);
-
-          const reply =
-            res.speechText ||
-            (status === 'skipped'
-              ? `I have recorded your ${med || 'medication'} as skipped. Caregiver has been notified.`
-              : `Wonderful! I have recorded your ${med || 'medication'} as taken.`);
-
-          setConversation((prev) => [...prev, { sender: 'alexa', text: reply }]);
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `alexa_${Date.now()}`,
-              sender: 'alexa',
-              text: reply,
-              timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-              toolCall: {
-                toolName: 'logDoseStatus',
-                args: { medicineName: med || 'Earliest Pending', status },
-                result: res,
-                status: 'success',
-                latencyMs: latency,
-              },
-            },
-          ]);
-          speakAndRelease(reply);
-
-          // Automatic UI refresh across all views
-          if (options?.onDoseLogged) {
-            options.onDoseLogged();
-          }
-        } else if (isScheduleAction) {
-          setToolLogs((prev) => [
-            {
-              timestamp: now,
-              toolName: 'getTodaySchedule',
-              args: { date: new Date().toISOString().split('T')[0] },
-              result: 'Querying SQLite...',
-              status: 'invoking',
-            },
-            ...prev,
-          ]);
-
-          const todayData = await mcpClient.getTodayData();
-          const latency = Math.round(performance.now() - startTime);
-          const pending = todayData.schedule.filter((s) => s.status === 'pending');
-          const nextDoseStr = pending.length > 0 ? `${pending[0].name} (${pending[0].scheduledTime})` : 'All completed';
-
-          setToolLogs((prev) => [
-            {
-              timestamp: now,
-              toolName: 'getTodaySchedule',
-              args: { date: todayData.date },
-              result: {
-                totalDoses: todayData.schedule.length,
-                adherenceRate: todayData.adherenceRate,
-                nextDose: nextDoseStr,
-                pendingCount: pending.length,
-              },
-              status: 'success',
-              latencyMs: latency,
-            },
-            ...prev.slice(1),
-          ]);
-
-          let reply = '';
-          if (pending.length > 0) {
-            reply = `You have ${todayData.schedule.length} scheduled medications today. Next upcoming dose is ${pending[0].name} at ${pending[0].scheduledTime}.`;
-          } else {
-            reply = `All ${todayData.schedule.length} scheduled doses for today are completed! Your adherence rate is ${todayData.adherenceRate}%.`;
-          }
-
-          setConversation((prev) => [...prev, { sender: 'alexa', text: reply }]);
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `alexa_${Date.now()}`,
-              sender: 'alexa',
-              text: reply,
-              timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-              toolCall: {
-                toolName: 'getTodaySchedule',
-                args: { date: todayData.date },
-                result: {
-                  totalDoses: todayData.schedule.length,
-                  adherenceRate: todayData.adherenceRate,
-                  nextDose: nextDoseStr,
-                  pendingCount: pending.length,
-                },
-                status: 'success',
-                latencyMs: latency,
-              },
-            },
-          ]);
-          speakAndRelease(reply);
-        } else if (
-          lower.includes('order it') ||
-          lower.includes('yes, order') ||
-          lower.includes('yes order') ||
-          lower.includes('order refill') ||
-          lower.includes('refill') ||
-          lower.includes('pharmacy') ||
-          lower.includes('order medicine') ||
-          lower.includes('place order') ||
-          lower.includes('buy more') ||
-          lower.includes('order my')
-        ) {
-          // 3. AMAZON PHARMACY 1-CLICK REFILL INTENT
-          let refillMed = lastLowStockMedRef.current;
-          if (lower.includes('atorvastatin') || lower.includes('lipitor')) {
-            refillMed = 'Atorvastatin (Lipitor)';
-          } else if (lower.includes('amlodipine') || lower.includes('norvasc')) {
-            refillMed = 'Amlodipine (Norvasc)';
-          } else if (lower.includes('metformin')) {
-            refillMed = 'Metformin HCl';
-          } else if (lower.includes('aspirin')) {
-            refillMed = 'Baby Aspirin Cardio';
-          }
-
-          if (!refillMed) {
-            refillMed = 'Atorvastatin (Lipitor)';
-          }
-
-          setToolLogs((prev) => [
-            {
-              timestamp: now,
-              toolName: 'orderRefill (Amazon Pharmacy 1-Click)',
-              args: { medicineName: refillMed, quantity: 30 },
-              result: 'Dispatching Amazon Pharmacy 1-Click order...',
-              status: 'invoking',
-            },
-            ...prev,
-          ]);
-
-          const orderRes = await mcpClient.orderRefill({
-            medicineName: refillMed,
-            quantity: 30,
-          });
-          const latency = Math.round(performance.now() - startTime);
-
-          setToolLogs((prev) => [
-            {
-              timestamp: now,
-              toolName: 'orderRefill',
-              args: { medicineName: refillMed, quantity: 30 },
-              result: orderRes,
-              status: 'success',
-              latencyMs: latency,
-            },
-            ...prev.slice(1),
-          ]);
-
-          const reply =
-            orderRes.speechText ||
-            `I have placed your Amazon Pharmacy 1-Click order for ${refillMed}. It will arrive with Prime Two-Day free shipping.`;
-
-          setConversation((prev) => [...prev, { sender: 'alexa', text: reply }]);
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `alexa_${Date.now()}`,
-              sender: 'alexa',
-              text: reply,
-              timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-              toolCall: {
-                toolName: 'orderRefill (Amazon Pharmacy)',
-                args: { medicineName: refillMed, quantity: 30 },
-                result: orderRes,
-                status: 'success',
-                latencyMs: latency,
-              },
-            },
-          ]);
-
-          speakAndRelease(reply);
-
-          if (options?.onOrderRefillTriggered) {
-            options.onOrderRefillTriggered(orderRes);
-          }
-
-          if (options?.onDoseLogged) {
-            options.onDoseLogged();
-          }
         } else {
-          // DEFAULT / FALLBACK INTENT (All other queries -> AWS Bedrock Claude Haiku 4.5)
           setToolLogs((prev) => [
             {
               timestamp: now,
-              toolName: 'clinicalAdvisor (AWS Bedrock Claude Haiku 4.5)',
-              args: { query: queryText },
-              result: 'Dispatched to Bedrock runtime...',
-              status: 'invoking',
-            },
-            ...prev,
-          ]);
-
-          const data = await mcpClient.askClinicalAdvisor(queryText);
-          const latency = Math.round(performance.now() - startTime);
-
-          setToolLogs((prev) => [
-            {
-              timestamp: now,
-              toolName: 'clinicalAdvisor',
-              args: { query: queryText },
-              result: data,
+              toolName: 'Direct Conversational Response',
+              args: { query: trimmed },
+              result: { speechResponse: reply, offlineFallbackUsed: turnRes.offlineFallbackUsed },
               status: 'success',
               latencyMs: latency,
             },
             ...prev.slice(1),
           ]);
+        }
 
-          const reply =
-            data.speechResponse ||
-            data.actionAdvice ||
-            data.assessment ||
-            "I've noted that. Please let me know how you are feeling.";
-
-          setConversation((prev) => [...prev, { sender: 'alexa', text: reply }]);
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `alexa_${Date.now()}`,
-              sender: 'alexa',
-              text: reply,
-              timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-              toolCall: {
-                toolName: 'clinicalAdvisor',
-                args: { query: queryText },
-                result: data,
+        // Tạo message cho Alexa với đầy đủ metadata
+        const alexaMsg: ChatMessage = {
+          id: `alexa_${Date.now()}`,
+          sender: 'alexa',
+          text: reply,
+          timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+          toolCall: toolName
+            ? {
+                toolName,
+                args: toolArgs,
+                result: toolResult,
                 status: 'success',
                 latencyMs: latency,
-                urgencyLevel: data.urgencyLevel || data.richCard?.urgencyLevel,
-                actionAdvice: data.actionAdvice || data.richCard?.actionAdvice || data.richCard?.advice,
-                clinicalExplanation: data.clinicalExplanation || data.richCard?.clinicalExplanation,
-              },
-              urgencyLevel: data.urgencyLevel || data.richCard?.urgencyLevel,
-              actionAdvice: data.actionAdvice || data.richCard?.actionAdvice || data.richCard?.advice,
-              clinicalExplanation: data.clinicalExplanation || data.richCard?.clinicalExplanation,
-            },
-          ]);
-          speakAndRelease(reply);
+                urgencyLevel: toolResult?.urgencyLevel || toolResult?.richCard?.urgencyLevel,
+                actionAdvice:
+                  toolResult?.actionAdvice ||
+                  toolResult?.richCard?.actionAdvice ||
+                  toolResult?.richCard?.advice,
+                clinicalExplanation:
+                  toolResult?.clinicalExplanation || toolResult?.richCard?.clinicalExplanation,
+              }
+            : undefined,
+          urgencyLevel: toolResult?.urgencyLevel || toolResult?.richCard?.urgencyLevel,
+          actionAdvice:
+            toolResult?.actionAdvice ||
+            toolResult?.richCard?.actionAdvice ||
+            toolResult?.richCard?.advice,
+          clinicalExplanation:
+            toolResult?.clinicalExplanation || toolResult?.richCard?.clinicalExplanation,
+        };
 
+        setConversation((prev) => [...prev, { sender: 'alexa', text: reply }]);
+        setMessages((prev) => [...prev, alexaMsg]);
+
+        // Đọc lời thoại speechResponse qua AWS Polly Neural Voice (Ruth)
+        speakAndRelease(reply);
+
+        // ĐIỀU HƯỚNG GIAO DIỆN & MỞ THẺ TƯƠNG TÁC DỰA TRÊN TOOL CLAUDE CHỌN
+        if (toolName === 'orderRefill') {
+          // Mở AmazonOrderCard
+          if (options?.onOrderRefillTriggered) {
+            options.onOrderRefillTriggered(toolResult);
+          }
+          if (options?.onDoseLogged) {
+            options.onDoseLogged();
+          }
+        } else if (toolName === 'clinicalAdvisor') {
+          // Mở ClinicalAdviceCard
           if (options?.onClinicalAdviceTriggered) {
-            options.onClinicalAdviceTriggered(data);
+            options.onClinicalAdviceTriggered(toolResult);
+          }
+        } else if (toolName === 'logDoseStatus') {
+          // Ghi nhận tồn kho thấp để refill nếu cần
+          if (toolResult?.lowStockAlert) {
+            lastLowStockMedRef.current = toolResult.lowStockAlert.medicineName;
+          }
+          // Làm mới giao diện & hiệu ứng hoàn thành cữ thuốc
+          if (options?.onDoseLogged) {
+            options.onDoseLogged();
+          }
+        } else if (toolName === 'recordVitals' || toolName === 'getTodaySchedule') {
+          if (options?.onDoseLogged) {
+            options.onDoseLogged();
           }
         }
       } catch (err: any) {

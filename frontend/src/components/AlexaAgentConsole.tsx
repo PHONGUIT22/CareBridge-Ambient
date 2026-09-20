@@ -258,7 +258,11 @@ export function AlexaAgentConsole({
                     <div className="flex items-center gap-2">
                       <span className="text-[#FF5733] flex items-center gap-1 font-mono font-medium">
                         <FontAwesomeIcon icon={faBolt} className="text-xs" />
-                        <span>{msg.toolCall.toolName}</span>
+                        <span>
+                          {msg.toolCall.toolName.startsWith('🧠')
+                            ? msg.toolCall.toolName
+                            : `🧠 Claude Reasoned Tool: ${msg.toolCall.toolName}`}
+                        </span>
                       </span>
                       {msg.toolCall.latencyMs !== undefined && (
                         <span className="px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-300 text-xs font-mono border border-white/[0.08]">

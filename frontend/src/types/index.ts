@@ -156,3 +156,13 @@ export interface AmazonRefillOrder {
   error?: string;
 }
 
+export interface AgentTurnResponse {
+  success: boolean;
+  toolName: string | null;
+  toolArgs: Record<string, any> | null;
+  toolResult: any | null;
+  speechResponse: string;
+  offlineFallbackUsed?: boolean;
+  error?: string;
+}
+

@@ -7,6 +7,7 @@ import {
   AmazonRefillOrder,
   VitalsRecord,
   LogStatus,
+  AgentTurnResponse,
 } from '../types';
 
 const API_BASE_URL =
@@ -41,6 +42,22 @@ async function fetchWithTimeout(
 }
 
 export const mcpClient = {
+  /**
+   * POST /api/agent/turn
+   * Bedrock Claude Native Tool-Use & Agentic Loop Orchestrator
+   */
+  async executeAgentTurn(query: string): Promise<AgentTurnResponse> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/api/agent/turn`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to execute agent turn: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
   /**
    * GET /api/today
    * Lấy lịch uống thuốc, chỉ số sinh tồn và người chăm sóc hôm nay
