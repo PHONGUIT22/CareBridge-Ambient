@@ -199,4 +199,24 @@ export interface RingDeviceHubResult {
   };
 }
 
+export type InteractionSeverity = 'CRITICAL' | 'HIGH' | 'MODERATE';
 
+export interface DrugInteractionWarning {
+  severity: InteractionSeverity;
+  drugA: string;
+  drugB: string;
+  conflictingMedName: string;
+  title: string;
+  mechanism: string;
+  clinicalRisk: string;
+  recommendation: string;
+}
+
+export interface DrugInteractionCheckResult {
+  success: boolean;
+  hasInteraction: boolean;
+  newDrug: string;
+  activeMedsChecked: string[];
+  warnings: DrugInteractionWarning[];
+  error?: string;
+}

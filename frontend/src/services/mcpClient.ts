@@ -9,6 +9,7 @@ import {
   LogStatus,
   AgentTurnResponse,
   RingDeviceHubResult,
+  DrugInteractionCheckResult,
 } from '../types';
 
 const API_BASE_URL =
@@ -256,6 +257,25 @@ export const mcpClient = {
     });
     if (!res.ok) {
       throw new Error(`Failed to delete medicine: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
+  /**
+   * POST /api/medicines/check-interaction
+   * Automated Drug-Drug Safety & Beers Criteria interaction checker
+   */
+  async checkDrugInteraction(
+    newMedicineName: string,
+    currentMedicines?: string[]
+  ): Promise<DrugInteractionCheckResult> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/api/medicines/check-interaction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newMedicineName, currentMedicines }),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to check drug interactions: ${res.statusText}`);
     }
     return res.json();
   },

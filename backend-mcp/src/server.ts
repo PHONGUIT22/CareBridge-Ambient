@@ -39,6 +39,7 @@ import { orderRefillTool } from './tools/orderRefill.js';
 import { ringDeviceHubTool } from './tools/ringDeviceHub.js';
 import { handleAgentTurn } from './tools/agentTurnHandler.js';
 import { synthesizeSpeech } from './aws/pollyClient.js';
+import { checkDrugInteractions } from './services/drugInteractionService.js';
 
 const app = express();
 const PORT = Number(process.env.MCP_PORT || process.env.PORT) || 3001;
@@ -317,6 +318,22 @@ app.delete('/api/medicines/:id', async (req: Request, res: Response) => {
     await MedicineRepo.deleteMedicine(id);
     res.json({ success: true, message: 'Đã xóa thuốc thành công.' });
   } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Kiểm tra tương tác thuốc tự động (Drug Safety & Beers Criteria check)
+app.post('/api/medicines/check-interaction', async (req: Request, res: Response) => {
+  try {
+    const { newMedicineName, currentMedicines } = req.body || {};
+    if (!newMedicineName || typeof newMedicineName !== 'string') {
+      res.status(400).json({ success: false, error: 'Thiếu tên thuốc cần kiểm tra (newMedicineName).' });
+      return;
+    }
+    const result = await checkDrugInteractions(newMedicineName, currentMedicines);
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    console.error('[Server Check Interaction Error]:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
