@@ -14,7 +14,8 @@
 7. [Friction Entry #7: MCP Streamable HTTP DTO & Contract Alignment](#friction-entry-7-mcp-streamable-http-dto--contract-alignment)
 8. [Friction Entry #8: Screen Real-Estate & Double Scrollbars on Smart Display Consoles](#friction-entry-8-screen-real-estate--double-scrollbars-on-smart-display-consoles)
 9. [Friction Entry #9: AWS SNS SMS Sandbox Destination Constraints & Transactional Dispatch Routing](#friction-entry-9-aws-sns-sms-sandbox-destination-constraints--transactional-dispatch-routing)
-10. [Product Feedback Summary (Devpost Field Answers)](#-product-feedback-summary-devpost-field-answers)
+10. [Friction Entry #10: Native Claude Tool-Use Schema Mapping & Zero-Downtime Offline Fallback Resilience](#friction-entry-10-native-claude-tool-use-schema-mapping--zero-downtime-offline-fallback-resilience)
+11. [Product Feedback Summary (Devpost Field Answers)](#-product-feedback-summary-devpost-field-answers)
 
 ---
 
@@ -167,6 +168,29 @@
   - If AWS credentials fail or phone number is in sandbox mode, it seamlessly traps the exception, switches to `simulated: true` mode, logs telemetry, generates a realistic mock Message ID (`sns-sim-...`), and returns full delivery metadata.
   - On the frontend (`ClinicalAdviceCard.tsx` and `page.tsx`), a status banner distinguishes between `AWS SNS Live` vs `AWS Sandbox` mode, guaranteeing an uninterrupted evaluation flow.
 - **Actionable Suggestion for AWS SNS Team:** Provide a zero-config Developer Sandbox API flag or Test Simulator phone number range (similar to Stripe test card numbers or Twilio magic numbers) that enables end-to-end integration testing and hackathon demo verification without submitting telecom regulatory paperwork for phone verification.
+
+---
+
+### Friction Entry #10: Native Claude Tool-Use Schema Mapping & Zero-Downtime Offline Fallback Resilience
+
+- **Task Attempted:** Upgrading CareBridge's agentic loop from hardcoded pattern matching to AWS Bedrock Native Claude 3.5 Sonnet / Haiku 4.5 Tool Use (`anthropic_version: "bedrock-2023-05-31"`, `tools: [...]`, `tool_choice: { type: "auto" }`) to allow the LLM to autonomously select and execute 1 of 5 core MCP tools (`getTodaySchedule`, `logDoseStatus`, `recordVitals`, `clinicalAdvisor`, `orderRefill`).
+- **Steps Taken:**
+  1. Defined strict JSON schemas conforming to Anthropic's tool format inside `backend-mcp/src/aws/bedrockClient.ts`.
+  2. Dispatched payloads with `InvokeModelCommand` passing `tools` array and `tool_choice: { type: "auto" }`.
+  3. Tested edge cases: AWS credentials present vs. missing, network latency spikes, tool execution failures, and dual stop reasons (`tool_use` vs `end_turn`).
+- **Expected vs. Actual Result:**
+  - *Expected:* Bedrock cleanly parses function schemas and returns structured tool calls across all AWS regions with straightforward error handling.
+  - *Actual:* Three critical DX hurdles emerged:
+    1. **Dual Stop Reason Handling:** Claude may stop with `stop_reason === 'tool_use'` (where tool arguments reside inside a content block of type `tool_use`) or `stop_reason === 'end_turn'` (conversational text block). If an agent loop assumes tool calls are always emitted in a single schema format, runtime parsing errors happen.
+    2. **Region-Specific Profile Inconsistencies:** Not all Bedrock regions support Claude 3.5 Sonnet tool-use directly without specific cross-region inference profiles, leading to unhandled `400 ValidationException: The provided model ID is not supported` if static ARNs are hardcoded.
+    3. **Ambient Device Reliability & Offline Fragility:** In an ambient healthcare device setting (e.g. Echo Show 10 in a senior's home), cloud connection drops or AWS token expirations must never render the medication schedule unreachable or crash the server process.
+- **Severity Rating:** **High** (Vital for production-grade agentic autonomy and life-critical patient safety).
+- **Workaround Used:**
+  - Architected `backend-mcp/src/tools/agentTurnHandler.ts` with a resilient dual-branch engine:
+    - **Cloud Agentic Branch:** Seamlessly handles both `tool_use` blocks (executing the MCP tool on SQLite WAL and synthesizing speech via Polly) and pure `text` conversational replies.
+    - **Deterministic Offline Heuristic Branch:** If Bedrock throws any error (`UnrecognizedClientException`, invalid credentials, network timeout), the engine intercepts it gracefully without crashing, falling back to a deterministic regex/keyword heuristic parser (`resolveOfflineHeuristic`), marking `offlineFallbackUsed: true`, and fulfilling the user's intent.
+  - Added visual transparency to `AlexaAgentConsole.tsx`: An audit pill displaying `🧠 Claude Reasoned Tool: [toolName] (XXms)` in cloud mode or `⚡ Offline Heuristic Fallback` in offline mode.
+- **Actionable Suggestion for AWS Bedrock & Alexa Teams:** Provide an official high-level `@aws-sdk/bedrock-agentic-runtime` wrapper for Node.js / TypeScript that abstracts message formatting, handles automatic fallback retry loops, and standardizes error payloads when tool schemas are rejected.
 
 ---
 
