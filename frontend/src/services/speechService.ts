@@ -38,6 +38,65 @@ class SpeechService {
   }
 
   /**
+   * Phát âm thanh Earcon Chime ngắn ngay tức thì (0ms) bằng Web Audio API
+   * 2 nốt beep thanh nhã tần số 587Hz (D5) -> 880Hz (A5) trong 175ms với gain envelope êm ái
+   */
+  public playChime(): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      const now = ctx.currentTime;
+
+      // Nốt 1: 587.33 Hz (D5)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, now);
+
+      gain1.gain.setValueAtTime(0, now);
+      gain1.gain.linearRampToValueAtTime(0.16, now + 0.015);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.085);
+
+      // Nốt 2: 880.00 Hz (A5)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(880, now + 0.07);
+
+      gain2.gain.setValueAtTime(0, now + 0.07);
+      gain2.gain.linearRampToValueAtTime(0.18, now + 0.085);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.175);
+
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.07);
+      osc2.stop(now + 0.18);
+
+      // Thu hồi AudioContext sau khi phát xong
+      setTimeout(() => {
+        try {
+          ctx.close();
+        } catch (_) {}
+      }, 250);
+    } catch (err) {
+      console.warn('[SpeechService] Earcon chime failed:', err);
+    }
+  }
+
+  /**
    * Ngắt toàn bộ âm thanh đang phát (cả AWS Polly Audio Stream lẫn Web Speech API)
    */
   public cancel(): void {
@@ -101,7 +160,7 @@ class SpeechService {
       this.activeAbortController = new AbortController();
       const timeoutId = setTimeout(() => {
         this.activeAbortController?.abort();
-      }, 5000);
+      }, 800);
 
       const response = await fetch(`${API_BASE_URL}/api/tts`, {
         method: 'POST',
@@ -158,7 +217,11 @@ class SpeechService {
     } catch (err: any) {
       // Nếu là do cancel() gọi abort() thì không fallback nữa
       if (currentId !== this.playbackId) return;
-      console.warn('[SpeechService] Không thể kết nối tới AWS Polly TTS endpoint, fallback sang Web Speech API:', err.message);
+      if (err.name === 'AbortError') {
+        console.info('[SpeechService] AWS Polly quá 800ms -> Fast Fallback sang Web Speech API ngay tức thì');
+      } else {
+        console.warn('[SpeechService] Không thể kết nối tới AWS Polly TTS endpoint, fallback sang Web Speech API:', err.message);
+      }
     }
 
     // TẦNG 2: Fallback sang Web Speech API

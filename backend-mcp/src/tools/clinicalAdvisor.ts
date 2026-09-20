@@ -53,12 +53,12 @@ export const clinicalAdvisorTool = {
         const alertBody = `[CareBridge EMERGENCY ALERT] Eleanor reported severe symptoms: "${args.query}". Risk Level: ${analysis.urgencyLevel}. Current Vitals: ${recentVitals}. Immediate family assistance requested. Ambient station active.`;
         smsDispatchResult = await sendEmergencySMS(caregiverPhone, alertBody, caregiverName);
 
-        // Đảm bảo lời thoại phản hồi thông báo rõ ràng về việc đã gửi SMS khẩn cấp tới người thân
+        // Đảm bảo lời thoại phản hồi thông báo ngắn gọn dưới 20 từ cho AWS Polly render tức thì
         if (analysis.urgencyLevel === 'EMERGENCY') {
           analysis.speechResponse =
-            `I've flagged this as an emergency. Sit down immediately. I have just dispatched an urgent SMS alert with your location and current vitals to your daughter Sarah.`;
+            `Emergency flagged. Sit down immediately. An urgent SMS alert with your vitals has been sent to your daughter Sarah.`;
         } else if (!analysis.speechResponse.toLowerCase().includes('sarah')) {
-          analysis.speechResponse += ` An urgent SMS notification has been dispatched to your caregiver ${caregiverName.split(' ')[0]}.`;
+          analysis.speechResponse += ` An alert was sent to ${caregiverName.split(' ')[0]}.`;
         }
       } catch (err) {
         console.warn('[clinicalAdvisor] Failed to dispatch emergency SMS via AWS SNS:', err);

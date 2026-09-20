@@ -172,6 +172,37 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
     }
   }, [isListening]);
 
+/**
+ * Tối ưu độ trễ âm thanh: Đảm bảo câu đọc gửi sang Polly ngắn gọn dưới 20 từ,
+ * không gửi phần giải thích lâm sàng dài dòng để giảm thiểu thời gian kết xuất âm thanh.
+ */
+function toConciseSpokenSummary(text: string): string {
+  if (!text) return '';
+
+  const clean = text
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/[*_#`]/g, '')
+    .replace(/\[.*?\]\(.*?\)/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const words = clean.split(' ');
+  if (words.length <= 20) {
+    return clean;
+  }
+
+  // Nếu quá 20 từ, lấy câu đầu tiên nếu ngắn gọn hoặc cắt tối đa 18 từ
+  const firstSentenceMatch = clean.match(/^([^\.\?!]+[\.\?!])/);
+  if (firstSentenceMatch) {
+    const firstSentence = firstSentenceMatch[1].trim();
+    if (firstSentence.split(' ').length <= 20) {
+      return firstSentence;
+    }
+  }
+
+  return words.slice(0, 18).join(' ') + '.';
+}
+
   const processVoiceQuery = useCallback(
     async (queryText: string) => {
       // 1. Lock against concurrent queries
@@ -190,6 +221,9 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
         recognitionRef.current?.abort();
       } catch (_) {}
       setIsListening(false);
+
+      // 3. Phát Earcon Chime lập tức (0ms) xác nhận hệ thống đã nhận diện câu lệnh
+      speechService.playChime();
 
       const now = new Date().toLocaleTimeString('en-US', { hour12: false });
       const startTime = performance.now();
@@ -210,8 +244,11 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
           }
         }, 12000);
 
+        // Tối ưu độ trễ: Chỉ gửi câu tóm tắt ngắn (dưới 20 từ) sang Polly
+        const conciseSpokenText = toConciseSpokenSummary(replyText);
+
         if (speechService.isSupported()) {
-          speechService.speak(replyText, {
+          speechService.speak(conciseSpokenText, {
             onEnd: () => {
               setIsSpeaking(false);
               clearTimeout(safetyTimer);

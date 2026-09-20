@@ -28,7 +28,7 @@ Context of patient:
 
 Respond STRICTLY in valid JSON with NO markdown codeblock markers, matching this exact schema:
 {
-  "speechResponse": "Concise, compassionate voice response for Alexa to speak out loud (under 30 words, 8th grade reading level).",
+  "speechResponse": "Concise, compassionate voice response for Alexa to speak out loud (strictly under 20 words for fast audio rendering).",
   "displayCardTitle": "Short, clear card title for Echo Show display (e.g. 'Mild Dizziness - Rest Recommended')",
   "actionAdvice": "Concrete, actionable step-by-step guidance for the senior or caregiver (e.g. 'Sit down immediately and drink a glass of warm water. Rest for 15 minutes before checking blood pressure.')",
   "clinicalExplanation": "Plain-language clinical reason for why this might be happening (e.g. 'Transient orthostatic hypotension may occur shortly after taking anti-hypertensive medication such as Amlodipine.')",
@@ -166,7 +166,7 @@ Respond STRICTLY in valid JSON with NO markdown codeblock markers, matching this
   if (isEmergency) {
     return {
       speechResponse:
-        "I've flagged this as an emergency. Sit down immediately. I have just dispatched an urgent SMS alert with your location and current vitals to your daughter Sarah.",
+        "Emergency flagged. Sit down immediately. An urgent SMS alert with your vitals has been sent to your daughter Sarah.",
       displayCardTitle: 'EMERGENCY: Acute Chest Discomfort',
       actionAdvice:
         'Stop all physical movement immediately. Sit in an upright supported position. Rest quietly and keep your airway open. If pain radiates to jaw or left arm, call 911 immediately.',
@@ -183,8 +183,8 @@ Respond STRICTLY in valid JSON with NO markdown codeblock markers, matching this
 
   return {
     speechResponse: isDizzy
-      ? "I hear you, please sit down and drink a glass of water. Dizziness can happen as your blood pressure medication takes effect."
-      : "I've noted that. You are doing well. Please rest, drink warm water, and I'll keep your daughter Sarah informed.",
+      ? "Please sit down and rest. Dizziness is common after blood pressure medication."
+      : "I have recorded your note. Please rest quietly and drink a glass of water.",
     displayCardTitle: isDizzy ? 'Mild Dizziness - Sit & Rest' : 'Health Observation Logged',
     actionAdvice: isDizzy
       ? 'Please sit down immediately to prevent falls. Drink 200ml of room-temperature water. Rest for 15 minutes before checking blood pressure.'
