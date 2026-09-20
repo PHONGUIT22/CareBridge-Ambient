@@ -10,6 +10,216 @@ export interface ClinicalAnalysisResult {
   recommendedAction: string;
 }
 
+export interface BedrockToolUseDecision {
+  stopReason: string;
+  toolCall?: {
+    id: string;
+    name: string;
+    input: Record<string, any>;
+  };
+  textResponse?: string;
+  rawResponse?: any;
+}
+
+export const MCP_TOOLS_SCHEMAS = [
+  {
+    name: 'getTodaySchedule',
+    description: 'Lấy toàn bộ lịch uống thuốc trong ngày của bệnh nhân, tỉ lệ tuân thủ phần trăm và liều thuốc sắp tới cần uống.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        date: {
+          type: 'string',
+          description: 'Ngày cần lấy dạng YYYY-MM-DD. Mặc định là ngày hôm nay.',
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'logDoseStatus',
+    description: "Đánh dấu trạng thái một cữ thuốc là 'taken' (đã uống) hoặc 'skipped' (bỏ qua), kèm ghi chú cảm giác hoặc lâm sàng.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        logId: {
+          type: 'string',
+          description: 'Mã định danh của bản ghi intake log (nếu có).',
+        },
+        medicineName: {
+          type: 'string',
+          description: 'Tên thuốc người bệnh nói (ví dụ: Amlodipine, Metformin, Atorvastatin, morning pills).',
+        },
+        status: {
+          type: 'string',
+          enum: ['taken', 'skipped', 'pending'],
+          description: "Trạng thái mới của cữ thuốc ('taken' hoặc 'skipped'). Mặc định là 'taken'.",
+        },
+        notes: {
+          type: 'string',
+          description: 'Ghi chú lâm sàng hoặc cảm giác khi uống.',
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'recordVitals',
+    description: 'Ghi nhận nhanh các chỉ số sinh tồn của người cao tuổi: huyết áp tâm thu, tâm trương, đường huyết, nhịp tim.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        systolic: { type: 'number', description: 'Huyết áp tâm thu (e.g. 120, 130)' },
+        diastolic: { type: 'number', description: 'Huyết áp tâm trương (e.g. 80, 85)' },
+        bloodSugar: { type: 'number', description: 'Chỉ số đường huyết mg/dL (e.g. 105)' },
+        heartRate: { type: 'number', description: 'Nhịp tim bpm (e.g. 72)' },
+        date: { type: 'string', description: 'Ngày đo YYYY-MM-DD. Mặc định là hôm nay.' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'clinicalAdvisor',
+    description: 'Nhận triệu chứng hoặc thắc mắc sức khỏe của người cao tuổi (chóng mặt, đau ngực, mệt mỏi, tương tác thuốc) để phân tích lâm sàng và đưa ra lời khuyên an toàn.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Câu nói hoặc mô tả triệu chứng của người bệnh (ví dụ: "I feel dizzy after taking my pill").',
+        },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'orderRefill',
+    description: 'Tự động đặt thuốc bổ sung (refill) qua Amazon Pharmacy 1-Click khi thuốc trong kho sắp hết hoặc người dùng yêu cầu đặt thêm thuốc.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        medicineName: {
+          type: 'string',
+          description: 'Tên loại thuốc cần đặt thêm (ví dụ: Atorvastatin, Amlodipine, Metformin).',
+        },
+        quantity: {
+          type: 'number',
+          description: 'Số lượng viên thuốc đặt bổ sung (mặc định 30 viên).',
+        },
+      },
+      required: ['medicineName'],
+    },
+  },
+];
+
+/**
+ * Gọi Bedrock Runtime với Claude Native Tool-Use API (anthropic_version: "bedrock-2023-05-31")
+ * Hỗ trợ Claude tự động chọn 1 trong 5 MCP Tools.
+ */
+export async function invokeBedrockWithTools(
+  userQuery: string,
+  contextData?: { currentMeds?: string[]; recentVitals?: string }
+): Promise<BedrockToolUseDecision | null> {
+  const modelId =
+    process.env.BEDROCK_MODEL_ID || 'au.anthropic.claude-haiku-4-5-20251001-v1:0';
+  const region = process.env.AWS_REGION || 'ap-southeast-2';
+
+  const accessKeyId = process.env.AWS_ACCESS_KEY_ID?.trim();
+  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY?.trim();
+  const sessionToken = process.env.AWS_SESSION_TOKEN?.trim();
+
+  const hasRealCredentials =
+    Boolean(accessKeyId) &&
+    Boolean(secretAccessKey) &&
+    secretAccessKey !== 'PASTE_YOUR_SECRET_KEY_HERE' &&
+    !(secretAccessKey && secretAccessKey.includes('PASTE_'));
+
+  if (!hasRealCredentials || !accessKeyId || !secretAccessKey) {
+    console.log('[Bedrock Tool-Use] No real AWS credentials configured. Deferring to offline heuristic fallback.');
+    return null;
+  }
+
+  try {
+    const credentials = {
+      accessKeyId,
+      secretAccessKey,
+      ...(sessionToken ? { sessionToken } : {}),
+    };
+
+    const bedrockClient = new BedrockRuntimeClient({
+      region,
+      credentials,
+    });
+
+    const systemPrompt = `You are CareBridge Ambient OS, an empathetic, geriatric-focused AI health companion running on an Amazon Echo Show 10 for senior patient Eleanor Vance (78).
+Based on the user's spoken request, choose the single most relevant tool from the provided tools:
+- getTodaySchedule: When asking for daily medication routine, upcoming doses, or compliance rate.
+- logDoseStatus: When the senior reports taking, drinking, or skipping a medication (e.g. "I took my morning pills", "I took Amlodipine", "skipped my evening dose").
+- recordVitals: When reporting blood pressure, blood sugar, heart rate, or pulse measurements.
+- clinicalAdvisor: When reporting symptoms, discomfort, feeling dizzy, pain, or asking clinical questions.
+- orderRefill: When requesting a refill or ordering more medicine via Amazon Pharmacy.
+
+If no tool is needed (such as a greeting or simple conversation), respond directly with compassionate, reassuring text strictly under 20 words for fast speech rendering.`;
+
+    const payload = {
+      anthropic_version: 'bedrock-2023-05-31',
+      max_tokens: 1024,
+      temperature: 0.1,
+      system: systemPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: userQuery,
+        },
+      ],
+      tools: MCP_TOOLS_SCHEMAS,
+      tool_choice: { type: 'auto' },
+    };
+
+    const command = new InvokeModelCommand({
+      modelId,
+      contentType: 'application/json',
+      accept: 'application/json',
+      body: JSON.stringify(payload),
+    });
+
+    console.log(`[Bedrock Tool-Use] Invoking ${modelId} with native tool schemas...`);
+    const response = await bedrockClient.send(command);
+    const jsonStr = new TextDecoder().decode(response.body);
+    const parsed = JSON.parse(jsonStr);
+
+    const stopReason = parsed.stop_reason || 'end_turn';
+    let toolCall: { id: string; name: string; input: Record<string, any> } | undefined;
+    let textResponse: string | undefined;
+
+    if (Array.isArray(parsed.content)) {
+      for (const block of parsed.content) {
+        if (block.type === 'tool_use') {
+          toolCall = {
+            id: block.id,
+            name: block.name,
+            input: block.input || {},
+          };
+        } else if (block.type === 'text') {
+          textResponse = (textResponse ? textResponse + ' ' : '') + block.text;
+        }
+      }
+    }
+
+    console.log(`[Bedrock Tool-Use Response] Stop reason: ${stopReason}, Tool called: ${toolCall?.name || 'none'}`);
+
+    return {
+      stopReason,
+      toolCall,
+      textResponse: textResponse?.trim(),
+      rawResponse: parsed,
+    };
+  } catch (err: any) {
+    console.warn(`[Bedrock Tool-Use] AWS Bedrock call failed (${err?.name || 'Error'}: ${err?.message || err}). Falling back smoothly to offline heuristic fallback.`);
+    return null;
+  }
+}
+
 export async function analyzeClinicalQuery(
   patientStatement: string,
   contextData?: { currentMeds?: string[]; recentVitals?: string }

@@ -43,3 +43,4 @@ Thumbs.db
 .agents/
 skills-lock.json
 *.local.json
+repomix-output.xml

@@ -36,6 +36,7 @@ import { logDoseStatusTool } from './tools/logDoseStatus.js';
 import { recordVitalsTool } from './tools/recordVitals.js';
 import { clinicalAdvisorTool } from './tools/clinicalAdvisor.js';
 import { orderRefillTool } from './tools/orderRefill.js';
+import { handleAgentTurn } from './tools/agentTurnHandler.js';
 import { synthesizeSpeech } from './aws/pollyClient.js';
 
 const app = express();
@@ -315,6 +316,22 @@ app.post('/api/advisor', async (req: Request, res: Response) => {
     const result = await clinicalAdvisorTool.handler({ query });
     res.json(result);
   } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Endpoint điều phối AI Agent Turn (Claude Haiku Native Tool-Use & Offline Heuristic Fallback)
+app.post('/api/agent/turn', async (req: Request, res: Response) => {
+  try {
+    const { query, context } = req.body || {};
+    if (!query || typeof query !== 'string') {
+      res.status(400).json({ success: false, error: 'Thiếu câu lệnh người dùng (query).' });
+      return;
+    }
+    const result = await handleAgentTurn({ query, context });
+    res.json(result);
+  } catch (error: any) {
+    console.error('[Server Agent Turn Error]:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

@@ -49,10 +49,17 @@ export const logDoseStatusTool = {
         if (found) {
           targetLogId = found.logId;
           matchedMedName = found.name;
+        } else {
+          // Fallback nếu medicineName là từ nói chung (ví dụ: "morning pills", "pills", "medication")
+          const pendingDose = todayLogs.find((l) => l.status === 'pending') || todayLogs[0];
+          if (pendingDose) {
+            targetLogId = pendingDose.logId;
+            matchedMedName = pendingDose.name;
+          }
         }
       } else {
         // Lấy cữ pending gần nhất
-        const pendingDose = todayLogs.find((l) => l.status === 'pending');
+        const pendingDose = todayLogs.find((l) => l.status === 'pending') || todayLogs[0];
         if (pendingDose) {
           targetLogId = pendingDose.logId;
           matchedMedName = pendingDose.name;
