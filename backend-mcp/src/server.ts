@@ -36,6 +36,7 @@ import { logDoseStatusTool } from './tools/logDoseStatus.js';
 import { recordVitalsTool } from './tools/recordVitals.js';
 import { clinicalAdvisorTool } from './tools/clinicalAdvisor.js';
 import { orderRefillTool } from './tools/orderRefill.js';
+import { ringDeviceHubTool } from './tools/ringDeviceHub.js';
 import { handleAgentTurn } from './tools/agentTurnHandler.js';
 import { synthesizeSpeech } from './aws/pollyClient.js';
 
@@ -72,6 +73,7 @@ const registeredTools = [
   recordVitalsTool,
   clinicalAdvisorTool,
   orderRefillTool,
+  ringDeviceHubTool,
 ];
 
 // Định nghĩa handler khi Alexa/Agent hỏi danh sách Tool
@@ -105,6 +107,10 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
       case 'orderRefill': {
         const result = await orderRefillTool.handler(toolArgs as any);
+        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      }
+      case 'ringDeviceHub': {
+        const result = await ringDeviceHubTool.handler(toolArgs as any);
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
       }
       default:
@@ -211,6 +217,16 @@ app.post('/api/dose', async (req: Request, res: Response) => {
 app.post('/api/refill', async (req: Request, res: Response) => {
   try {
     const result = await orderRefillTool.handler(req.body);
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Điều khiển và kiểm tra hệ sinh thái thiết bị thông minh Ring
+app.post('/api/ring', async (req: Request, res: Response) => {
+  try {
+    const result = await ringDeviceHubTool.handler(req.body || {});
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });

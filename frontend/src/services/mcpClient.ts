@@ -8,6 +8,7 @@ import {
   VitalsRecord,
   LogStatus,
   AgentTurnResponse,
+  RingDeviceHubResult,
 } from '../types';
 
 const API_BASE_URL =
@@ -54,6 +55,25 @@ export const mcpClient = {
     });
     if (!res.ok) {
       throw new Error(`Failed to execute agent turn: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
+  /**
+   * POST /api/ring
+   * Ring Smart Doorbell & Access Hub Controller
+   */
+  async triggerRingAction(
+    action: 'checkFrontPorch' | 'triggerEmergencyDoorUnlock' | 'getDeviceStatus' = 'checkFrontPorch',
+    reason?: string
+  ): Promise<RingDeviceHubResult> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/api/ring`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, reason }),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to trigger Ring action: ${res.statusText}`);
     }
     return res.json();
   },

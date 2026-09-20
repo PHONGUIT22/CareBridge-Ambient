@@ -4,6 +4,7 @@ import { logDoseStatusTool } from './logDoseStatus.js';
 import { recordVitalsTool } from './recordVitals.js';
 import { clinicalAdvisorTool } from './clinicalAdvisor.js';
 import { orderRefillTool } from './orderRefill.js';
+import { ringDeviceHubTool } from './ringDeviceHub.js';
 
 export interface AgentTurnRequest {
   query: string;
@@ -199,6 +200,34 @@ function resolveOfflineHeuristic(query: string): {
     };
   }
 
+  // 5. Ý định Hệ sinh thái Ring (Ring Doorbell Pro / Smart Lock)
+  const isRingIntent =
+    lower.includes('ring') ||
+    lower.includes('doorbell') ||
+    lower.includes('porch') ||
+    lower.includes('front door') ||
+    lower.includes('thềm cửa') ||
+    lower.includes('chuông cửa') ||
+    lower.includes('door') ||
+    lower.includes('parcel') ||
+    lower.includes('package');
+
+  if (isRingIntent) {
+    const isUnlock =
+      lower.includes('unlock') ||
+      lower.includes('open door') ||
+      lower.includes('mở cửa') ||
+      lower.includes('paramedic') ||
+      lower.includes('emergency');
+
+    return {
+      toolName: 'ringDeviceHub',
+      toolArgs: {
+        action: isUnlock ? 'triggerEmergencyDoorUnlock' : 'checkFrontPorch',
+        reason: isUnlock ? 'Emergency Paramedic Access Request' : 'Front Porch Security & Package Inspection',
+      },
+    };
+  }
 
   return null;
 }
@@ -239,6 +268,11 @@ async function executeTool(toolName: string, toolArgs: Record<string, any>): Pro
     case 'orderRefill': {
       toolResult = await orderRefillTool.handler(toolArgs as any);
       speechResponse = toolResult.speechText || 'Your Amazon Pharmacy refill order has been placed.';
+      break;
+    }
+    case 'ringDeviceHub': {
+      toolResult = await ringDeviceHubTool.handler(toolArgs as any);
+      speechResponse = toolResult.speechText || 'Ring Doorbell front porch camera checked.';
       break;
     }
     default:

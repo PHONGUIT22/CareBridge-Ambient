@@ -59,6 +59,14 @@ const QUICK_PROMPTS = [
     label: 'Chest discomfort',
     prompt: 'Alexa, I have severe crushing chest pain and shortness of breath.',
   },
+  {
+    label: 'Check Porch (Ring)',
+    prompt: 'Alexa, check my front porch Ring camera for packages.',
+  },
+  {
+    label: 'Unlock Door (Ring)',
+    prompt: 'Alexa, unlock front door for paramedics.',
+  },
 ];
 
 const EMPTY_MESSAGES: ChatMessage[] = [];

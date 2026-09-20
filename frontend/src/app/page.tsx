@@ -9,6 +9,7 @@ import { AlexaAgentConsole } from '../components/AlexaAgentConsole';
 import { PillVisualCard } from '../components/RichCards/PillVisualCard';
 import { ClinicalAdviceCard } from '../components/RichCards/ClinicalAdviceCard';
 import { AmazonOrderCard } from '../components/RichCards/AmazonOrderCard';
+import { RingDoorbellCard } from '../components/RichCards/RingDoorbellCard';
 import { ToastContainer, ToastMessage } from '../components/Toast';
 import { AuthGate, AuthSession } from '../components/AuthGate';
 import { PaywallModal } from '../components/PaywallModal';
@@ -23,6 +24,7 @@ import {
   faShieldHalved,
   faTableCells,
   faChartLine,
+  faVideo,
   faClock,
   faMicrophone,
   faCircleNotch,
@@ -44,6 +46,11 @@ export default function Home() {
   const [clinicalAdviceData, setClinicalAdviceData] = useState<any>(null);
   const [amazonOrderCardOpen, setAmazonOrderCardOpen] = useState(false);
   const [amazonOrderData, setAmazonOrderData] = useState<AmazonRefillOrder | null>(null);
+  const [ringCardOpen, setRingCardOpen] = useState(false);
+  const [ringCardMode, setRingCardMode] = useState<'delivery' | 'emergency' | 'live'>('delivery');
+  const [ringPackageData, setRingPackageData] = useState<any>(null);
+  const [ringDoorLockStatus, setRingDoorLockStatus] = useState<string>('LOCKED');
+  const [ringEmergencyReason, setRingEmergencyReason] = useState<string>('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -163,6 +170,25 @@ export default function Home() {
         message: `Alert dispatched to ${sms.recipient} (${sms.phone}) via AWS SNS.`,
       });
     }
+
+    // Khi có cảnh báo EMERGENCY từ Bedrock: Thẻ Ring hiển thị trạng thái Ring Smart Lock: UNLOCKED FOR PARAMEDICS
+    const isEmergency =
+      data?.urgencyLevel === 'EMERGENCY' || data?.richCard?.urgencyLevel === 'EMERGENCY';
+    if (isEmergency) {
+      setRingCardMode('emergency');
+      setRingDoorLockStatus('UNLOCKED FOR PARAMEDICS');
+      setRingEmergencyReason(
+        data?.displayCardTitle || data?.richCard?.title || 'Acute Medical Emergency Alert'
+      );
+      setTimeout(() => {
+        setRingCardOpen(true);
+        addToast({
+          type: 'warning',
+          title: 'Ring Smart Access Overridden',
+          message: 'Front door unlocked automatically for incoming paramedics.',
+        });
+      }, 1800);
+    }
   };
 
   // Kích hoạt Amazon Pharmacy Order Card khi đặt thuốc thành công
@@ -174,6 +200,27 @@ export default function Home() {
       title: 'Amazon Pharmacy Order Placed',
       message: `${order.quantityAdded || 30} tabs of ${order.medicineName} arriving ${order.estimatedDelivery}`,
     });
+
+    // Sau 5 giây giả lập sự kiện shipper Amazon Prime bấm chuông và để kiện thuốc ở thềm cửa
+    setTimeout(() => {
+      setRingCardMode('delivery');
+      setRingPackageData({
+        carrier: 'Amazon Prime Delivery',
+        description: `Prescription Refill (${order.medicineName})`,
+        orderId: order.orderId,
+        deliveryTime: 'Just now',
+      });
+      setRingDoorLockStatus('LOCKED');
+      setRingCardOpen(true);
+      speechService.speak(
+        'Ring Doorbell: Amazon Pharmacy package delivered at your front porch.'
+      );
+      addToast({
+        type: 'info',
+        title: 'Ring Doorbell Motion Detected',
+        message: 'Amazon Prime delivery arrived. Prescription parcel placed on front porch.',
+      });
+    }, 5000);
   };
 
   // Single Source of Truth: Voice Agent & Bedrock Multi-Turn Orchestration
@@ -186,6 +233,18 @@ export default function Home() {
     },
     onOrderRefillTriggered: (order) => {
       handleTriggerAmazonOrder(order);
+    },
+    onRingDeviceTriggered: (ringResult) => {
+      if (ringResult.action === 'triggerEmergencyDoorUnlock') {
+        setRingCardMode('emergency');
+        setRingDoorLockStatus('UNLOCKED FOR PARAMEDICS');
+        setRingEmergencyReason(ringResult.emergencyReason || 'Emergency Paramedic Access');
+      } else {
+        setRingCardMode('delivery');
+        setRingPackageData(ringResult.packageDetails);
+        setRingDoorLockStatus(ringResult.doorLockStatus || 'LOCKED');
+      }
+      setRingCardOpen(true);
     },
   });
 
@@ -287,6 +346,26 @@ export default function Home() {
           >
             <FontAwesomeIcon icon={faDesktop} className="text-xs" />
             <span className="hidden lg:inline">Dual frame</span>
+          </button>
+
+          {/* Ring Doorbell Pro Camera Quick Trigger */}
+          <button
+            onClick={() => {
+              setRingCardMode('delivery');
+              setRingPackageData({
+                carrier: 'Amazon Prime Delivery',
+                description: 'Prescription Medication Parcel (Atorvastatin 20mg)',
+                orderId: '114-7294821-4928103',
+                deliveryTime: 'Just now',
+              });
+              setRingDoorLockStatus('LOCKED');
+              setRingCardOpen(true);
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#1399FF]/15 hover:bg-[#1399FF]/25 border border-[#1399FF]/40 text-[#1399FF] text-xs font-mono font-medium transition-all active:scale-95"
+            title="Preview Ring Doorbell Pro Camera"
+          >
+            <FontAwesomeIcon icon={faVideo} className="text-xs" />
+            <span className="hidden sm:inline">Ring Porch</span>
           </button>
 
           <button
@@ -569,6 +648,31 @@ export default function Home() {
             type: 'info',
             title: 'Amazon Logistics',
             message: `Tracking shipment for Order #${orderId}. Carrier: Amazon Prime Delivery.`,
+          });
+        }}
+      />
+
+      {/* RICH CARD CAMERA CHUÔNG CỬA THÔNG MINH RING (CROSS-DEVICE ECOSYSTEM) */}
+      <RingDoorbellCard
+        isOpen={ringCardOpen}
+        onClose={() => setRingCardOpen(false)}
+        mode={ringCardMode}
+        packageDetails={ringPackageData}
+        doorLockStatus={ringDoorLockStatus}
+        emergencyReason={ringEmergencyReason}
+        onAcknowledge={() => {
+          addToast({
+            type: 'success',
+            title: 'Medication Package Received',
+            message: 'Prescription parcel brought inside safely from front porch.',
+          });
+        }}
+        onUnlockDoor={() => {
+          setRingDoorLockStatus('LOCKED');
+          addToast({
+            type: 'info',
+            title: 'Ring Smart Access',
+            message: 'Front door deadbolt restored to locked secure state.',
           });
         }}
       />

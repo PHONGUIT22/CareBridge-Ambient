@@ -166,3 +166,37 @@ export interface AgentTurnResponse {
   error?: string;
 }
 
+export interface RingDeviceHubResult {
+  success: boolean;
+  action: 'checkFrontPorch' | 'triggerEmergencyDoorUnlock' | 'getDeviceStatus';
+  cameraName: string;
+  timestamp: string;
+  doorLockStatus: 'LOCKED' | 'UNLOCKED FOR PARAMEDICS';
+  motionDetected?: boolean;
+  packageDetected?: boolean;
+  packageDetails?: {
+    carrier: string;
+    description: string;
+    deliveryTime: string;
+    orderId?: string;
+  };
+  emergencyReason?: string;
+  speechText: string;
+  richCard?: {
+    type: 'RingDoorbellFeed';
+    cameraName: string;
+    mode: 'delivery' | 'emergency' | 'live';
+    doorLockStatus: string;
+    packageDetected: boolean;
+    packageDetails?: {
+      carrier: string;
+      description: string;
+      deliveryTime: string;
+      orderId?: string;
+    };
+    emergencyReason?: string;
+    timestamp: string;
+  };
+}
+
+

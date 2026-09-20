@@ -110,6 +110,26 @@ export const MCP_TOOLS_SCHEMAS = [
       required: ['medicineName'],
     },
   },
+  {
+    name: 'ringDeviceHub',
+    description:
+      'Tích hợp hệ sinh thái thiết bị thông minh Ring (Ring Video Doorbell Pro & Ring Smart Access Lock). Kiểm tra camera thềm cửa, nhận diện kiện hàng Amazon Pharmacy, và mở chốt cửa an toàn cho cứu hộ/cấp cứu.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['checkFrontPorch', 'triggerEmergencyDoorUnlock', 'getDeviceStatus'],
+          description: 'Hành động với Ring: checkFrontPorch (kiểm tra thềm cửa/kiện hàng), triggerEmergencyDoorUnlock (mở cửa cấp cứu).',
+        },
+        reason: {
+          type: 'string',
+          description: 'Lý do thực hiện.',
+        },
+      },
+      required: ['action'],
+    },
+  },
 ];
 
 /**

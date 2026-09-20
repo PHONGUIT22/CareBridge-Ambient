@@ -38,6 +38,7 @@ export interface UseAlexaAgentOptions {
   onDoseLogged?: () => void;
   onClinicalAdviceTriggered?: (advice: ClinicalAdviceResponse) => void;
   onOrderRefillTriggered?: (order: AmazonRefillOrder) => void;
+  onRingDeviceTriggered?: (ringResult: any) => void;
 }
 
 export function useAlexaAgent(options?: UseAlexaAgentOptions) {
@@ -398,6 +399,10 @@ function toConciseSpokenSummary(text: string): string {
         } else if (toolName === 'recordVitals' || toolName === 'getTodaySchedule') {
           if (options?.onDoseLogged) {
             options.onDoseLogged();
+          }
+        } else if (toolName === 'ringDeviceHub') {
+          if (options?.onRingDeviceTriggered) {
+            options.onRingDeviceTriggered(toolResult);
           }
         }
       } catch (err: any) {
