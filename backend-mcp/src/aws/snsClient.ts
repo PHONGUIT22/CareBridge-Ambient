@@ -33,6 +33,7 @@ function getSNSClient(): SNSClient | null {
         secretAccessKey,
         ...(sessionToken ? { sessionToken } : {}),
       },
+      maxAttempts: 1,
     });
   }
 
@@ -90,7 +91,9 @@ export async function sendEmergencySMS(
       };
 
       const command = new PublishCommand(params);
-      const response = await client.send(command);
+      const response = await client.send(command, {
+        abortSignal: AbortSignal.timeout(2000),
+      });
 
       const messageId = response.MessageId || `sns_msg_${Date.now()}`;
       console.log(`[AWS SNS Success] Emergency SMS published successfully! MessageId: ${messageId}`);
