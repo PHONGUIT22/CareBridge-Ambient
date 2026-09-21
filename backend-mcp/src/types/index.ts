@@ -44,3 +44,53 @@ export interface CaregiverProfile {
   email: string;
   phone?: string;
 }
+
+export type GuardianPersonaId =
+  | 'nurse_betty'
+  | 'dr_reynolds'
+  | 'grandson_leo'
+  | 'sergeant_miller';
+
+export interface GuardianPersona {
+  id: GuardianPersonaId;
+  displayName: string;
+  roleTitle: string;
+  avatarIcon: string;
+  voiceTone: string;
+  accentColor: string;
+  themeColor: string;
+  description: string;
+}
+
+export type EscalationLevel = 'MILD' | 'FIRM' | 'SARAH_CIRCUIT_BREAKER';
+
+export interface GuardianNegotiationCard {
+  type: 'GuardianNegotiation';
+  guardianName: string;
+  roleTitle?: string;
+  quote: string;
+  avatar: string;
+  turnCount: number;
+  callSarahAction: boolean;
+  medicineName: string;
+  escalationLevel: EscalationLevel;
+  sarahPhone?: string;
+  snsMessageId?: string;
+}
+
+export interface NegotiateAdherenceArgs {
+  medicineName: string;
+  refusalReason?: string;
+  personaId?: GuardianPersonaId;
+  turnCount?: number;
+}
+
+export interface NegotiateAdherenceResult {
+  success: boolean;
+  persona: GuardianPersona;
+  speechResponse: string;
+  escalationLevel: EscalationLevel;
+  sarahNotified: boolean;
+  snsMessageId?: string;
+  richCard: GuardianNegotiationCard;
+}
