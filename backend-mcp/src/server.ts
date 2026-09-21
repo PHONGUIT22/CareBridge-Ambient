@@ -9,7 +9,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
-// Cấu hình nạp biến môi trường chuẩn xác đa tầng cho ESM
+// Multi-tier environment variable loader for ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootEnvPath = path.resolve(__dirname, '../../.env');
@@ -22,7 +22,7 @@ if (fs.existsSync(backendEnvPath)) {
   dotenv.config({ path: backendEnvPath, override: true });
 }
 
-// Khởi tạo Database và Seeder
+// Initialize Database and Seeder
 import { initDB } from './database/db.js';
 import { seedDemoData } from './database/seedDemoData.js';
 import { MedicineRepo } from './database/medicineRepo.js';
@@ -30,13 +30,14 @@ import { LogRepo } from './database/logRepo.js';
 import { VitalsRepo } from './database/vitalsRepo.js';
 import { CaregiverRepo } from './database/caregiverRepo.js';
 
-// Nạp 4 MCP Tools cốt lõi
+// Core MCP Tools
 import { getTodayScheduleTool } from './tools/getTodaySchedule.js';
 import { logDoseStatusTool } from './tools/logDoseStatus.js';
 import { recordVitalsTool } from './tools/recordVitals.js';
 import { clinicalAdvisorTool } from './tools/clinicalAdvisor.js';
 import { orderRefillTool } from './tools/orderRefill.js';
 import { ringDeviceHubTool } from './tools/ringDeviceHub.js';
+import { negotiateAdherenceTool } from './tools/negotiateAdherence.js';
 import { handleAgentTurn } from './tools/agentTurnHandler.js';
 import { synthesizeSpeech } from './aws/pollyClient.js';
 import { checkDrugInteractions } from './services/drugInteractionService.js';
@@ -44,16 +45,16 @@ import { checkDrugInteractions } from './services/drugInteractionService.js';
 const app = express();
 const PORT = Number(process.env.MCP_PORT || process.env.PORT) || 3001;
 
-// Cho phép Web Next.js (port 3000) gọi API
+// Allow Next.js frontend (port 3000) CORS access
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// 1. KHỞI TẠO CƠ SỞ DỮ LIỆU & SEED DEMO NẾU MỚI BẮT ĐẦU
+// 1. INITIALIZE DATABASE & SEED DEMO DATA IF FIRST RUN
 initDB();
 seedDemoData(false);
 
 // ==========================================
-// 2. THIẾT LẬP MCP SERVER (Chuẩn spec 2025-11-25)
+// 2. SETUP MCP SERVER (Spec 2025-11-25)
 // ==========================================
 const mcpServer = new Server(
   {
@@ -67,7 +68,7 @@ const mcpServer = new Server(
   }
 );
 
-// Danh sách tất cả các tools sẵn sàng phục vụ Alexa+
+// Registered tools ready for Alexa+ agent
 const registeredTools = [
   getTodayScheduleTool,
   logDoseStatusTool,
@@ -75,16 +76,17 @@ const registeredTools = [
   clinicalAdvisorTool,
   orderRefillTool,
   ringDeviceHubTool,
+  negotiateAdherenceTool,
 ];
 
-// Định nghĩa handler khi Alexa/Agent hỏi danh sách Tool
+// Handler when Alexa/Agent requests tool list
 mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: registeredTools.map((t) => t.definition),
   };
 });
 
-// Định nghĩa handler khi Alexa/Agent thực thi 1 Tool
+// Handler when Alexa/Agent executes a tool
 mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: toolArgs } = request.params;
 
@@ -114,6 +116,10 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
         const result = await ringDeviceHubTool.handler(toolArgs as any);
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
       }
+      case 'negotiateAdherence': {
+        const result = await negotiateAdherenceTool.handler(toolArgs as any);
+        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      }
       default:
         throw new Error(`MCP Tool '${name}' does not exist.`);
     }
@@ -130,21 +136,21 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
 // ==========================================
 const sseTransports = new Map<string, SSEServerTransport>();
 
-// Endpoint bắt đầu stream Server-Sent Events
+// SSE stream initiation endpoint
 app.get('/sse', async (req: Request, res: Response) => {
-  console.log('[MCP] Kết nối client mới qua SSE Stream...');
+  console.log('[MCP] New client connected via SSE stream...');
   const transport = new SSEServerTransport('/message', res);
   sseTransports.set(transport.sessionId, transport);
 
   req.on('close', () => {
-    console.log(`[MCP] Đóng kết nối SSE session: ${transport.sessionId}`);
+    console.log(`[MCP] Closed SSE session: ${transport.sessionId}`);
     sseTransports.delete(transport.sessionId);
   });
 
   await mcpServer.connect(transport);
 });
 
-// Endpoint nhận message POST từ Alexa+ Client
+// Message POST endpoint from Alexa+ client
 app.post('/message', async (req: Request, res: Response) => {
   const sessionId = req.query.sessionId as string;
   const transport = sseTransports.get(sessionId);
@@ -158,10 +164,10 @@ app.post('/message', async (req: Request, res: Response) => {
 });
 
 // ==========================================
-// 4. CÁC REST API PHỤC VỤ WEB NEXT.JS FRONTEND
+// 4. REST APIS FOR NEXT.JS FRONTEND
 // ==========================================
 
-// Lấy toàn bộ dữ liệu trang chính (Lịch hôm nay + Chỉ số sinh tồn + Người chăm sóc)
+// Fetch primary dashboard data (Today's schedule + Vitals + Caregiver)
 app.get('/api/today', async (req: Request, res: Response) => {
   try {
     const today = new Date().toISOString().split('T')[0];
@@ -188,7 +194,7 @@ app.get('/api/today', async (req: Request, res: Response) => {
   }
 });
 
-// Bấm nút "I Took My Pill" đổi trạng thái trực tiếp
+// Direct "I Took My Pill" toggle action
 app.post('/api/toggle', async (req: Request, res: Response) => {
   try {
     const { logId, currentStatus } = req.body;
@@ -204,7 +210,7 @@ app.post('/api/toggle', async (req: Request, res: Response) => {
   }
 });
 
-// Ghi nhận hoặc cập nhật cữ thuốc (phục vụ Alexa, voice, hoặc direct update)
+// Log or update dose status (Alexa voice command or direct UI action)
 app.post('/api/dose', async (req: Request, res: Response) => {
   try {
     const result = await logDoseStatusTool.handler(req.body);
@@ -214,7 +220,7 @@ app.post('/api/dose', async (req: Request, res: Response) => {
   }
 });
 
-// Đặt thuốc bổ sung qua Amazon Pharmacy 1-Click
+// Amazon Pharmacy 1-Click medication refill
 app.post('/api/refill', async (req: Request, res: Response) => {
   try {
     const result = await orderRefillTool.handler(req.body);
@@ -224,7 +230,7 @@ app.post('/api/refill', async (req: Request, res: Response) => {
   }
 });
 
-// Điều khiển và kiểm tra hệ sinh thái thiết bị thông minh Ring
+// Ring Smart Ecosystem control and monitoring
 app.post('/api/ring', async (req: Request, res: Response) => {
   try {
     const result = await ringDeviceHubTool.handler(req.body || {});
@@ -234,7 +240,7 @@ app.post('/api/ring', async (req: Request, res: Response) => {
   }
 });
 
-// Cập nhật ghi chú lâm sàng cho một cữ thuốc
+// Update clinical dose notes
 app.post('/api/note', async (req: Request, res: Response) => {
   try {
     const { logId, notes } = req.body;
@@ -249,7 +255,7 @@ app.post('/api/note', async (req: Request, res: Response) => {
   }
 });
 
-// Ghi nhanh chỉ số sinh tồn từ thanh QuickVitalsBar
+// Quick vitals recording from QuickVitalsBar
 app.post('/api/vitals', async (req: Request, res: Response) => {
   try {
     const result = await recordVitalsTool.handler(req.body);
@@ -259,7 +265,7 @@ app.post('/api/vitals', async (req: Request, res: Response) => {
   }
 });
 
-// Lấy toàn bộ lịch sử 30 ngày cho ma trận punch-card & báo cáo bác sĩ
+// Fetch 30-day historical matrix for punch-card visualization & clinician report
 app.get('/api/history', async (req: Request, res: Response) => {
   try {
     const [logs, vitals] = await Promise.all([
@@ -272,7 +278,7 @@ app.get('/api/history', async (req: Request, res: Response) => {
   }
 });
 
-// Danh mục tất cả thuốc và tồn kho
+// All medicines catalog and inventory levels
 app.get('/api/medicines', async (req: Request, res: Response) => {
   try {
     const medicines = await MedicineRepo.getAllMedicines();
@@ -282,7 +288,7 @@ app.get('/api/medicines', async (req: Request, res: Response) => {
   }
 });
 
-// Thêm thuốc mới vào danh mục
+// Add new medicine to catalog
 app.post('/api/medicines', async (req: Request, res: Response) => {
   try {
     const { name, dosage, reminderTimes, daysOfWeek, stockCount, imageUri, type } = req.body;
@@ -307,7 +313,7 @@ app.post('/api/medicines', async (req: Request, res: Response) => {
   }
 });
 
-// Xóa thuốc khỏi danh mục
+// Delete medicine from catalog
 app.delete('/api/medicines/:id', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
@@ -322,7 +328,7 @@ app.delete('/api/medicines/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Kiểm tra tương tác thuốc tự động (Drug Safety & Beers Criteria check)
+// Automated drug interaction check (Drug Safety & Beers Criteria check)
 app.post('/api/medicines/check-interaction', async (req: Request, res: Response) => {
   try {
     const { newMedicineName, currentMedicines } = req.body || {};
@@ -338,7 +344,7 @@ app.post('/api/medicines/check-interaction', async (req: Request, res: Response)
   }
 });
 
-// Endpoint cho khung AlexaAgentConsole gửi giọng nói/text kiểm tra Bedrock
+// Clinical advisor query endpoint for AlexaAgentConsole and voice/text queries
 app.post('/api/advisor', async (req: Request, res: Response) => {
   try {
     const { query } = req.body;
@@ -353,7 +359,18 @@ app.post('/api/advisor', async (req: Request, res: Response) => {
   }
 });
 
-// Endpoint điều phối AI Agent Turn (Claude Haiku Native Tool-Use & Offline Heuristic Fallback)
+// AI Health Guardian adherence negotiation endpoint
+app.post('/api/guardian/negotiate', async (req: Request, res: Response) => {
+  try {
+    const result = await negotiateAdherenceTool.handler(req.body || {});
+    res.json(result);
+  } catch (error: any) {
+    console.error('[Server Guardian Negotiate Error]:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Agent turn orchestration endpoint (Claude Haiku Native Tool-Use & Offline Heuristic Fallback)
 app.post('/api/agent/turn', async (req: Request, res: Response) => {
   try {
     const { query, context } = req.body || {};
@@ -369,7 +386,7 @@ app.post('/api/agent/turn', async (req: Request, res: Response) => {
   }
 });
 
-// Endpoint tổng hợp giọng nói AWS Polly Neural TTS cho Alexa & Echo Show Smart Displays
+// AWS Polly Neural TTS synthesis endpoint for Alexa & Echo Show Smart Displays
 app.post('/api/tts', async (req: Request, res: Response) => {
   try {
     const { text, voiceId } = req.body;
@@ -410,7 +427,7 @@ app.post('/api/tts', async (req: Request, res: Response) => {
   }
 });
 
-// Reset và tạo lại 30 ngày dữ liệu mẫu
+// Reset and reseed 30-day clinical demo dataset
 app.post('/api/seed', async (req: Request, res: Response) => {
   try {
     await seedDemoData(true);
@@ -421,17 +438,17 @@ app.post('/api/seed', async (req: Request, res: Response) => {
 });
 
 // ==========================================
-// 5. KHỞI ĐỘNG SERVER
+// 5. START SERVER
 // ==========================================
 app.listen(PORT, () => {
   console.log(`
 =====================================================
-  CAREBRIDGE AMBIENT MCP SERVER ĐÃ SẴN SÀNG!
+  CAREBRIDGE AMBIENT MCP SERVER READY!
   • Port:               ${PORT}
   • REST API:           http://localhost:${PORT}/api/today
   • MCP SSE Endpoint:   http://localhost:${PORT}/sse
   • MCP Message Post:   http://localhost:${PORT}/message
 =====================================================
   `);
-  console.log(`[AWS Config] Region: ${process.env.AWS_REGION || 'chưa có'}, Key ID: ${process.env.AWS_ACCESS_KEY_ID ? 'Đã nhận' : 'Trống'}`);
+  console.log(`[AWS Config] Region: ${process.env.AWS_REGION || 'none'}, Key ID: ${process.env.AWS_ACCESS_KEY_ID ? 'Configured' : 'Empty'}`);
 });

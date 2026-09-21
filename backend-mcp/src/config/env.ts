@@ -6,22 +6,22 @@ import dotenv from 'dotenv';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Xác định các đường dẫn .env tiềm năng trong monorepo
+// Resolve potential .env paths across the monorepo hierarchy
 const rootEnvPath = path.resolve(__dirname, '../../../.env');
 const backendEnvPath = path.resolve(__dirname, '../../.env');
 const cwdEnvPath = path.resolve(process.cwd(), '.env');
 
-// 1. Nạp từ thư mục gốc monorepo (carebridge-ambient/.env)
+// 1. Load from monorepo root (carebridge-ambient/.env)
 if (fs.existsSync(rootEnvPath)) {
   dotenv.config({ path: rootEnvPath });
 }
 
-// 2. Nạp hoặc ghi đè từ backend-mcp/.env
+// 2. Load or override from backend-mcp/.env
 if (fs.existsSync(backendEnvPath)) {
   dotenv.config({ path: backendEnvPath, override: true });
 }
 
-// 3. Fallback theo thư mục chạy lệnh hiện tại
+// 3. Fallback to current working execution directory
 if (fs.existsSync(cwdEnvPath)) {
   dotenv.config({ path: cwdEnvPath, override: true });
 }

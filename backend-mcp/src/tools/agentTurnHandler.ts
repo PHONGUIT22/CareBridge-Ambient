@@ -5,6 +5,7 @@ import { recordVitalsTool } from './recordVitals.js';
 import { clinicalAdvisorTool } from './clinicalAdvisor.js';
 import { orderRefillTool } from './orderRefill.js';
 import { ringDeviceHubTool } from './ringDeviceHub.js';
+import { negotiateAdherenceTool } from './negotiateAdherence.js';
 
 export interface AgentTurnRequest {
   query: string;
@@ -24,9 +25,9 @@ export interface AgentTurnResponse {
 }
 
 /**
- * Bộ Heuristic Fallback Offline:
- * Tự động phân tích ý định (intent) từ giọng nói/câu hỏi người bệnh
- * khi thiết bị chạy offline hoặc AWS Bedrock không khả dụng.
+ * Offline Heuristic Fallback Engine:
+ * Autonomously parses user intent and parameters from natural voice queries
+ * when device is offline or AWS Bedrock is unreachable.
  */
 function resolveOfflineHeuristic(query: string): {
   toolName: string;
@@ -34,7 +35,79 @@ function resolveOfflineHeuristic(query: string): {
 } | null {
   const lower = query.toLowerCase();
 
-  // 1. Ý định Xem lịch uống thuốc trong ngày (getTodaySchedule) - Ưu tiên hàng đầu nếu có từ khóa schedule/lịch
+  // 0. Medication Refusal / Resistance Intent (negotiateAdherence) - Health Guardians & Sarah Circuit-Breaker
+  const isRefusalIntent =
+    lower.includes("don't want to take") ||
+    lower.includes("dont want to take") ||
+    lower.includes("don't want my") ||
+    lower.includes("dont want my") ||
+    lower.includes("not taking") ||
+    lower.includes("won't take") ||
+    lower.includes("wont take") ||
+    lower.includes("refuse") ||
+    lower.includes("hate") ||
+    lower.includes("stop giving me") ||
+    lower.includes("leave me alone") ||
+    lower.includes("no pills") ||
+    (lower.includes("skip") && !lower.includes("what") && !lower.includes("status")) ||
+    ((lower.includes("later") || lower.includes("delay")) &&
+      (lower.includes("pill") || lower.includes("medication") || lower.includes("dose") || lower.includes("medicine") || lower.includes("amlodipine")));
+
+  if (isRefusalIntent) {
+    let medicineName = 'Amlodipine (Norvasc) 5mg';
+    if (lower.includes('atorvastatin') || lower.includes('lipitor')) {
+      medicineName = 'Atorvastatin 20mg';
+    } else if (lower.includes('metformin')) {
+      medicineName = 'Metformin 500mg';
+    } else if (lower.includes('aspirin')) {
+      medicineName = 'Baby Aspirin Cardio 81mg';
+    } else if (lower.includes('amlodipine') || lower.includes('norvasc')) {
+      medicineName = 'Amlodipine (Norvasc) 5mg';
+    }
+
+    let refusalReason = 'Patient resistance expressed';
+    if (lower.includes('bitter') || lower.includes('taste')) {
+      refusalReason = 'Tastes bitter';
+    } else if (lower.includes('fine') || lower.includes('feel fine') || lower.includes('healthy')) {
+      refusalReason = 'Feeling fine today';
+    } else if (lower.includes('later')) {
+      refusalReason = "I'll do it later";
+    } else if (lower.includes('hate') || lower.includes('refuse') || lower.includes('leave me alone')) {
+      refusalReason = 'Explicit vocal refusal';
+    }
+
+    // Explicit or hard refusal triggers Sarah Circuit-Breaker (turnCount >= 2)
+    const isExplicitHardRefusal =
+      lower.includes('refuse') ||
+      lower.includes('leave me alone') ||
+      lower.includes('never') ||
+      lower.includes('stop giving me');
+
+    const turnCount = isExplicitHardRefusal ? 2 : 1;
+
+    let personaId = 'grandson_leo';
+    if (lower.includes('betty') || lower.includes('nurse')) {
+      personaId = 'nurse_betty';
+    } else if (lower.includes('reynolds') || lower.includes('doctor') || lower.includes('dr')) {
+      personaId = 'dr_reynolds';
+    } else if (lower.includes('miller') || lower.includes('sergeant') || lower.includes('sgt')) {
+      personaId = 'sergeant_miller';
+    } else if (lower.includes('leo') || lower.includes('grandson')) {
+      personaId = 'grandson_leo';
+    }
+
+    return {
+      toolName: 'negotiateAdherence',
+      toolArgs: {
+        medicineName,
+        refusalReason,
+        personaId,
+        turnCount,
+      },
+    };
+  }
+
+  // 1. Schedule inquiry intent (getTodaySchedule) - Priority if query mentions schedule/calendar
   const isScheduleIntent =
     lower.includes('schedule') ||
     lower.includes('what pill') ||
@@ -42,8 +115,6 @@ function resolveOfflineHeuristic(query: string): {
     lower.includes('upcoming') ||
     lower.includes('next dose') ||
     lower.includes('calendar') ||
-    lower.includes('lịch') ||
-    lower.includes('kế hoạch') ||
     (lower.includes('today') && !lower.includes('took') && !lower.includes('taken') && !lower.includes('skip'));
 
   if (isScheduleIntent) {
@@ -53,18 +124,15 @@ function resolveOfflineHeuristic(query: string): {
     };
   }
 
-  // 2. Ý định Ghi nhận Uống thuốc / Bỏ cữ (logDoseStatus)
+  // 2. Dose intake / skipped intent (logDoseStatus)
   const isDoseIntent =
     lower.includes('took') ||
     lower.includes('taken') ||
     lower.includes('had my') ||
     lower.includes('drank') ||
     lower.includes('swallowed') ||
-    lower.includes('uống') ||
-    lower.includes('đã uống') ||
     lower.includes('skip') ||
     lower.includes('skipped') ||
-    lower.includes('bỏ qua') ||
     lower.includes('morning pills') ||
     lower.includes('morning pill') ||
     lower.includes('evening pills') ||
@@ -73,7 +141,7 @@ function resolveOfflineHeuristic(query: string): {
 
   if (isDoseIntent) {
     const status: 'taken' | 'skipped' =
-      lower.includes('skip') || lower.includes('bỏ') ? 'skipped' : 'taken';
+      lower.includes('skip') ? 'skipped' : 'taken';
 
     let medicineName: string | undefined = undefined;
     if (lower.includes('amlodipine') || lower.includes('norvasc')) {
@@ -97,7 +165,7 @@ function resolveOfflineHeuristic(query: string): {
     };
   }
 
-  // 2. Ý định Đặt thuốc bổ sung qua Amazon Pharmacy (orderRefill)
+  // 3. Amazon Pharmacy refill intent (orderRefill)
   const isRefillIntent =
     lower.includes('refill') ||
     lower.includes('reorder') ||
@@ -105,10 +173,7 @@ function resolveOfflineHeuristic(query: string): {
     lower.includes('order') ||
     lower.includes('buy') ||
     lower.includes('out of') ||
-    lower.includes('running low') ||
-    lower.includes('mua thuốc') ||
-    lower.includes('đặt thuốc') ||
-    lower.includes('hết thuốc');
+    lower.includes('running low');
 
   if (isRefillIntent) {
     let medicineName = 'Atorvastatin';
@@ -126,7 +191,7 @@ function resolveOfflineHeuristic(query: string): {
     };
   }
 
-  // 3. Ý định Ghi nhận Chỉ số Sinh tồn (recordVitals)
+  // 4. Biometric vitals recording intent (recordVitals)
   const isVitalsIntent =
     lower.includes('blood pressure') ||
     lower.includes('bp') ||
@@ -135,34 +200,31 @@ function resolveOfflineHeuristic(query: string): {
     lower.includes('heart rate') ||
     lower.includes('pulse') ||
     lower.includes('blood sugar') ||
-    lower.includes('glucose') ||
-    lower.includes('huyết áp') ||
-    lower.includes('đường huyết') ||
-    lower.includes('nhịp tim');
+    lower.includes('glucose');
 
   if (isVitalsIntent) {
     const args: Record<string, any> = {};
 
-    // Tìm huyết áp (e.g. "120/80" hoặc "120 over 80")
+    // Extract blood pressure (e.g. "120/80" or "120 over 80")
     const bpMatch = query.match(/(\d{2,3})\s*(?:\/|over)\s*(\d{2,3})/i);
     if (bpMatch) {
       args.systolic = parseInt(bpMatch[1], 10);
       args.diastolic = parseInt(bpMatch[2], 10);
     }
 
-    // Tìm đường huyết (e.g. "blood sugar 105" hoặc "sugar is 110")
-    const sugarMatch = query.match(/(?:sugar|glucose|đường huyết)(?:\s*(?:is|là|:))?\s*(\d{2,3})/i);
+    // Extract blood glucose (e.g. "blood sugar 105" or "sugar is 110")
+    const sugarMatch = query.match(/(?:sugar|glucose)(?:\s*(?:is|:))?\s*(\d{2,3})/i);
     if (sugarMatch) {
       args.bloodSugar = parseInt(sugarMatch[1], 10);
     }
 
-    // Tìm nhịp tim (e.g. "heart rate 72" hoặc "pulse 75")
-    const hrMatch = query.match(/(?:pulse|heart rate|nhịp tim)(?:\s*(?:is|là|:))?\s*(\d{2,3})/i);
+    // Extract heart rate (e.g. "heart rate 72" or "pulse 75")
+    const hrMatch = query.match(/(?:pulse|heart rate)(?:\s*(?:is|:))?\s*(\d{2,3})/i);
     if (hrMatch) {
       args.heartRate = parseInt(hrMatch[1], 10);
     }
 
-    // Nếu không trích xuất được số cụ thể, dùng giá trị mặc định ổn định
+    // If no specific numbers detected, provide safe clinical baseline defaults
     if (Object.keys(args).length === 0) {
       args.systolic = 120;
       args.diastolic = 80;
@@ -174,7 +236,7 @@ function resolveOfflineHeuristic(query: string): {
     };
   }
 
-  // 4. Ý định Triệu chứng lâm sàng hoặc thắc mắc sức khỏe (clinicalAdvisor)
+  // 5. Clinical symptoms or health concerns intent (clinicalAdvisor)
   const isClinicalIntent =
     lower.includes('dizzy') ||
     lower.includes('dizziness') ||
@@ -186,11 +248,6 @@ function resolveOfflineHeuristic(query: string): {
     lower.includes('fall') ||
     lower.includes('headache') ||
     lower.includes('nausea') ||
-    lower.includes('chóng mặt') ||
-    lower.includes('đau') ||
-    lower.includes('mệt') ||
-    lower.includes('khó thở') ||
-    lower.includes('buồn nôn') ||
     lower.includes('feel');
 
   if (isClinicalIntent) {
@@ -200,14 +257,12 @@ function resolveOfflineHeuristic(query: string): {
     };
   }
 
-  // 5. Ý định Hệ sinh thái Ring (Ring Doorbell Pro / Smart Lock)
+  // 6. Ring smart ecosystem intent (Ring Doorbell Pro / Smart Lock)
   const isRingIntent =
     lower.includes('ring') ||
     lower.includes('doorbell') ||
     lower.includes('porch') ||
     lower.includes('front door') ||
-    lower.includes('thềm cửa') ||
-    lower.includes('chuông cửa') ||
     lower.includes('door') ||
     lower.includes('parcel') ||
     lower.includes('package');
@@ -216,7 +271,6 @@ function resolveOfflineHeuristic(query: string): {
     const isUnlock =
       lower.includes('unlock') ||
       lower.includes('open door') ||
-      lower.includes('mở cửa') ||
       lower.includes('paramedic') ||
       lower.includes('emergency');
 
@@ -233,7 +287,7 @@ function resolveOfflineHeuristic(query: string): {
 }
 
 /**
- * Thực thi MCP Tool được chọn trên SQLite Database
+ * Executes the selected MCP Tool against the SQLite Database
  */
 async function executeTool(toolName: string, toolArgs: Record<string, any>): Promise<{
   toolResult: any;
@@ -275,28 +329,46 @@ async function executeTool(toolName: string, toolArgs: Record<string, any>): Pro
       speechResponse = toolResult.speechText || 'Ring Doorbell front porch camera checked.';
       break;
     }
+    case 'negotiateAdherence': {
+      toolResult = await negotiateAdherenceTool.handler(toolArgs as any);
+      speechResponse = toolResult.speechResponse || 'I am here with you Eleanor.';
+      break;
+    }
     default:
-      throw new Error(`MCP Tool '${toolName}' không được hỗ trợ trong hệ thống.`);
+      throw new Error(`MCP Tool '${toolName}' is not supported in the system.`);
   }
 
   return { toolResult, speechResponse };
 }
 
 /**
- * Điểm vào chính xử lý lượt tương tác thoại (Voice Turn Orchestrator)
+ * Primary entry point for voice turn orchestration (Voice Turn Orchestrator)
  */
 export async function handleAgentTurn(req: AgentTurnRequest): Promise<AgentTurnResponse> {
   const { query, context } = req;
   const trimmedQuery = query.trim();
 
-  // 1. Thử gọi Bedrock Claude Haiku 4.5 Native Tool-Use
+  // 1. Attempt Bedrock Claude Haiku 4.5 Native Tool-Use
   let decision = await invokeBedrockWithTools(trimmedQuery, context);
 
-  // 2. Nếu Bedrock trả về stop_reason === 'tool_use' có toolCall
+  // 2. If Bedrock returns stop_reason === 'tool_use' with toolCall
   if (decision && decision.toolCall) {
     const { name: toolName, input: toolArgs } = decision.toolCall;
 
     try {
+      if (toolName === 'negotiateAdherence') {
+        const lowerQuery = trimmedQuery.toLowerCase();
+        if (
+          lowerQuery.includes('refuse') ||
+          lowerQuery.includes('leave me alone') ||
+          lowerQuery.includes('never') ||
+          lowerQuery.includes('stop giving me')
+        ) {
+          toolArgs.turnCount = Math.max(Number(toolArgs.turnCount) || 1, 2);
+          toolArgs.refusalReason = toolArgs.refusalReason || 'Explicit vocal refusal';
+        }
+      }
+
       const { toolResult, speechResponse } = await executeTool(toolName, toolArgs);
 
       return {
@@ -304,15 +376,18 @@ export async function handleAgentTurn(req: AgentTurnRequest): Promise<AgentTurnR
         toolName,
         toolArgs,
         toolResult,
-        speechResponse: decision.textResponse || speechResponse,
+        speechResponse:
+          toolName === 'negotiateAdherence'
+            ? speechResponse
+            : (decision.textResponse || speechResponse),
         offlineFallbackUsed: false,
       };
     } catch (toolExecErr: any) {
-      console.warn(`[agentTurnHandler] Lỗi thực thi tool '${toolName}':`, toolExecErr.message);
+      console.warn(`[agentTurnHandler] Error executing tool '${toolName}':`, toolExecErr.message);
     }
   }
 
-  // 3. Nếu Claude phản hồi bằng văn bản thuần (type: 'text') và không gọi tool nào
+  // 3. If Claude responded with pure conversational text ('text') and no tool call
   if (decision && decision.textResponse && !decision.toolCall) {
     return {
       success: true,
@@ -324,8 +399,8 @@ export async function handleAgentTurn(req: AgentTurnRequest): Promise<AgentTurnR
     };
   }
 
-  // 4. Nếu không có AWS Credentials, lỗi mạng hoặc Claude không quyết định được -> Kích hoạt Heuristic Fallback
-  console.info('[agentTurnHandler] Kích hoạt Offline Heuristic Fallback cho câu lệnh:', trimmedQuery);
+  // 4. If AWS credentials unavailable, network timeout, or Claude returned null -> Activate Heuristic Fallback
+  console.info('[agentTurnHandler] Activating Offline Heuristic Fallback for query:', trimmedQuery);
   const heuristic = resolveOfflineHeuristic(trimmedQuery);
 
   if (heuristic) {
@@ -344,7 +419,7 @@ export async function handleAgentTurn(req: AgentTurnRequest): Promise<AgentTurnR
     };
   }
 
-  // 5. Câu lệnh giao tiếp thông thường khi offline
+  // 5. Ambient conversational fallback when offline
   return {
     success: true,
     toolName: null,
