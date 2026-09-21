@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 
-// 1. Nạp biến môi trường đa tầng an toàn cho ESM
+// 1. Multi-tier environment variable loader for ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -41,7 +41,7 @@ if (!accessKeyId || !secretAccessKey || secretAccessKey.includes('PASTE_')) {
   process.exit(1);
 }
 
-// 2. Khởi tạo Bedrock Runtime Client
+// 2. Initialize Bedrock Runtime Client
 const client = new BedrockRuntimeClient({
   region,
   credentials: {
@@ -51,7 +51,7 @@ const client = new BedrockRuntimeClient({
   },
 });
 
-// 3. Chuẩn bị payload kiểm tra
+// 3. Prepare test payload
 const testPrompt = 'Respond in JSON: {"status": "ok", "message": "Bedrock connected"}';
 const payload = {
   anthropic_version: 'bedrock-2023-05-31',

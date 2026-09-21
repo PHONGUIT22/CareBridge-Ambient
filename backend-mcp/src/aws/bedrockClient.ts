@@ -24,13 +24,13 @@ export interface BedrockToolUseDecision {
 export const MCP_TOOLS_SCHEMAS = [
   {
     name: 'getTodaySchedule',
-    description: 'Lấy toàn bộ lịch uống thuốc trong ngày của bệnh nhân, tỉ lệ tuân thủ phần trăm và liều thuốc sắp tới cần uống.',
+    description: "Retrieve the patient's daily medication schedule, percentage adherence rate, and next upcoming dose.",
     input_schema: {
       type: 'object',
       properties: {
         date: {
           type: 'string',
-          description: 'Ngày cần lấy dạng YYYY-MM-DD. Mặc định là ngày hôm nay.',
+          description: 'Target date in YYYY-MM-DD format. Defaults to today.',
         },
       },
       required: [],
@@ -38,26 +38,26 @@ export const MCP_TOOLS_SCHEMAS = [
   },
   {
     name: 'logDoseStatus',
-    description: "Đánh dấu trạng thái một cữ thuốc là 'taken' (đã uống) hoặc 'skipped' (bỏ qua), kèm ghi chú cảm giác hoặc lâm sàng.",
+    description: "Mark medication dose intake status as 'taken' or 'skipped', with optional clinical or feeling notes.",
     input_schema: {
       type: 'object',
       properties: {
         logId: {
           type: 'string',
-          description: 'Mã định danh của bản ghi intake log (nếu có).',
+          description: 'Unique intake log record identifier (if known).',
         },
         medicineName: {
           type: 'string',
-          description: 'Tên thuốc người bệnh nói (ví dụ: Amlodipine, Metformin, Atorvastatin, morning pills).',
+          description: 'Name of medicine spoken by patient (e.g., Amlodipine, Metformin, Lipitor, morning pills).',
         },
         status: {
           type: 'string',
           enum: ['taken', 'skipped', 'pending'],
-          description: "Trạng thái mới của cữ thuốc ('taken' hoặc 'skipped'). Mặc định là 'taken'.",
+          description: "New intake status ('taken' or 'skipped'). Defaults to 'taken'.",
         },
         notes: {
           type: 'string',
-          description: 'Ghi chú lâm sàng hoặc cảm giác khi uống.',
+          description: 'Clinical observation or sensation noted during intake.',
         },
       },
       required: [],
@@ -65,28 +65,28 @@ export const MCP_TOOLS_SCHEMAS = [
   },
   {
     name: 'recordVitals',
-    description: 'Ghi nhận nhanh các chỉ số sinh tồn của người cao tuổi: huyết áp tâm thu, tâm trương, đường huyết, nhịp tim.',
+    description: 'Record geriatric biometric vitals: systolic and diastolic blood pressure, blood glucose, and heart rate.',
     input_schema: {
       type: 'object',
       properties: {
-        systolic: { type: 'number', description: 'Huyết áp tâm thu (e.g. 120, 130)' },
-        diastolic: { type: 'number', description: 'Huyết áp tâm trương (e.g. 80, 85)' },
-        bloodSugar: { type: 'number', description: 'Chỉ số đường huyết mg/dL (e.g. 105)' },
-        heartRate: { type: 'number', description: 'Nhịp tim bpm (e.g. 72)' },
-        date: { type: 'string', description: 'Ngày đo YYYY-MM-DD. Mặc định là hôm nay.' },
+        systolic: { type: 'number', description: 'Systolic blood pressure mmHg (e.g. 120, 130)' },
+        diastolic: { type: 'number', description: 'Diastolic blood pressure mmHg (e.g. 80, 85)' },
+        bloodSugar: { type: 'number', description: 'Blood glucose level mg/dL (e.g. 105)' },
+        heartRate: { type: 'number', description: 'Heart rate in beats per minute bpm (e.g. 72)' },
+        date: { type: 'string', description: 'Date of measurement in YYYY-MM-DD format. Defaults to today.' },
       },
       required: [],
     },
   },
   {
     name: 'clinicalAdvisor',
-    description: 'Nhận triệu chứng hoặc thắc mắc sức khỏe của người cao tuổi (chóng mặt, đau ngực, mệt mỏi, tương tác thuốc) để phân tích lâm sàng và đưa ra lời khuyên an toàn.',
+    description: 'Evaluate senior symptoms or health queries (dizziness, chest pain, fatigue, drug interactions) for triage and guidance.',
     input_schema: {
       type: 'object',
       properties: {
         query: {
           type: 'string',
-          description: 'Câu nói hoặc mô tả triệu chứng của người bệnh (ví dụ: "I feel dizzy after taking my pill").',
+          description: 'Patient verbal statement or symptom description (e.g., "I feel dizzy after taking my pill").',
         },
       },
       required: ['query'],
@@ -94,17 +94,17 @@ export const MCP_TOOLS_SCHEMAS = [
   },
   {
     name: 'orderRefill',
-    description: 'Tự động đặt thuốc bổ sung (refill) qua Amazon Pharmacy 1-Click khi thuốc trong kho sắp hết hoặc người dùng yêu cầu đặt thêm thuốc.',
+    description: 'Place an automated 1-Click prescription refill order via Amazon Pharmacy when inventory runs low or upon patient request.',
     input_schema: {
       type: 'object',
       properties: {
         medicineName: {
           type: 'string',
-          description: 'Tên loại thuốc cần đặt thêm (ví dụ: Atorvastatin, Amlodipine, Metformin).',
+          description: 'Name of the medication to refill (e.g., Atorvastatin, Amlodipine, Metformin).',
         },
         quantity: {
           type: 'number',
-          description: 'Số lượng viên thuốc đặt bổ sung (mặc định 30 viên).',
+          description: 'Number of tablets to refill (defaults to 30 tablets for a 1-month supply).',
         },
       },
       required: ['medicineName'],
@@ -113,28 +113,56 @@ export const MCP_TOOLS_SCHEMAS = [
   {
     name: 'ringDeviceHub',
     description:
-      'Tích hợp hệ sinh thái thiết bị thông minh Ring (Ring Video Doorbell Pro & Ring Smart Access Lock). Kiểm tra camera thềm cửa, nhận diện kiện hàng Amazon Pharmacy, và mở chốt cửa an toàn cho cứu hộ/cấp cứu.',
+      'Integrate Ring smart home ecosystem (Ring Video Doorbell Pro & Ring Smart Access Lock). Check front porch camera, verify Amazon Pharmacy deliveries, and unlock door for emergency paramedics.',
     input_schema: {
       type: 'object',
       properties: {
         action: {
           type: 'string',
           enum: ['checkFrontPorch', 'triggerEmergencyDoorUnlock', 'getDeviceStatus'],
-          description: 'Hành động với Ring: checkFrontPorch (kiểm tra thềm cửa/kiện hàng), triggerEmergencyDoorUnlock (mở cửa cấp cứu).',
+          description: 'Action to perform: checkFrontPorch (inspect porch/package), triggerEmergencyDoorUnlock (emergency paramedic access).',
         },
         reason: {
           type: 'string',
-          description: 'Lý do thực hiện.',
+          description: 'Reason for triggering device action.',
         },
       },
       required: ['action'],
     },
   },
+  {
+    name: 'negotiateAdherence',
+    description:
+      'Handles patient resistance or refusal to take scheduled medication. Deploys an AI Health Guardian persona to negotiate adherence and activates the Sarah Connor emergency family circuit-breaker if refusal persists.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        medicineName: {
+          type: 'string',
+          description: 'Name of the medication being refused or resisted (e.g. Amlodipine, Lipitor, morning pills).',
+        },
+        refusalReason: {
+          type: 'string',
+          description: 'Reason provided by the patient for refusing or wanting to skip.',
+        },
+        personaId: {
+          type: 'string',
+          enum: ['nurse_betty', 'dr_reynolds', 'grandson_leo', 'sergeant_miller'],
+          description: 'Health Guardian persona to deploy. Defaults to grandson_leo.',
+        },
+        turnCount: {
+          type: 'number',
+          description: 'Resistance turn count (1 = initial persuasion, 2+ = Sarah Circuit-Breaker).',
+        },
+      },
+      required: [],
+    },
+  },
 ];
 
 /**
- * Gọi Bedrock Runtime với Claude Native Tool-Use API (anthropic_version: "bedrock-2023-05-31")
- * Hỗ trợ Claude tự động chọn 1 trong 5 MCP Tools.
+ * Invoke Bedrock Runtime using Claude Native Tool-Use API (anthropic_version: "bedrock-2023-05-31")
+ * Enables Claude to autonomously reason and execute 1 of 5 MCP Tools.
  */
 export async function invokeBedrockWithTools(
   userQuery: string,
@@ -169,15 +197,18 @@ export async function invokeBedrockWithTools(
     const bedrockClient = new BedrockRuntimeClient({
       region,
       credentials,
+      maxAttempts: 1,
     });
 
     const systemPrompt = `You are CareBridge Ambient OS, an empathetic, geriatric-focused AI health companion running on an Amazon Echo Show 10 for senior patient Eleanor Vance (78).
 Based on the user's spoken request, choose the single most relevant tool from the provided tools:
-- getTodaySchedule: When asking for daily medication routine, upcoming doses, or compliance rate.
-- logDoseStatus: When the senior reports taking, drinking, or skipping a medication (e.g. "I took my morning pills", "I took Amlodipine", "skipped my evening dose").
+- negotiateAdherence: HIGHEST PRIORITY whenever the patient expresses ANY reluctance, hesitation, resistance, refusal, says "don't want to take", "not taking my pills", "hate this pill", "skip my pills", "leave me alone", "refuse". Even if "today" or "schedule" is mentioned, if reluctance or refusal is expressed, ALWAYS choose negotiateAdherence.
+- getTodaySchedule: ONLY when asking for daily medication routine, upcoming doses, or compliance rate. NOT when resisting doses.
+- logDoseStatus: When the senior reports taking, drinking, or having taken a medication (e.g. "I took my morning pills", "I took Amlodipine").
 - recordVitals: When reporting blood pressure, blood sugar, heart rate, or pulse measurements.
 - clinicalAdvisor: When reporting symptoms, discomfort, feeling dizzy, pain, or asking clinical questions.
 - orderRefill: When requesting a refill or ordering more medicine via Amazon Pharmacy.
+- ringDeviceHub: When checking front porch Ring camera, packages, or unlocking door for emergency paramedics.
 
 If no tool is needed (such as a greeting or simple conversation), respond directly with compassionate, reassuring text strictly under 20 words for fast speech rendering.`;
 
@@ -204,7 +235,9 @@ If no tool is needed (such as a greeting or simple conversation), respond direct
     });
 
     console.log(`[Bedrock Tool-Use] Invoking ${modelId} with native tool schemas...`);
-    const response = await bedrockClient.send(command);
+    const response = await bedrockClient.send(command, {
+      abortSignal: AbortSignal.timeout(5000),
+    });
     const jsonStr = new TextDecoder().decode(response.body);
     const parsed = JSON.parse(jsonStr);
 
@@ -277,7 +310,7 @@ Respond STRICTLY in valid JSON with NO markdown codeblock markers, matching this
     secretAccessKey !== 'PASTE_YOUR_SECRET_KEY_HERE' &&
     !(secretAccessKey && secretAccessKey.includes('PASTE_'));
 
-  // Kiểm tra nếu có AWS Keys thật thì gọi Bedrock
+  // If genuine AWS credentials exist, invoke Bedrock
   if (hasRealCredentials && accessKeyId && secretAccessKey) {
     try {
       console.log(`[Bedrock Invocation] Target Region: ${region}, Model ID: ${modelId}`);
@@ -296,6 +329,7 @@ Respond STRICTLY in valid JSON with NO markdown codeblock markers, matching this
       const bedrockClient = new BedrockRuntimeClient({
         region,
         credentials,
+        maxAttempts: 1,
       });
 
       const payload = {
@@ -319,12 +353,14 @@ Respond STRICTLY in valid JSON with NO markdown codeblock markers, matching this
       });
 
       console.log(`[Bedrock Invocation] Dispatching command to Bedrock runtime...`);
-      const response = await bedrockClient.send(command);
+      const response = await bedrockClient.send(command, {
+        abortSignal: AbortSignal.timeout(5000),
+      });
       const jsonStr = new TextDecoder().decode(response.body);
       const parsed = JSON.parse(jsonStr);
       const textOutput = parsed.content?.[0]?.text || '{}';
 
-      // Loại bỏ định dạng markdown (```json ... ```) nếu Claude bao quanh
+      // Strip markdown code block wrapping (```json ... ```) if emitted by Claude
       let cleanJson = textOutput.trim();
       if (cleanJson.startsWith('```')) {
         cleanJson = cleanJson.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
@@ -383,15 +419,13 @@ Respond STRICTLY in valid JSON with NO markdown codeblock markers, matching this
     );
   }
 
-  // Fallback thông minh chuẩn DTO cho trường hợp offline hoặc chưa có AWS Keys
+  // Intelligent clinical DTO fallback for offline environments or unconfigured AWS credentials
   const lower = patientStatement.toLowerCase();
   const isEmergency =
     lower.includes('chest pain') ||
     lower.includes('shortness of breath') ||
     lower.includes('crushing') ||
-    lower.includes('heart attack') ||
-    lower.includes('đau ngực') ||
-    lower.includes('khó thở');
+    lower.includes('heart attack');
 
   if (isEmergency) {
     return {
@@ -407,9 +441,7 @@ Respond STRICTLY in valid JSON with NO markdown codeblock markers, matching this
     };
   }
 
-  const isDizzy =
-    lower.includes('dizzy') ||
-    lower.includes('chóng mặt');
+  const isDizzy = lower.includes('dizzy');
 
   return {
     speechResponse: isDizzy
