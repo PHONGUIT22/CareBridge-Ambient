@@ -13,18 +13,23 @@ import {
   faShieldHalved,
   faChevronRight,
   faHeartPulse,
+  faBan,
 } from '@fortawesome/free-solid-svg-icons';
 import confetti from 'canvas-confetti';
+import { GuardianSelector } from '../components/GuardianSelector';
+import { soundFxService } from '../services/soundFxService';
 
 interface DeskModeViewProps {
   onSwitchToCaregiver?: () => void;
   onTakeDose?: (logId: string) => void;
+  onTriggerGuardianRefusal?: (medicineName: string) => void;
   refreshTrigger?: number;
 }
 
 export function DeskModeView({
   onSwitchToCaregiver,
   onTakeDose,
+  onTriggerGuardianRefusal,
   refreshTrigger = 0,
 }: DeskModeViewProps) {
   const [schedule, setSchedule] = useState<DailyLogItem[]>([]);
@@ -48,7 +53,7 @@ export function DeskModeView({
     fetchSchedule();
   }, [refreshTrigger, fetchSchedule]);
 
-  // Tự động tìm cữ thuốc kế tiếp cần uống dựa theo thời gian thực (Next pending dose based on current time)
+  // Automatically find next pending dose based on real time
   const upcomingDose = useMemo(() => {
     const pendingList = schedule.filter((s) => s.status === 'pending');
     if (pendingList.length === 0) return null;
@@ -56,7 +61,7 @@ export function DeskModeView({
     const now = new Date();
     const currentHourMin = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    // Tìm cữ thuốc pending sắp đến gần nhất (ưu tiên cữ chưa quá giờ hoặc cữ trễ gần nhất)
+    // Find nearest upcoming pending dose (preferring upcoming or closest overdue)
     const sorted = [...pendingList].sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
     const nextAfterNow = sorted.find((s) => s.scheduledTime >= currentHourMin);
 
@@ -76,6 +81,9 @@ export function DeskModeView({
   const handleTakePill = async () => {
     if (!upcomingDose) return;
 
+    soundFxService.playPillClick();
+    soundFxService.playCelebrationChord();
+
     confetti({
       particleCount: 100,
       spread: 75,
@@ -86,7 +94,7 @@ export function DeskModeView({
     const takingLogId = upcomingDose.logId;
     const medName = upcomingDose.name;
 
-    // Cập nhật trạng thái lạc quan ngay lập tức
+    // Instant optimistic status update
     setSchedule((prev) =>
       prev.map((item) =>
         item.logId === takingLogId
@@ -135,6 +143,11 @@ export function DeskModeView({
 
       {/* 3. UPCOMING DOSE CARD & ACTION BUTTON */}
       <div className="w-full max-w-lg mx-auto flex flex-col gap-4 pb-4">
+        {/* Active Health Guardian Persona Selector */}
+        <div className="bg-[#1E2330] rounded-2xl p-3 border border-white/[0.08] shadow-sm">
+          <GuardianSelector compact />
+        </div>
+
         {/* Compliance Progress Track */}
         <div className="bg-[#1E2330] rounded-2xl p-3.5 border border-white/[0.08] shadow-sm">
           <div className="flex items-center justify-between text-xs font-medium mb-2">
@@ -187,6 +200,17 @@ export function DeskModeView({
             >
               <FontAwesomeIcon icon={faCheck} className="text-lg" />
               <span>I Took My Pill</span>
+            </button>
+
+            {/* Skip Dose Guardian Negotiation Trigger Button */}
+            <button
+              type="button"
+              onClick={() => onTriggerGuardianRefusal?.(upcomingDose.name)}
+              className="w-full mt-2.5 py-3 rounded-xl bg-[#151922] hover:bg-rose-500/15 text-rose-300 hover:text-rose-200 text-xs font-semibold tracking-normal flex items-center justify-center gap-2 border border-rose-500/30 active:scale-[0.98] transition-all"
+              title="Trigger AI Health Guardian refusal negotiation flow"
+            >
+              <FontAwesomeIcon icon={faBan} className="text-xs text-rose-400" />
+              <span>I don&apos;t want to take this pill (Skip Dose)</span>
             </button>
           </div>
         ) : (

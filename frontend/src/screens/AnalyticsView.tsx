@@ -39,7 +39,7 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
     setIsMounted(true);
   }, []);
 
-  // Lấy dữ liệu 30 ngày từ Backend qua mcpClient
+  // Fetch 30-day vitals history from backend via mcpClient
   useEffect(() => {
     mcpClient
       .getHistory()
@@ -60,7 +60,7 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
       });
   }, [refreshTrigger]);
 
-  // Tính toán chỉ số lâm sàng trung bình và nhận xét động
+  // Compute dynamic clinical averages and observations
   const bpAnalysis = useMemo(() => {
     const valid = vitalsData.filter((v) => v.systolic && v.diastolic);
     if (valid.length === 0) {

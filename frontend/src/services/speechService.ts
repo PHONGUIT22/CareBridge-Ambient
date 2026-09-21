@@ -1,7 +1,7 @@
 /**
- * Speech Service: Cung cấp giọng đọc Alexa cho người cao tuổi qua:
- * 1. AWS Polly Neural TTS (/api/tts) - Giọng đọc chất lượng cao Ruth / Matthew
- * 2. Web Speech API (window.speechSynthesis) - Fallback offline mượt mà
+ * Speech Service: Provides Alexa voice feedback for seniors via:
+ * 1. AWS Polly Neural TTS (/api/tts) - High-fidelity Ruth / Matthew voice
+ * 2. Web Speech API (window.speechSynthesis) - Resilient offline fallback
  */
 
 const API_BASE_URL =
@@ -13,7 +13,7 @@ export interface SpeechOptions {
   rate?: number;
   pitch?: number;
   lang?: string;
-  voiceId?: string; // 'Ruth' | 'Matthew' | 'Danielle' | 'Amy'
+  voiceId?: string; // Defaults to 'Ruth' (Unified Alexa Voice)
   onStart?: () => void;
   onEnd?: () => void;
   onError?: (err?: any) => void;
@@ -38,8 +38,8 @@ class SpeechService {
   }
 
   /**
-   * Phát âm thanh Earcon Chime ngắn ngay tức thì (0ms) bằng Web Audio API
-   * 2 nốt beep thanh nhã tần số 587Hz (D5) -> 880Hz (A5) trong 175ms với gain envelope êm ái
+   * Plays an immediate earcon chime (0ms) via Web Audio API
+   * 2-tone melodic beep: 587Hz (D5) -> 880Hz (A5) over 175ms with gentle gain envelope
    */
   public playChime(): void {
     if (typeof window === 'undefined') return;
@@ -55,7 +55,7 @@ class SpeechService {
 
       const now = ctx.currentTime;
 
-      // Nốt 1: 587.33 Hz (D5)
+      // Tone 1: 587.33 Hz (D5)
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.type = 'sine';
@@ -70,7 +70,7 @@ class SpeechService {
       osc1.start(now);
       osc1.stop(now + 0.085);
 
-      // Nốt 2: 880.00 Hz (A5)
+      // Tone 2: 880.00 Hz (A5)
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.type = 'sine';
@@ -85,7 +85,7 @@ class SpeechService {
       osc2.start(now + 0.07);
       osc2.stop(now + 0.18);
 
-      // Thu hồi AudioContext sau khi phát xong
+      // Dispose AudioContext after playback finishes
       setTimeout(() => {
         try {
           ctx.close();
@@ -97,13 +97,13 @@ class SpeechService {
   }
 
   /**
-   * Ngắt toàn bộ âm thanh đang phát (cả AWS Polly Audio Stream lẫn Web Speech API)
+   * Cancels all currently playing speech (both AWS Polly stream and Web Speech API)
    */
   public cancel(): void {
-    // 1. Tăng playback ID để vô hiệu hóa các callback bất đồng bộ đang chờ
+    // 1. Increment playback ID to invalidate pending async callbacks
     this.playbackId++;
 
-    // 2. Abort request fetch đang gửi lên /api/tts
+    // 2. Abort ongoing fetch request to /api/tts
     if (this.activeAbortController) {
       try {
         this.activeAbortController.abort();
@@ -111,7 +111,7 @@ class SpeechService {
       this.activeAbortController = null;
     }
 
-    // 3. Dừng và dọn dẹp Audio element của AWS Polly
+    // 3. Stop and clean up AWS Polly Audio element
     if (this.currentAudio) {
       try {
         this.currentAudio.onended = null;
@@ -123,7 +123,7 @@ class SpeechService {
       this.currentAudio = null;
     }
 
-    // 4. Dừng Web Speech API
+    // 4. Stop Web Speech API
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
@@ -134,8 +134,8 @@ class SpeechService {
   }
 
   /**
-   * Phát âm thanh với cơ chế 2 tầng:
-   * AWS Polly (/api/tts) -> Fallback window.speechSynthesis
+   * Plays speech with two-tier resilience:
+   * Tier 1: AWS Polly (/api/tts) -> Tier 2: Fallback window.speechSynthesis
    */
   public async speak(text: string, options?: SpeechOptions): Promise<void> {
     if (!this.isSupported()) {
@@ -149,18 +149,18 @@ class SpeechService {
       return;
     }
 
-    // Ngắt bất kỳ âm thanh nào đang phát trước đó
+    // Cancel any ongoing speech
     this.cancel();
 
     const currentId = ++this.playbackId;
     this.isSpeakingInternal = true;
 
-    // TẦNG 1: Thử gọi AWS Polly Neural TTS từ backend
+    // TIER 1: Attempt AWS Polly Neural TTS via backend
     try {
       this.activeAbortController = new AbortController();
       const timeoutId = setTimeout(() => {
         this.activeAbortController?.abort();
-      }, 800);
+      }, 2500);
 
       const response = await fetch(`${API_BASE_URL}/api/tts`, {
         method: 'POST',
@@ -170,14 +170,14 @@ class SpeechService {
         },
         body: JSON.stringify({
           text: cleanText,
-          voiceId: options?.voiceId || 'Ruth',
+          voiceId: 'Ruth', // Standard Alexa voice across all flows
         }),
         signal: this.activeAbortController.signal,
       });
 
       clearTimeout(timeoutId);
 
-      // Kiểm tra nếu phiên đã bị huỷ trong lúc chờ fetch
+      // Check if session was cancelled while awaiting fetch
       if (currentId !== this.playbackId) return;
 
       if (response.ok) {
@@ -186,7 +186,7 @@ class SpeechService {
         if (currentId !== this.playbackId) return;
 
         if (data.success && data.audioBase64) {
-          console.log('[SpeechService] Phát âm thanh qua AWS Polly Neural Voice (Ruth)');
+          console.log('[SpeechService] Playing audio via AWS Polly Neural Voice (Ruth)');
           const audioUrl = `data:${data.mimeType || 'audio/mpeg'};base64,${data.audioBase64}`;
           const audio = new Audio(audioUrl);
           this.currentAudio = audio;
@@ -200,7 +200,7 @@ class SpeechService {
           };
 
           audio.onerror = (e) => {
-            console.warn('[SpeechService] Audio element gặp lỗi khi phát Polly stream:', e);
+            console.warn('[SpeechService] Audio element failed playing Polly stream:', e);
             if (currentId === this.playbackId) {
               this.currentAudio = null;
               this.fallbackToSpeechSynthesis(cleanText, options, currentId);
@@ -211,27 +211,27 @@ class SpeechService {
           await audio.play();
           return;
         } else if (data.fallback) {
-          console.info('[SpeechService] Backend phản hồi fallback AWS Polly -> chuyển sang Web Speech API');
+          console.info('[SpeechService] Backend requested Polly fallback -> switching to Web Speech API');
         }
       }
     } catch (err: any) {
-      // Nếu là do cancel() gọi abort() thì không fallback nữa
+      // If cancel() called abort(), do not fallback
       if (currentId !== this.playbackId) return;
       if (err.name === 'AbortError') {
-        console.info('[SpeechService] AWS Polly quá 800ms -> Fast Fallback sang Web Speech API ngay tức thì');
+        console.info('[SpeechService] AWS Polly exceeded 2500ms -> Fast Fallback to Web Speech API immediately');
       } else {
-        console.warn('[SpeechService] Không thể kết nối tới AWS Polly TTS endpoint, fallback sang Web Speech API:', err.message);
+        console.warn('[SpeechService] Could not connect to AWS Polly TTS endpoint, fallback to Web Speech API:', err.message);
       }
     }
 
-    // TẦNG 2: Fallback sang Web Speech API
+    // TIER 2: Fallback to Web Speech API
     if (currentId === this.playbackId) {
       this.fallbackToSpeechSynthesis(cleanText, options, currentId);
     }
   }
 
   /**
-   * Fallback Web Speech API cục bộ trên trình duyệt
+   * Browser local Web Speech API fallback
    */
   private fallbackToSpeechSynthesis(
     text: string,
@@ -252,8 +252,8 @@ class SpeechService {
       window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = options?.rate ?? 0.9;
-      utterance.pitch = options?.pitch ?? 1.05;
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
       utterance.lang = options?.lang ?? 'en-US';
 
       utterance.onstart = () => {
@@ -275,7 +275,7 @@ class SpeechService {
         }
       };
 
-      // Chọn giọng tiếng Anh tự nhiên ấm áp
+      // Select warm natural English voice
       const voices = window.speechSynthesis.getVoices();
       const naturalVoice = voices.find(
         (v) =>
@@ -294,7 +294,7 @@ class SpeechService {
 
       window.speechSynthesis.speak(utterance);
     } catch (err) {
-      console.warn('[SpeechService] Lỗi khởi chạy SpeechSynthesis:', err);
+      console.warn('[SpeechService] SpeechSynthesis initialization error:', err);
       this.isSpeakingInternal = false;
       options?.onEnd?.();
     }

@@ -104,7 +104,7 @@ export function DoseNoteModal({
           </div>
         </div>
 
-        {/* TEXTAREA GHI CHÚ TỰ DO */}
+        {/* FREE-FORM CLINICAL NOTE TEXTAREA */}
         <div className="mt-4">
           <label className="block text-xs font-medium text-slate-400 mb-2">
             Detailed observations and symptoms

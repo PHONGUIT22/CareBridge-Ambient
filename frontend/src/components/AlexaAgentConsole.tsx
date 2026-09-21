@@ -52,6 +52,10 @@ const QUICK_PROMPTS = [
     prompt: 'Alexa, I just took my morning Amlodipine pill.',
   },
   {
+    label: 'Refuse Dose (Guardian)',
+    prompt: "Alexa, I don't want to take my pills today.",
+  },
+  {
     label: 'Mild dizziness',
     prompt: 'Alexa, I feel mild dizziness after taking my pill.',
   },
@@ -88,7 +92,7 @@ export function AlexaAgentConsole({
   const [inputQuery, setInputQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Nhận trực tiếp state và actions từ hook khởi tạo duy nhất tại page.tsx
+  // Consume state and actions directly from the single voice agent hook initialized in page.tsx
   const isListening = voiceAgent ? voiceAgent.isListening : propIsListening ?? false;
   const isThinking = voiceAgent ? voiceAgent.isThinking : propIsThinking ?? false;
   const isSpeaking = voiceAgent ? (voiceAgent as any).isSpeaking : propIsSpeaking ?? false;
@@ -198,6 +202,19 @@ export function AlexaAgentConsole({
 
         {/* Compact horizontal scrolling quick-test chips */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+          {/* JUDGE QUICK-TEST ACTION CHIP */}
+          <button
+            onClick={() =>
+              processVoiceQuery(
+                'Alexa, I refuse to take my Amlodipine pills today, leave me alone!'
+              )
+            }
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 text-xs font-semibold text-rose-300 hover:text-white whitespace-nowrap transition-all shrink-0 active:scale-95 shadow-sm"
+            title="Instant Evaluation: Test Voice Refusal & Sarah Connor Circuit-Breaker"
+          >
+            <span>😈 Test Refusal: &ldquo;I don&apos;t want my pills!&rdquo;</span>
+          </button>
+
           {QUICK_PROMPTS.map((item, idx) => (
             <button
               key={idx}

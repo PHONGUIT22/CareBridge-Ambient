@@ -19,13 +19,17 @@ import {
   faDroplet,
   faClock,
   faCrown,
+  faShieldCat,
 } from '@fortawesome/free-solid-svg-icons';
+import { GuardianSelector } from '../components/GuardianSelector';
+import { soundFxService } from '../services/soundFxService';
 
 interface TodayScheduleViewProps {
   onSwitchToDeskMode?: () => void;
   onOpenAddModal?: () => void;
   onOpenPaywall?: () => void;
   onDoseToggled?: () => void;
+  onTriggerGuardianRefusal?: (medicineName: string) => void;
   refreshTrigger?: number;
   isPro?: boolean;
 }
@@ -35,6 +39,7 @@ export function TodayScheduleView({
   onOpenAddModal,
   onOpenPaywall,
   onDoseToggled,
+  onTriggerGuardianRefusal,
   refreshTrigger = 0,
   isPro = false,
 }: TodayScheduleViewProps) {
@@ -290,6 +295,11 @@ export function TodayScheduleView({
           </div>
         )}
 
+        {/* ACTIVE HEALTH GUARDIAN BEHAVIORAL INTERVENTION SELECTOR */}
+        <div className="p-4 rounded-2xl bg-[#1E2330] border border-white/[0.08] shadow-sm">
+          <GuardianSelector />
+        </div>
+
         {/* 4. TODAY'S SCHEDULE (2-COLUMN RESPONSIVE GRID) */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
@@ -302,6 +312,14 @@ export function TodayScheduleView({
               </span>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onTriggerGuardianRefusal?.('Amlodipine (Norvasc) 5mg')}
+                className="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                title="Test Refusal: Engage active AI Guardian persuasion flow"
+              >
+                <span>🛡️ Test Refusal</span>
+              </button>
               <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium">
                 {takenCount} taken
               </span>
@@ -335,7 +353,7 @@ export function TodayScheduleView({
         </div>
       </div>
 
-      {/* MODAL GHI CHÚ */}
+      {/* DOSE NOTE MODAL */}
       <DoseNoteModal
         isOpen={!!activeNoteItem}
         onClose={() => setActiveNoteItem(null)}
@@ -345,14 +363,14 @@ export function TodayScheduleView({
         initialNote={activeNoteItem?.notes || ''}
       />
 
-      {/* MODAL THÊM THUỐC MỚI */}
+      {/* ADD NEW MEDICATION MODAL */}
       <AddMedicineModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddMedicine}
       />
 
-      {/* MODAL GHI CHỈ SỐ SINH TỒN (+ LOG) */}
+      {/* LOG VITALS MODAL (+ LOG) */}
       <LogVitalsModal
         isOpen={isVitalsModalOpen}
         onClose={() => setIsVitalsModalOpen(false)}

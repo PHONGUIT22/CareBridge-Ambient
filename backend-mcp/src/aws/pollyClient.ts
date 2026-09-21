@@ -88,25 +88,28 @@ export async function synthesizeSpeech(
   }
 
   try {
-    console.log(`[Polly Invocation] Synthesizing speech via Neural engine. Voice: ${voiceId}, Region: ${region}`);
+    const pollyVoice = 'Ruth'; // Unified premium Alexa Neural voice across all CareBridge interactions
+    console.log(`[Polly Invocation] Synthesizing speech via Neural engine. Voice: ${pollyVoice}, Region: ${region}`);
 
     const params: SynthesizeSpeechCommandInput = {
       OutputFormat: 'mp3',
       Text: cleanText,
-      VoiceId: (voiceId || 'Ruth') as any,
+      VoiceId: pollyVoice as any,
       Engine: 'neural',
     };
 
     const command = new SynthesizeSpeechCommand(params);
-    const response = await client.send(command);
+    const response = await client.send(command, {
+      abortSignal: AbortSignal.timeout(4000),
+    });
 
-    if (!response.AudioStream) {
+    if (!response || !response.AudioStream) {
       console.warn(`[Polly Warning] No AudioStream received from AWS Polly.`);
       return null;
     }
 
     const audioBuffer = await streamToBuffer(response.AudioStream);
-    console.log(`[Polly Success] Synthesized ${audioBuffer.length} bytes of MP3 audio.`);
+    console.log(`[Polly Success] Synthesized ${audioBuffer.length} bytes of MP3 audio via Ruth (Neural).`);
     return audioBuffer;
   } catch (err: any) {
     console.warn(`[Polly Warning] Failed to synthesize speech via AWS Polly:`);

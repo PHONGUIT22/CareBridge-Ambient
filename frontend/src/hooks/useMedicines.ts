@@ -55,7 +55,7 @@ export function useMedicines() {
         hour12: false,
       });
 
-      // Lưu snapshot để rollback khi gặp sự cố backend
+      // Save snapshot for rollback if backend request fails
       let previousSchedule: DailyLogItem[] = [];
       let previousAdherence = 0;
 

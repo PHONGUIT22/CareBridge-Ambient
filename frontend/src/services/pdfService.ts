@@ -3,7 +3,7 @@ import { DailyLogItem, VitalsRecord } from '../types';
 
 export const pdfService = {
   /**
-   * Tạo file PDF Báo Cáo Y Tế Lâm Sàng 30 Ngày sử dụng jspdf
+   * Generates a 30-day clinical medical summary PDF report using jsPDF
    */
   generateDoctorReport(params: {
     patientName?: string;

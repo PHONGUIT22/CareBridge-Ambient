@@ -9,7 +9,7 @@ interface SeniorClockProps {
 export function SeniorClock({ className = '' }: SeniorClockProps) {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
-  // Tránh lỗi Hydration mismatch giữa Server và Client trong Next.js 15
+  // Prevent Next.js 15 hydration mismatch between Server and Client
   useEffect(() => {
     setCurrentTime(new Date());
     const interval = setInterval(() => {
@@ -28,7 +28,7 @@ export function SeniorClock({ className = '' }: SeniorClockProps) {
     );
   }
 
-  // Tách giờ, phút, giây
+  // Extract hours, minutes, seconds
   const hours = currentTime.getHours().toString().padStart(2, '0');
   const minutes = currentTime.getMinutes().toString().padStart(2, '0');
   const seconds = currentTime.getSeconds().toString().padStart(2, '0');

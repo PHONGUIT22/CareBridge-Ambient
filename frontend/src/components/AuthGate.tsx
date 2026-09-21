@@ -36,7 +36,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
   const [error, setError] = useState<string | null>(null);
   const [selectedPersona, setSelectedPersona] = useState<'senior' | 'caregiver'>('caregiver');
 
-  // Lưu phiên đăng nhập vào localStorage
+  // Persist authentication session to localStorage
   const saveAndCompleteSession = (session: AuthSession) => {
     try {
       localStorage.setItem('carebridge_auth', JSON.stringify(session));
@@ -46,7 +46,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
     onLogin(session);
   };
 
-  // 1. Evaluator Fast-Track: 1-Click tự động nạp 30 ngày dữ liệu và đăng nhập
+  // 1. Evaluator Fast-Track: 1-Click automatic 30-day dataset seeding and authentication
   const handleFastTrackDemo = async () => {
     setIsLoading(true);
     setError(null);
@@ -103,14 +103,14 @@ export function AuthGate({ onLogin }: AuthGateProps) {
     }, 400);
   };
 
-  // 3. Xử lý bàn phím PIN số dành cho người cao tuổi
+  // 3. Senior-friendly numeric PIN keypad handler
   const handlePinInput = (digit: string) => {
     setError(null);
     if (pin.length < 4) {
       const newPin = pin + digit;
       setPin(newPin);
       if (newPin.length === 4) {
-        // Tự động xác thực khi nhập đủ 4 số
+        // Automatically verify when 4 digits are entered
         handleVerifyPin(newPin);
       }
     }
@@ -130,7 +130,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
     setIsLoading(true);
     setStatusMessage('Verifying Bedside PIN...');
     setTimeout(() => {
-      // Cho phép mã PIN demo 1234 hoặc bất kỳ 4 số hợp lệ trong môi trường hackathon
+      // Accept demo PIN 1234 or any valid 4-digit code in hackathon environment
       const session: AuthSession = {
         isAuthenticated: true,
         user: selectedPersona === 'senior' ? 'Eleanor Vance' : 'Sarah Connor',
@@ -144,7 +144,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
 
   return (
     <div className="min-h-screen bg-[#151922] text-white flex flex-col items-center justify-center p-4 sm:p-6 relative select-none font-sans">
-      {/* KHUNG AUTHENTICATION CHÍNH */}
+      {/* MAIN AUTHENTICATION CONTAINER */}
       <div className="relative z-10 w-full max-w-xl bg-[#1E2330] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-2xl">
         {/* 1. BRAND HEADER */}
         <div className="flex flex-col items-center text-center pb-5 border-b border-white/[0.08]">
@@ -165,7 +165,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
           </p>
         </div>
 
-        {/* 2. EVALUATOR FAST-TRACK BANNER (DÀNH CHO BAN GIÁM KHẢO) */}
+        {/* 2. EVALUATOR FAST-TRACK BANNER (FOR JUDGES) */}
         <div className="mt-5 p-4 rounded-2xl bg-[#151922] border border-white/[0.08] relative overflow-hidden">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
@@ -292,7 +292,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
             <p className="text-xs text-rose-400 font-medium mb-2 text-center">{error}</p>
           )}
 
-          {/* Grid bàn phím số lớn (Touch-Ergonomics for Seniors) */}
+          {/* Large Keypad Grid (Touch-Ergonomics for Seniors) */}
           <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
             {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
               <button

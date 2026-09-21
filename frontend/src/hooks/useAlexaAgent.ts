@@ -39,6 +39,7 @@ export interface UseAlexaAgentOptions {
   onClinicalAdviceTriggered?: (advice: ClinicalAdviceResponse) => void;
   onOrderRefillTriggered?: (order: AmazonRefillOrder) => void;
   onRingDeviceTriggered?: (ringResult: any) => void;
+  onGuardianNegotiationTriggered?: (guardianData: any) => void;
 }
 
 export function useAlexaAgent(options?: UseAlexaAgentOptions) {
@@ -144,7 +145,7 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
     }
 
     if (isBusyRef.current && !isListening) {
-      // Nếu trợ lý đang nói (Polly/SpeechSynthesis), cho phép người dùng ngắt lời tức thì
+      // Allow instant user barge-in while assistant is speaking (Polly/SpeechSynthesis)
       if (speechService.isSpeaking()) {
         speechService.cancel();
         isBusyRef.current = false;
@@ -174,8 +175,8 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
   }, [isListening]);
 
 /**
- * Tối ưu độ trễ âm thanh: Đảm bảo câu đọc gửi sang Polly ngắn gọn dưới 20 từ,
- * không gửi phần giải thích lâm sàng dài dòng để giảm thiểu thời gian kết xuất âm thanh.
+ * Latency optimization: Ensure spoken string sent to Polly is concise (<20 words),
+ * omitting lengthy clinical markdown explanations to minimize audio rendering time.
  */
 function toConciseSpokenSummary(text: string): string {
   if (!text) return '';
@@ -192,7 +193,7 @@ function toConciseSpokenSummary(text: string): string {
     return clean;
   }
 
-  // Nếu quá 20 từ, lấy câu đầu tiên nếu ngắn gọn hoặc cắt tối đa 18 từ
+  // If over 20 words, take the first sentence if concise, or truncate to 18 words
   const firstSentenceMatch = clean.match(/^([^\.\?!]+[\.\?!])/);
   if (firstSentenceMatch) {
     const firstSentence = firstSentenceMatch[1].trim();
@@ -223,7 +224,7 @@ function toConciseSpokenSummary(text: string): string {
       } catch (_) {}
       setIsListening(false);
 
-      // 3. Phát Earcon Chime lập tức (0ms) xác nhận hệ thống đã nhận diện câu lệnh
+      // 3. Play immediate Earcon Chime (0ms) confirming command detection
       speechService.playChime();
 
       const now = new Date().toLocaleTimeString('en-US', { hour12: false });
@@ -245,7 +246,7 @@ function toConciseSpokenSummary(text: string): string {
           }
         }, 12000);
 
-        // Tối ưu độ trễ: Chỉ gửi câu tóm tắt ngắn (dưới 20 từ) sang Polly
+        // Latency optimization: Only send concise summary (<20 words) to Polly
         const conciseSpokenText = toConciseSpokenSummary(replyText);
 
         if (speechService.isSupported()) {
@@ -253,7 +254,7 @@ function toConciseSpokenSummary(text: string): string {
             onEnd: () => {
               setIsSpeaking(false);
               clearTimeout(safetyTimer);
-              // Khoảng đệm 150ms chống vang âm thanh loa vào mic (Acoustic Echo Guard)
+              // 150ms acoustic buffer guarding microphone against speaker echo (Acoustic Echo Guard)
               setTimeout(() => {
                 isBusyRef.current = false;
               }, 150);
@@ -285,7 +286,7 @@ function toConciseSpokenSummary(text: string): string {
         },
       ]);
 
-      // Ghi nhận trạng thái bắt đầu gọi Bedrock Native Tool-Use Orchestrator
+      // Log start state of Bedrock Native Tool-Use Orchestrator
       setToolLogs((prev) => [
         {
           timestamp: now,
@@ -298,7 +299,7 @@ function toConciseSpokenSummary(text: string): string {
       ]);
 
       try {
-        // TOÀN BỘ Ý ĐỊNH ĐƯỢC PHÂN TÍCH QUA BEDROCK AGENTIC LOOP TẬP TRUNG
+        // ALL INTENTS ANALYZED VIA CENTRALIZED BEDROCK AGENTIC LOOP
         const turnRes = await mcpClient.executeAgentTurn(trimmed);
         const latency = Math.round(performance.now() - startTime);
 
@@ -309,7 +310,7 @@ function toConciseSpokenSummary(text: string): string {
           turnRes.speechResponse ||
           "I have noted your observation. Please let me know if you need anything else.";
 
-        // Cập nhật Tool Execution Log hiển thị rõ bước suy luận của Claude
+        // Update Tool Execution Log showing Claude's reasoning steps
         if (toolName) {
           setToolLogs((prev) => [
             {
@@ -336,7 +337,7 @@ function toConciseSpokenSummary(text: string): string {
           ]);
         }
 
-        // Tạo message cho Alexa với đầy đủ metadata
+        // Construct Alexa response message with complete metadata
         const alexaMsg: ChatMessage = {
           id: `alexa_${Date.now()}`,
           sender: 'alexa',
@@ -370,12 +371,12 @@ function toConciseSpokenSummary(text: string): string {
         setConversation((prev) => [...prev, { sender: 'alexa', text: reply }]);
         setMessages((prev) => [...prev, alexaMsg]);
 
-        // Đọc lời thoại speechResponse qua AWS Polly Neural Voice (Ruth)
+        // Synthesize speechResponse via Unified Alexa Voice (Ruth)
         speakAndRelease(reply);
 
-        // ĐIỀU HƯỚNG GIAO DIỆN & MỞ THẺ TƯƠNG TÁC DỰA TRÊN TOOL CLAUDE CHỌN
+        // UI NAVIGATION & INTERACTIVE CARD MODALS BASED ON SELECTED TOOL
         if (toolName === 'orderRefill') {
-          // Mở AmazonOrderCard
+          // Open AmazonOrderCard
           if (options?.onOrderRefillTriggered) {
             options.onOrderRefillTriggered(toolResult);
           }
@@ -383,16 +384,16 @@ function toConciseSpokenSummary(text: string): string {
             options.onDoseLogged();
           }
         } else if (toolName === 'clinicalAdvisor') {
-          // Mở ClinicalAdviceCard
+          // Open ClinicalAdviceCard
           if (options?.onClinicalAdviceTriggered) {
             options.onClinicalAdviceTriggered(toolResult);
           }
         } else if (toolName === 'logDoseStatus') {
-          // Ghi nhận tồn kho thấp để refill nếu cần
+          // Record low stock for refill alert if needed
           if (toolResult?.lowStockAlert) {
             lastLowStockMedRef.current = toolResult.lowStockAlert.medicineName;
           }
-          // Làm mới giao diện & hiệu ứng hoàn thành cữ thuốc
+          // Refresh UI & complete dose effects
           if (options?.onDoseLogged) {
             options.onDoseLogged();
           }
@@ -403,6 +404,10 @@ function toConciseSpokenSummary(text: string): string {
         } else if (toolName === 'ringDeviceHub') {
           if (options?.onRingDeviceTriggered) {
             options.onRingDeviceTriggered(toolResult);
+          }
+        } else if (toolName === 'negotiateAdherence') {
+          if (options?.onGuardianNegotiationTriggered) {
+            options.onGuardianNegotiationTriggered(toolResult);
           }
         }
       } catch (err: any) {

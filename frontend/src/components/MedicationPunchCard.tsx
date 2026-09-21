@@ -48,7 +48,7 @@ export function MedicationPunchCard({
 
   return (
     <div className="bg-[#1E2330] rounded-3xl p-5 text-white border border-white/[0.08] hover:border-[#FF5733]/40 transition-all">
-      {/* HEADER: ICON, TÊN THUỐC & ACTIONS */}
+      {/* HEADER: ICON, MEDICATION NAME & ACTIONS */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-[#151922] border border-white/[0.08] flex items-center justify-center text-[#FF5733] shrink-0">
@@ -78,10 +78,10 @@ export function MedicationPunchCard({
         </div>
       </div>
 
-      {/* MA TRẬN PUNCH-CARD: CÁC Ô CORAL VÀ XÁM TRẦM */}
+      {/* PUNCH-CARD MATRIX: CORAL AND MUTED SLATE CELLS */}
       <div className="bg-[#151922] rounded-2xl p-3.5 border border-white/[0.08]">
         <div className="flex gap-2">
-          {/* Nhãn thứ trong tuần */}
+          {/* Day of week labels */}
           <div className="grid grid-rows-7 gap-1.5 text-xs font-mono font-medium text-slate-400 select-none pr-1">
             {dayLabels.map((d, i) => (
               <span key={i} className="h-4 sm:h-5 flex items-center justify-center">
@@ -90,10 +90,10 @@ export function MedicationPunchCard({
             ))}
           </div>
 
-          {/* Lưới ô vuông tuân thủ */}
+          {/* Adherence square grid */}
           <div className="grid grid-rows-7 grid-flow-col gap-1.5 flex-1">
             {cells.map((cell, idx) => {
-              // 1. Ô đã uống: Coral Signal
+              // 1. Taken dose: Coral Signal
               if (cell.status === 'taken') {
                 return (
                   <div
@@ -104,7 +104,7 @@ export function MedicationPunchCard({
                 );
               }
 
-              // 2. Ô hôm nay: Viền Signal Coral
+              // 2. Today: Signal Coral border
               if (cell.status === 'today') {
                 return (
                   <div
@@ -115,7 +115,7 @@ export function MedicationPunchCard({
                 );
               }
 
-              // 3. Ô bị lỡ (missed): Xám trầm có viền
+              // 3. Missed dose: Muted slate with border
               if (cell.status === 'missed') {
                 return (
                   <div
@@ -126,7 +126,7 @@ export function MedicationPunchCard({
                 );
               }
 
-              // 4. Ô trống / tuần cũ: Mờ tối
+              // 4. Empty / past week: Muted dark
               return (
                 <div
                   key={idx}
@@ -138,7 +138,7 @@ export function MedicationPunchCard({
         </div>
       </div>
 
-      {/* FOOTER 3 CHỈ SỐ: STREAK, COMPLETED, ADHERENCE */}
+      {/* FOOTER 3 METRICS: STREAK, COMPLETED, ADHERENCE */}
       <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/[0.08] text-xs font-mono font-medium text-slate-300">
         <div className="flex items-center gap-1.5 text-amber-400 font-mono">
           <Flame className="w-4 h-4 fill-amber-400" />

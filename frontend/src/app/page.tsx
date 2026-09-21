@@ -10,6 +10,7 @@ import { PillVisualCard } from '../components/RichCards/PillVisualCard';
 import { ClinicalAdviceCard } from '../components/RichCards/ClinicalAdviceCard';
 import { AmazonOrderCard } from '../components/RichCards/AmazonOrderCard';
 import { RingDoorbellCard } from '../components/RichCards/RingDoorbellCard';
+import { GuardianNegotiationCard } from '../components/RichCards/GuardianNegotiationCard';
 import { ToastContainer, ToastMessage } from '../components/Toast';
 import { AuthGate, AuthSession } from '../components/AuthGate';
 import { PaywallModal } from '../components/PaywallModal';
@@ -17,6 +18,7 @@ import { AlexaAmbientGlow } from '../components/AlexaAmbientGlow';
 import { AmazonRefillOrder } from '../types';
 import { mcpClient } from '../services/mcpClient';
 import { speechService } from '../services/speechService';
+import { soundFxService } from '../services/soundFxService';
 import { useAlexaAgent } from '../hooks/useAlexaAgent';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -39,7 +41,7 @@ type ScreenTab = 'caregiver' | 'history' | 'analytics' | 'deskClock';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<ScreenTab>('caregiver');
-  const [isDualMode, setIsDualMode] = useState<boolean>(true); // Chế độ Echo Show 10 chia đôi màn hình
+  const [isDualMode, setIsDualMode] = useState<boolean>(true); // Echo Show 10 dual-screen layout state
   const [visualCardOpen, setVisualCardOpen] = useState(false);
   const [selectedMedForCard, setSelectedMedForCard] = useState('Amlodipine (Blood Pressure)');
   const [clinicalAdviceOpen, setClinicalAdviceOpen] = useState(false);
@@ -51,6 +53,8 @@ export default function Home() {
   const [ringPackageData, setRingPackageData] = useState<any>(null);
   const [ringDoorLockStatus, setRingDoorLockStatus] = useState<string>('LOCKED');
   const [ringEmergencyReason, setRingEmergencyReason] = useState<string>('');
+  const [guardianCardOpen, setGuardianCardOpen] = useState<boolean>(false);
+  const [guardianCardData, setGuardianCardData] = useState<any>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -59,22 +63,22 @@ export default function Home() {
   const [isAuthLoaded, setIsAuthLoaded] = useState(false);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
 
+  // Read authentication session from localStorage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('carebridge_auth');
-      if (saved) {
-        const parsed: AuthSession = JSON.parse(saved);
-        if (parsed?.isAuthenticated) {
-          setAuthSession(parsed);
-          if (parsed.role === 'senior') {
-            setActiveTab('deskClock');
-          } else {
-            setActiveTab('caregiver');
-          }
-        }
+      const savedAuth = localStorage.getItem('carebridge_auth_session');
+      if (savedAuth) {
+        setAuthSession(JSON.parse(savedAuth));
+      } else {
+        setAuthSession({
+          isAuthenticated: false,
+          user: 'Eleanor Vance (Age 78)',
+          role: 'senior',
+          isPro: false,
+        });
       }
     } catch (e) {
-      console.warn('LocalStorage read error:', e);
+      console.warn('Could not read auth session from localStorage:', e);
     } finally {
       setIsAuthLoaded(true);
     }
@@ -82,78 +86,59 @@ export default function Home() {
 
   const handleLogin = (session: AuthSession) => {
     setAuthSession(session);
-    if (session.role === 'senior') {
-      setActiveTab('deskClock');
-    } else {
-      setActiveTab('caregiver');
-    }
     addToast({
       type: 'success',
-      title: `Welcome, ${session.user.split(' ')[0]}`,
-      message: `Signed in as ${session.role === 'senior' ? 'Senior (Bedside Mode)' : 'Primary Caregiver'}.`,
+      title: `Welcome, ${session.role === 'caregiver' ? 'Sarah' : 'Eleanor'}!`,
+      message: session.isPro
+        ? 'CareBridge Ambient Pro Activated (Unlimited Sync & AWS SNS Alerts).'
+        : 'CareBridge Ambient Ready (Evaluator Mode).',
     });
   };
 
   const handleSignOut = () => {
-    try {
-      localStorage.removeItem('carebridge_auth');
-    } catch (e) {}
-    setAuthSession(null);
+    localStorage.removeItem('carebridge_auth_session');
+    setAuthSession({
+      isAuthenticated: false,
+      user: 'Eleanor Vance (Age 78)',
+      role: 'senior',
+      isPro: false,
+    });
     addToast({
       type: 'info',
       title: 'Signed Out',
-      message: 'Returned to CareBridge Ambient Auth Gate.',
+      message: 'Switched back to Authentication Gate & Evaluator Sandbox.',
     });
   };
 
   const handleActivatePro = () => {
-    const updated: AuthSession = authSession
-      ? { ...authSession, isPro: true }
-      : {
-          isAuthenticated: true,
-          user: 'Sarah Connor',
-          role: 'caregiver',
-          isPro: true,
-        };
+    if (!authSession) return;
+    const updated = { ...authSession, isPro: true };
     setAuthSession(updated);
-    try {
-      localStorage.setItem('carebridge_auth', JSON.stringify(updated));
-    } catch (e) {}
-    triggerGlobalRefresh();
+    localStorage.setItem('carebridge_auth_session', JSON.stringify(updated));
+    setIsPaywallOpen(false);
     addToast({
       type: 'success',
       title: 'CareBridge Pro Unlocked',
-      message: 'Evaluator Pass active! Unlimited slots & AI telemetry enabled.',
+      message: 'Unlimited PDF export, multi-dose scheduling, and priority AWS Bedrock access active.',
     });
   };
 
   const handleResetFreePlan = () => {
-    const updated: AuthSession = authSession
-      ? { ...authSession, isPro: false }
-      : {
-          isAuthenticated: true,
-          user: 'Sarah Connor',
-          role: 'caregiver',
-          isPro: false,
-        };
+    if (!authSession) return;
+    const updated = { ...authSession, isPro: false };
     setAuthSession(updated);
-    try {
-      localStorage.setItem('carebridge_auth', JSON.stringify(updated));
-    } catch (e) {}
-    triggerGlobalRefresh();
+    localStorage.setItem('carebridge_auth_session', JSON.stringify(updated));
+    setIsPaywallOpen(false);
     addToast({
       type: 'info',
-      title: 'Reset to Free Plan',
-      message: 'Gated restrictions are now active for testing (2 slots, PDF locked).',
+      title: 'Plan Reset to Free Tier',
+      message: 'Pro paywall modal will prompt when accessing premium features.',
     });
   };
 
   const addToast = (toast: Omit<ToastMessage, 'id'>) => {
-    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`;
+    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     setToasts((prev) => [...prev, { ...toast, id }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4500);
   };
 
   const dismissToast = (id: string) => {
@@ -164,13 +149,13 @@ export default function Home() {
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  // Kích hoạt Visual Card từ Alexa
+  // Trigger Visual Pill Card from Alexa
   const handleTriggerVisualCard = (medName: string) => {
     setSelectedMedForCard(medName);
     setVisualCardOpen(true);
   };
 
-  // Kích hoạt Clinical Advice Card từ Alexa
+  // Trigger Clinical Advice Card from Alexa
   const handleTriggerClinicalAdvice = (data: any) => {
     setClinicalAdviceData(data);
     setClinicalAdviceOpen(true);
@@ -183,7 +168,7 @@ export default function Home() {
       });
     }
 
-    // Khi có cảnh báo EMERGENCY từ Bedrock: Thẻ Ring hiển thị trạng thái Ring Smart Lock: UNLOCKED FOR PARAMEDICS
+    // If EMERGENCY alert from Bedrock: Ring card displays Ring Smart Lock: UNLOCKED FOR PARAMEDICS
     const isEmergency =
       data?.urgencyLevel === 'EMERGENCY' || data?.richCard?.urgencyLevel === 'EMERGENCY';
     if (isEmergency) {
@@ -203,7 +188,7 @@ export default function Home() {
     }
   };
 
-  // Kích hoạt Amazon Pharmacy Order Card khi đặt thuốc thành công
+  // Trigger Amazon Pharmacy Order Card upon successful prescription refill
   const handleTriggerAmazonOrder = (order: AmazonRefillOrder) => {
     setAmazonOrderData(order);
     setAmazonOrderCardOpen(true);
@@ -213,7 +198,7 @@ export default function Home() {
       message: `${order.quantityAdded || 30} tabs of ${order.medicineName} arriving ${order.estimatedDelivery}`,
     });
 
-    // Sau 5 giây giả lập sự kiện shipper Amazon Prime bấm chuông và để kiện thuốc ở thềm cửa
+    // After 5s, simulate Amazon Prime driver ringing doorbell and placing prescription at porch
     setTimeout(() => {
       setRingCardMode('delivery');
       setRingPackageData({
@@ -258,14 +243,75 @@ export default function Home() {
       }
       setRingCardOpen(true);
     },
+    onGuardianNegotiationTriggered: (guardianData) => {
+      const payload = guardianData?.richCard || guardianData;
+      setGuardianCardData(payload);
+      setGuardianCardOpen(true);
+      if (
+        guardianData?.escalationLevel === 'SARAH_CIRCUIT_BREAKER' ||
+        payload?.escalationLevel === 'SARAH_CIRCUIT_BREAKER' ||
+        guardianData?.sarahNotified
+      ) {
+        addToast({
+          type: 'warning',
+          title: 'Sarah Connor Circuit-Breaker Triggered',
+          message:
+            'Persistent refusal detected. Urgent AWS SNS alert dispatched to Sarah (+1 555-0199).',
+        });
+      }
+    },
   });
 
-  // Kích hoạt giọng nói trực tiếp từ nút Mic nổi ở giữa Bottom Bar
+  const handleGuardianTakeDose = async (medName?: string) => {
+    try {
+      await mcpClient.logDoseStatus({
+        medicineName: medName || 'Amlodipine (Norvasc) 5mg',
+        status: 'taken',
+        notes: 'Dose taken after AI Health Guardian negotiation.',
+      });
+      triggerGlobalRefresh();
+      addToast({
+        type: 'success',
+        title: 'Medication Taken!',
+        message: `${medName || 'Dose'} logged as taken. Great job staying healthy!`,
+      });
+    } catch (_) {
+      triggerGlobalRefresh();
+    }
+  };
+
+  const handleGuardianCallSarah = () => {
+    addToast({
+      type: 'info',
+      title: 'Connecting Sarah Connor (+1 555-0199)',
+      message: 'Calling Sarah at work for clinical skip authorization.',
+    });
+  };
+
+  const handleTriggerGuardianRefusal = async (medicineName: string = 'Amlodipine (Norvasc) 5mg') => {
+    try {
+      const savedPersona =
+        (localStorage.getItem('carebridge_active_guardian') as any) || 'grandson_leo';
+      const result = await mcpClient.negotiateAdherence({
+        medicineName,
+        refusalReason: "I don't want to take my pills right now",
+        personaId: savedPersona,
+        turnCount: 1,
+      });
+      setGuardianCardData(result.richCard || result);
+      setGuardianCardOpen(true);
+      speechService.speak(result.speechResponse);
+    } catch (err) {
+      console.warn('Failed to negotiate adherence:', err);
+    }
+  };
+
+  // Trigger voice directly from elevated center Mic button in Bottom Bar
   const handleCenterMicClick = () => {
     alexaAgent.toggleListening();
   };
 
-  // Khi chưa đọc xong localStorage, hiển thị dark loading skeleton để tránh hydration mismatch
+  // Render dark loading skeleton until localStorage is read to prevent hydration mismatch
   if (!isAuthLoaded) {
     return (
       <div className="min-h-screen bg-[#151922] text-white flex items-center justify-center">
@@ -279,7 +325,7 @@ export default function Home() {
     );
   }
 
-  // Nếu chưa đăng nhập, hiển thị Authentication Gate & Evaluator Sandbox
+  // If unauthenticated, display Authentication Gate & Evaluator Sandbox
   if (!authSession?.isAuthenticated) {
     return (
       <>
@@ -291,10 +337,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#151922] text-slate-100 font-sans selection:bg-[#FF5733] selection:text-white flex flex-col justify-between">
-      {/* 1. THANH ĐIỀU KHIỂN HACKATHON SIMULATOR TRÊN CÙNG */}
+      {/* 1. TOP SIMULATOR & DEVICE CONTROL HEADER */}
       <header className="bg-[#151922]/95 backdrop-blur-md border-b border-white/[0.08] px-4 py-2.5 flex items-center justify-between sticky top-0 z-40 gap-3">
         <div className="flex items-center gap-2.5 shrink-0">
-          {/* Logo Smart Home Ambient faHeartPulse */}
+          {/* Smart Home Ambient Logo */}
           <div className="w-8 h-8 rounded-xl bg-[#FF5733] flex items-center justify-center">
             <FontAwesomeIcon icon={faHeartPulse} className="text-white text-sm" />
           </div>
@@ -346,7 +392,7 @@ export default function Home() {
             <span className="hidden md:inline">Switch profile</span>
           </button>
 
-          {/* Nút chuyển đổi Echo Show 10 Dual View / Single Frame View */}
+          {/* Echo Show 10 Dual View / Single Frame Toggle */}
           <button
             onClick={() => setIsDualMode(true)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
@@ -395,7 +441,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* 2. KHÔNG GIAN BỐ CỤC CHÍNH - ENCAPSULATED DEVICE MOCKUP FRAME */}
+      {/* 2. MAIN WORKSPACE - ENCAPSULATED DEVICE MOCKUP FRAME */}
       <div className="flex-1 flex items-center justify-center p-3 sm:p-6 md:p-8">
         <div
           className={`w-full transition-all duration-500 ${
@@ -419,13 +465,14 @@ export default function Home() {
 
               {/* SCROLLABLE VIEW CONTENT */}
               <div className="flex-1 overflow-y-auto overflow-x-hidden">
-                {/* TAB 1: CAREGIVER HUB (MÀN HÌNH CHÍNH) */}
+                {/* TAB 1: CAREGIVER HUB (PRIMARY DASHBOARD) */}
                 {activeTab === 'caregiver' && (
                   <TodayScheduleView
                     refreshTrigger={refreshTrigger}
                     onDoseToggled={triggerGlobalRefresh}
                     onSwitchToDeskMode={() => setActiveTab('deskClock')}
                     onOpenPaywall={() => setIsPaywallOpen(true)}
+                    onTriggerGuardianRefusal={handleTriggerGuardianRefusal}
                     isPro={Boolean(authSession?.isPro)}
                   />
                 )}
@@ -439,23 +486,24 @@ export default function Home() {
                   />
                 )}
 
-                {/* TAB 3: ANALYTICS CHỈ SỐ SINH TỒN */}
+                {/* TAB 3: VITALS ANALYTICS */}
                 {activeTab === 'analytics' && <AnalyticsView refreshTrigger={refreshTrigger} />}
 
-                {/* TAB 4: ĐỒNG HỒ ĐẦU GIƯỜNG BAN ĐÊM (DESK CLOCK) */}
+                {/* TAB 4: NIGHTTIME BEDSIDE CLOCK (DESK MODE) */}
                 {activeTab === 'deskClock' && (
                   <DeskModeView
                     refreshTrigger={refreshTrigger}
                     onSwitchToCaregiver={() => setActiveTab('caregiver')}
                     onTakeDose={triggerGlobalRefresh}
+                    onTriggerGuardianRefusal={handleTriggerGuardianRefusal}
                   />
                 )}
               </div>
 
-              {/* 3. FLOATING BOTTOM NAVIGATION BAR VỚI NÚT MICRO ELEVATED Ở TRUNG TÂM */}
+              {/* 3. FLOATING BOTTOM NAVIGATION BAR WITH ELEVATED CENTER MIC BUTTON */}
               <div className="sticky bottom-4 left-0 right-0 w-full px-4 z-30 pointer-events-auto">
                 <nav className="relative bg-[#1E2330]/95 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center justify-between border border-white/[0.08] shadow-xl">
-                  {/* 2 Tab bên trái */}
+                  {/* Left Navigation Tabs */}
                   <div className="flex items-center gap-5 pl-1">
                     {/* Tab 1: Caregiver */}
                     <button
@@ -484,9 +532,9 @@ export default function Home() {
                     </button>
                   </div>
 
-                  {/* NÚT MICRO ELEVATED Ở TRUNG TÂM THEO STYLE HARDWARE */}
+                  {/* ELEVATED HARDWARE-STYLE CENTER MIC BUTTON */}
                   <div className="relative -top-4 flex items-center justify-center">
-                    {/* Feedback giọng nói trực quan ngay trên Mic */}
+                    {/* Visual voice feedback pill above Mic */}
                     {(alexaAgent.isListening || alexaAgent.isThinking || alexaAgent.isSpeaking) && (
                       <div className="absolute -top-11 px-3 py-1.5 rounded-xl bg-[#1E2330] border border-[#00CAFF]/40 text-white text-xs font-medium shadow-lg backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none animate-fadeIn">
                         <span
@@ -530,7 +578,7 @@ export default function Home() {
                     </button>
                   </div>
 
-                  {/* 2 Tab bên phải */}
+                  {/* Right Navigation Tabs */}
                   <div className="flex items-center gap-5 pr-1">
                     {/* Tab 3: Analytics */}
                     <button
@@ -590,7 +638,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* POPUP PHẢN HỒI GIỌNG NÓI NHANH KHI ĐANG LẮNG NGHE / SUY NGHĨ */}
+      {/* QUICK VOICE FEEDBACK POPUP DURING LISTENING / THINKING */}
       {alexaAgent.isListening && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#1E2330] border border-[#FF5733] px-5 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-fadeIn">
           <span className="w-2.5 h-2.5 rounded-full bg-[#FF5733] animate-ping" />
@@ -616,14 +664,14 @@ export default function Home() {
         </div>
       )}
 
-      {/* RICH CARD NHẬN DIỆN VIÊN THUỐC PHÓNG TO KHI CẦN */}
+      {/* ZOOMED-IN PILL IDENTIFICATION RICH CARD */}
       <PillVisualCard
         isOpen={visualCardOpen}
         onClose={() => setVisualCardOpen(false)}
         medicineName={selectedMedForCard}
       />
 
-      {/* RICH CARD CỐ VẤN Y TẾ LÂM SÀNG CLAUDE BEDROCK */}
+      {/* CLAUDE BEDROCK CLINICAL ADVISOR RICH CARD */}
       <ClinicalAdviceCard
         isOpen={clinicalAdviceOpen}
         onClose={() => setClinicalAdviceOpen(false)}
@@ -657,7 +705,7 @@ export default function Home() {
         }
       />
 
-      {/* RICH CARD ĐƠN HÀNG AMAZON PHARMACY 1-CLICK REFILL */}
+      {/* AMAZON PHARMACY 1-CLICK REFILL ORDER RICH CARD */}
       <AmazonOrderCard
         isOpen={amazonOrderCardOpen}
         onClose={() => setAmazonOrderCardOpen(false)}
@@ -671,7 +719,7 @@ export default function Home() {
         }}
       />
 
-      {/* RICH CARD CAMERA CHUÔNG CỬA THÔNG MINH RING (CROSS-DEVICE ECOSYSTEM) */}
+      {/* RING SMART DOORBELL & ACCESS RICH CARD (CROSS-DEVICE ECOSYSTEM) */}
       <RingDoorbellCard
         isOpen={ringCardOpen}
         onClose={() => setRingCardOpen(false)}
@@ -694,6 +742,15 @@ export default function Home() {
             message: 'Front door deadbolt restored to locked secure state.',
           });
         }}
+      />
+
+      {/* HEALTH GUARDIAN NEGOTIATION CARD & SARAH CIRCUIT-BREAKER */}
+      <GuardianNegotiationCard
+        isOpen={guardianCardOpen}
+        onClose={() => setGuardianCardOpen(false)}
+        data={guardianCardData}
+        onTakeDose={handleGuardianTakeDose}
+        onCallSarah={handleGuardianCallSarah}
       />
 
       {/* PRO PAYWALL MODAL */}

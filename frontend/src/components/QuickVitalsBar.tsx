@@ -20,7 +20,7 @@ export function QuickVitalsBar({
 }: QuickVitalsBarProps) {
   return (
     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-      {/* 1. Chip Huyết áp (Blood Pressure) */}
+      {/* 1. Blood Pressure Chip */}
       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1E2330] border border-white/[0.08] text-white text-xs whitespace-nowrap">
         <Heart className="w-3.5 h-3.5 text-[#FF5733] fill-[#FF5733]/20" />
         <span className="font-mono tabular-nums font-bold">
@@ -28,7 +28,7 @@ export function QuickVitalsBar({
         </span>
       </div>
 
-      {/* 2. Chip Đường huyết (Blood Sugar) */}
+      {/* 2. Blood Sugar Chip */}
       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1E2330] border border-white/[0.08] text-white text-xs whitespace-nowrap">
         <Droplets className="w-3.5 h-3.5 text-slate-300" />
         <span className="font-mono tabular-nums font-bold">
@@ -36,7 +36,7 @@ export function QuickVitalsBar({
         </span>
       </div>
 
-      {/* 3. Chip Nhịp tim (Heart Rate) */}
+      {/* 3. Heart Rate Chip */}
       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1E2330] border border-white/[0.08] text-white text-xs whitespace-nowrap">
         <Activity className="w-3.5 h-3.5 text-emerald-400" />
         <span className="font-mono tabular-nums font-bold">
@@ -44,7 +44,7 @@ export function QuickVitalsBar({
         </span>
       </div>
 
-      {/* 4. Nút bấm ghi nhanh (+ Log) */}
+      {/* 4. Quick Log Action (+ Log) */}
       <button
         onClick={onOpenLogModal}
         className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] active:scale-95 text-white text-xs font-semibold whitespace-nowrap transition-all ml-auto shadow-md"

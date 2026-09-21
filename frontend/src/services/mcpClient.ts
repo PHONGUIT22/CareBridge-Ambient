@@ -10,6 +10,7 @@ import {
   AgentTurnResponse,
   RingDeviceHubResult,
   DrugInteractionCheckResult,
+  GuardianNegotiationResult,
 } from '../types';
 
 const API_BASE_URL =
@@ -81,7 +82,7 @@ export const mcpClient = {
 
   /**
    * GET /api/today
-   * Lấy lịch uống thuốc, chỉ số sinh tồn và người chăm sóc hôm nay
+   * Fetch today's medication schedule, vitals, and caregiver profile
    */
   async getTodayData(): Promise<TodayDataResponse> {
     const res = await fetchWithTimeout(`${API_BASE_URL}/api/today`, {
@@ -95,7 +96,7 @@ export const mcpClient = {
 
   /**
    * POST /api/toggle
-   * Đổi trạng thái cữ thuốc (pending <-> taken) và tự động bù trừ tồn kho SQLite
+   * Toggle dose status (pending <-> taken) and update SQLite inventory
    */
   async toggleDose(
     logId: string,
@@ -114,7 +115,7 @@ export const mcpClient = {
 
   /**
    * POST /api/vitals
-   * Ghi nhận chỉ số sinh tồn (huyết áp, đường huyết, nhịp tim)
+   * Record vital signs (blood pressure, blood sugar, heart rate)
    */
   async recordVitals(vitals: Partial<VitalsRecord>): Promise<any> {
     const res = await fetchWithTimeout(`${API_BASE_URL}/api/vitals`, {
@@ -130,7 +131,7 @@ export const mcpClient = {
 
   /**
    * GET /api/history
-   * Lấy toàn bộ lịch sử uống thuốc và chỉ số sinh tồn 30 ngày
+   * Fetch full 30-day medication and vitals history
    */
   async getHistory(): Promise<HistoryDataResponse> {
     const res = await fetchWithTimeout(`${API_BASE_URL}/api/history`, {
@@ -144,7 +145,7 @@ export const mcpClient = {
 
   /**
    * GET /api/medicines
-   * Lấy danh mục thuốc trong phác đồ điều trị
+   * Fetch prescription medication catalog
    */
   async getMedicines(): Promise<MedicinesResponse> {
     const res = await fetchWithTimeout(`${API_BASE_URL}/api/medicines`, {
@@ -158,7 +159,7 @@ export const mcpClient = {
 
   /**
    * POST /api/advisor
-   * Gửi câu hỏi lâm sàng/triệu chứng tới cố vấn y tế AI (Bedrock Claude 3.5 Sonnet)
+   * Send clinical symptom query to AI advisor (AWS Bedrock Claude)
    */
   async askClinicalAdvisor(query: string): Promise<ClinicalAdviceResponse> {
     const res = await fetchWithTimeout(`${API_BASE_URL}/api/advisor`, {
@@ -174,7 +175,7 @@ export const mcpClient = {
 
   /**
    * POST /api/seed
-   * Kích hoạt reset & nạp lại 30 ngày dữ liệu sóng sin mẫu
+   * Trigger 30-day clinical demo data reset and seed
    */
   async triggerDataSeed(): Promise<{ success: boolean; message?: string }> {
     const res = await fetchWithTimeout(`${API_BASE_URL}/api/seed`, {
@@ -188,7 +189,7 @@ export const mcpClient = {
 
   /**
    * POST /api/dose
-   * Ghi nhận trạng thái thuốc theo lệnh thoại Alexa hoặc chọn trực tiếp
+   * Log dose status via Alexa voice command or direct UI selection
    */
   async logDoseStatus(args: {
     logId?: string;
@@ -209,7 +210,7 @@ export const mcpClient = {
 
   /**
    * POST /api/note
-   * Cập nhật ghi chú lâm sàng cho cữ thuốc
+   * Save clinical note for a medication dose
    */
   async saveDoseNote(
     logId: string,
@@ -294,6 +295,27 @@ export const mcpClient = {
     });
     if (!res.ok) {
       throw new Error(`Failed to place Amazon Pharmacy refill: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
+  /**
+   * POST /api/guardian/negotiate
+   * Health Guardian persona persuasion & Sarah Circuit-Breaker
+   */
+  async negotiateAdherence(params: {
+    medicineName: string;
+    refusalReason?: string;
+    personaId?: string;
+    turnCount?: number;
+  }): Promise<GuardianNegotiationResult> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/api/guardian/negotiate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to negotiate adherence: ${res.statusText}`);
     }
     return res.json();
   },

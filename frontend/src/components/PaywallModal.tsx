@@ -64,7 +64,7 @@ export function PaywallModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151922]/80 backdrop-blur-md animate-fadeIn">
       <div className="bg-[#1E2330] border border-white/[0.08] w-full max-w-lg sm:max-w-xl rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative transform transition-all animate-scaleUp">
-        {/* Nút đóng */}
+        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-5 right-5 p-2 rounded-xl bg-[#151922] hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
@@ -196,7 +196,7 @@ export function PaywallModal({
           </div>
         </div>
 
-        {/* NÚT HÀNH ĐỘNG CHÍNH */}
+        {/* PRIMARY ACTION BUTTON */}
         <div className="flex flex-col gap-2">
           {isPro ? (
             <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-center text-xs font-medium flex items-center justify-center gap-2">

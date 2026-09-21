@@ -86,7 +86,7 @@ export function HistoryMatrixView({
               <FontAwesomeIcon icon={faArrowsRotate} className="text-xs" />
             </button>
 
-            {/* NÚT EXPORT PDF SỬ DỤNG JSPDF */}
+            {/* PDF EXPORT BUTTON USING JSPDF */}
             <button
               onClick={handleExportPDF}
               disabled={isExporting}
@@ -121,7 +121,7 @@ export function HistoryMatrixView({
           </div>
         )}
 
-        {/* DANH SÁCH CÁC THẺ PUNCH-CARD POPULATED BỞI useHeatmap */}
+        {/* PUNCH-CARD LIST POPULATED BY useHeatmap */}
         <div className="flex flex-col gap-4 mt-2">
           {loading && medicines.length === 0 ? (
             <div className="bg-[#1E2330] border border-white/[0.08] rounded-2xl p-8 text-center text-slate-400 text-xs">
@@ -144,7 +144,7 @@ export function HistoryMatrixView({
           )}
         </div>
 
-        {/* THÔNG BÁO LÂM SÀNG BẢO MẬT */}
+        {/* SECURE CLINICAL AUDIT TRAIL BANNER */}
         <div className="bg-[#1E2330] rounded-2xl p-4 border border-white/[0.08] flex items-center gap-3 mt-1">
           <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
             <FontAwesomeIcon icon={faCircleCheck} className="text-base" />
