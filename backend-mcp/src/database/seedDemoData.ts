@@ -5,16 +5,16 @@ import { VitalsRepo } from './vitalsRepo.js';
 export async function seedDemoData(force: boolean = false): Promise<void> {
   const db = getDatabase();
 
-  // Kiểm tra xem đã có dữ liệu thuốc chưa
+  // Check if medication records already exist
   const existingCount = db.prepare('SELECT COUNT(*) as count FROM medicines').get() as { count: number };
   if (existingCount.count > 0 && !force) {
-    console.log('[Seed] Cơ sở dữ liệu đã có dữ liệu, bỏ qua bước seeder.');
+    console.log('[Seed] Database already contains records, skipping seeder.');
     return;
   }
 
-  console.log('[Seed] Bắt đầu khởi tạo dữ liệu lâm sàng mẫu 30 ngày...');
+  console.log('[Seed] Initializing 30-day clinical sample dataset...');
 
-  // 1. Xoá sạch dữ liệu cũ nếu force = true
+  // 1. Clear existing data if force = true
   if (force) {
     db.exec(`
       DELETE FROM intake_logs;
@@ -24,7 +24,7 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
     `);
   }
 
-  // 2. Thêm danh mục thuốc mẫu thực tế cho người cao tuổi
+  // 2. Add realistic geriatric medication regimen
   const sampleMedicines = [
     {
       id: 'med_amlodipine',
@@ -68,13 +68,13 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
     await MedicineRepo.addMedicine(med);
   }
 
-  // Khởi tạo thông tin người chăm sóc
+  // Initialize designated family caregiver profile
   db.prepare(`
     INSERT OR REPLACE INTO caregiver_profile (id, name, email, updated_at)
     VALUES ('primary', 'Sarah Connor (Daughter)', 'sarah.connor@gmail.com', ?)
   `).run(new Date().toISOString());
 
-  // 3. Sinh 30 ngày chỉ số sinh tồn (Vitals) & Nhật ký uống thuốc (Logs)
+  // 3. Generate 30 days of daily vitals and medication intake logs
   const today = new Date();
   const notesLibrary = [
     'Took after breakfast with full glass of water.',
@@ -96,8 +96,7 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
       d.setDate(today.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
 
-      // --- SINH CHỈ SỐ SINH TỒN THEO SÓNG SIN TỰ NHIÊN ---
-      // Tạo đường cong huyết áp và đường huyết có độ dao động sinh lý học
+      // --- GENERATE VITALS USING REALISTIC BIOMETRIC SINE-WAVE CURVES ---
       const systolic = Math.round(124 + 9 * Math.sin(i * 0.35) + (Math.random() * 4 - 2));
       const diastolic = Math.round(80 + 5 * Math.sin(i * 0.35 + 0.5) + (Math.random() * 3 - 1.5));
       const bloodSugar = Number((105 + 14 * Math.sin(i * 0.28) + (Math.random() * 6 - 3)).toFixed(1));
@@ -112,7 +111,7 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
         updatedAt: d.toISOString(),
       });
 
-      // --- SINH LOG UỐNG THUỐC ---
+      // --- GENERATE MEDICATION INTAKE LOGS ---
       for (const med of sampleMedicines) {
         for (const time of med.reminderTimes) {
           const logId = `log_${dateStr}_${med.id}_${time.replace(':', '')}`;
@@ -123,7 +122,7 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
           let note: string | null = null;
 
           if (isToday) {
-            // Hôm nay: cữ sáng đã uống, cữ chiều/tối để pending
+            // Today: morning doses taken, afternoon/evening doses pending
             const currentHour = today.getHours();
             const logHour = parseInt(time.split(':')[0], 10);
             if (logHour > currentHour) {
@@ -131,14 +130,14 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
               takenAt = null;
             }
           } else {
-            // Quá khứ: tỷ lệ tuân thủ 92% (thỉnh thoảng skipped)
+            // Past history: ~92% adherence rate (occasional skipped dose)
             const randomVal = Math.random();
             if (randomVal > 0.92) {
               status = 'skipped';
               takenAt = null;
               note = 'Forgot dose while visiting relatives.';
             } else {
-              // 30% trường hợp có ghi chú lâm sàng ngẫu nhiên
+              // 30% chance of random clinical note
               if (Math.random() > 0.7) {
                 note = notesLibrary[Math.floor(Math.random() * notesLibrary.length)];
               }
@@ -161,5 +160,5 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
   });
 
   seedTransaction();
-  console.log('>>> [Seed Hoàn tất] Đã tạo 4 loại thuốc, 30 ngày chỉ số sinh tồn và lịch sử tuân thủ mẫu!');
-}
+  console.log('>>> [Seed Complete] Created 4 medications, 30 days of biometric vitals and sample adherence logs!');
+}

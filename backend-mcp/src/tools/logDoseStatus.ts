@@ -5,26 +5,26 @@ import { getDatabase } from '../database/db.js';
 export const logDoseStatusTool = {
   definition: {
     name: 'logDoseStatus',
-    description: "Đánh dấu trạng thái một cữ thuốc là 'taken' hoặc 'skipped', kèm ghi chú lâm sàng của người bệnh.",
+    description: "Mark medication dose intake status as 'taken' or 'skipped', with optional clinical or feeling notes.",
     inputSchema: {
       type: 'object',
       properties: {
         logId: {
           type: 'string',
-          description: 'Mã định danh của bản ghi intake log (nếu có).',
+          description: 'Unique intake log record identifier (if known).',
         },
         medicineName: {
           type: 'string',
-          description: 'Tên thuốc người bệnh nói (ví dụ: Amlodipine, Metformin).',
+          description: 'Name of medicine spoken by patient (e.g., Amlodipine, Metformin, morning pills).',
         },
         status: {
           type: 'string',
           enum: ['taken', 'skipped', 'pending'],
-          description: "Trạng thái mới của cữ thuốc. Mặc định là 'taken'.",
+          description: "New intake status ('taken' or 'skipped'). Defaults to 'taken'.",
         },
         notes: {
           type: 'string',
-          description: 'Ghi chú lâm sàng hoặc cảm giác khi uống (ví dụ: "Taken with oatmeal, slight dizziness").',
+          description: 'Clinical observation or sensation noted during intake (e.g., "Taken with oatmeal, slight dizziness").',
         },
       },
       required: [],
@@ -37,7 +37,7 @@ export const logDoseStatusTool = {
     let targetLogId = args.logId;
     let matchedMedName = args.medicineName || 'Medication';
 
-    // Nếu không truyền trực tiếp logId, tự tìm cữ pending phù hợp nhất hôm nay
+    // If logId is not explicitly provided, find the most relevant pending dose today
     if (!targetLogId) {
       const todayLogs = await LogRepo.getLogsByDate(todayStr);
 
@@ -50,7 +50,7 @@ export const logDoseStatusTool = {
           targetLogId = found.logId;
           matchedMedName = found.name;
         } else {
-          // Fallback nếu medicineName là từ nói chung (ví dụ: "morning pills", "pills", "medication")
+          // Fallback if medicineName is a generic phrase (e.g. "morning pills", "pills", "medication")
           const pendingDose = todayLogs.find((l) => l.status === 'pending') || todayLogs[0];
           if (pendingDose) {
             targetLogId = pendingDose.logId;
@@ -58,7 +58,7 @@ export const logDoseStatusTool = {
           }
         }
       } else {
-        // Lấy cữ pending gần nhất
+        // Retrieve nearest pending dose
         const pendingDose = todayLogs.find((l) => l.status === 'pending') || todayLogs[0];
         if (pendingDose) {
           targetLogId = pendingDose.logId;
@@ -77,7 +77,7 @@ export const logDoseStatusTool = {
 
     await LogRepo.updateStatusDirect(targetLogId, status, args.notes);
 
-    // Kiểm tra tồn kho sau khi đã trừ liều vừa uống
+    // Check remaining stock inventory after dose decrement
     let remainingStock: number | null = null;
     let lowStockWarning = false;
     const priceStr = '$12.50';

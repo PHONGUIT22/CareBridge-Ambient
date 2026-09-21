@@ -3,38 +3,38 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-// Lấy đường dẫn thư mục hiện tại theo chuẩn ES Module
+// Retrieve current directory path following ES Module standards
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Đặt file database tại thư mục gốc backend-mcp (hoặc tuỳ chỉnh)
+// Place SQLite database file in backend-mcp/data directory
 const DB_DIR = path.resolve(__dirname, '../../data');
 const DB_PATH = path.join(DB_DIR, 'carebridge.db');
 
 let dbInstance: DatabaseType | null = null;
 
 /**
- * Khởi tạo Database và Migrate Schema
+ * Initialize Database and Migrate Schema
  */
 export function initDB(): DatabaseType {
   if (dbInstance) return dbInstance;
 
-  // Đảm bảo thư mục chứa database tồn tại
+  // Ensure data directory exists
   if (!fs.existsSync(DB_DIR)) {
     fs.mkdirSync(DB_DIR, { recursive: true });
   }
 
-  // Khởi tạo connection với better-sqlite3
+  // Initialize better-sqlite3 connection
   dbInstance = new Database(DB_PATH, {
-    // verbose: console.log, // Bật nếu muốn debug toàn bộ câu lệnh SQL
+    // verbose: console.log, // Enable for detailed SQL query logging
   });
 
-  // Bật chế độ WAL mode và ràng buộc Foreign Keys
+  // Enable WAL mode and foreign key constraints
   dbInstance.pragma('journal_mode = WAL');
   dbInstance.pragma('foreign_keys = ON');
-  dbInstance.pragma('synchronous = NORMAL'); // Tối ưu tốc độ ghi đĩa an toàn cho WAL
+  dbInstance.pragma('synchronous = NORMAL'); // Optimize disk write safety for WAL
 
-  // Tạo toàn bộ các bảng cốt lõi
+  // Create core database tables
   dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS medicines (
       id TEXT PRIMARY KEY NOT NULL,
@@ -76,23 +76,23 @@ export function initDB(): DatabaseType {
       updated_at TEXT NOT NULL
     );
 
-    -- Tối ưu Index cho tốc độ truy vấn lịch uống và heatmap
+    -- Optimize indexes for schedule queries and adherence heatmaps
     CREATE UNIQUE INDEX IF NOT EXISTS idx_log_unique ON intake_logs(medicine_id, date, time);
     CREATE INDEX IF NOT EXISTS idx_log_date ON intake_logs(date);
   `);
 
-  // Cơ chế an toàn tự bổ sung cột (Defensive migration)
+  // Defensive migration: ensure newer columns exist safely
   migrateTableSafely('medicines', 'image_uri', 'TEXT');
   migrateTableSafely('medicines', 'stock_count', 'INTEGER DEFAULT 30');
   migrateTableSafely('medicines', 'type', "TEXT DEFAULT 'medication'");
   migrateTableSafely('intake_logs', 'notes', 'TEXT');
 
-  console.log(`[SQLite] Database kết nối thành công tại: ${DB_PATH}`);
+  console.log(`[SQLite] Database successfully connected at: ${DB_PATH}`);
   return dbInstance;
 }
 
 /**
- * Hàm hỗ trợ tự động bổ sung cột nếu bảng đã tồn tại từ trước mà chưa có cột mới
+ * Defensive schema migration helper to add missing columns to existing tables
  */
 function migrateTableSafely(table: string, column: string, columnDef: string) {
   if (!dbInstance) return;
@@ -103,13 +103,13 @@ function migrateTableSafely(table: string, column: string, columnDef: string) {
     try {
       dbInstance.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${columnDef};`);
     } catch (err) {
-      // Đã có cột hoặc bỏ qua lỗi trùng
+      // Column exists or duplicate error ignored
     }
   }
 }
 
 /**
- * Singleton Getter để các Repositories lấy database dùng chung
+ * Singleton Getter for repositories to share database connection
  */
 export function getDatabase(): DatabaseType {
   if (!dbInstance) {
@@ -119,17 +119,17 @@ export function getDatabase(): DatabaseType {
 }
 
 /**
- * Đóng kết nối an toàn khi tắt server
+ * Gracefully close database connection on process shutdown
  */
 export function closeDB(): void {
   if (dbInstance) {
     dbInstance.close();
     dbInstance = null;
-    console.log('[SQLite] Đã đóng kết nối cơ sở dữ liệu an toàn.');
+    console.log('[SQLite] Database connection closed safely.');
   }
 }
 
-// Lắng nghe sự kiện tắt tiến trình để đóng DB sạch sẽ, tránh corrupt file
+// Listen to process exit signals for clean shutdown to prevent database corruption
 process.on('exit', () => closeDB());
 process.on('SIGINT', () => {
   closeDB();
@@ -138,4 +138,4 @@ process.on('SIGINT', () => {
 process.on('SIGTERM', () => {
   closeDB();
   process.exit(0);
-});
+});

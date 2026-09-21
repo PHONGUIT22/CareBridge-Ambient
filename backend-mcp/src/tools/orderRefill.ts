@@ -31,17 +31,17 @@ export const orderRefillTool = {
   definition: {
     name: 'orderRefill',
     description:
-      'Tự động đặt thuốc bổ sung (refill) qua Amazon Pharmacy 1-Click khi thuốc trong kho sắp hết. Sinh mã đơn hàng Amazon chính thức, cập nhật tồn kho SQLite và ước tính thời gian giao hàng Prime 2-Day.',
+      'Place an automated 1-Click prescription refill order via Amazon Pharmacy when inventory runs low. Generates official Amazon order IDs, updates SQLite inventory WAL, and estimates Prime 2-Day delivery.',
     inputSchema: {
       type: 'object',
       properties: {
         medicineName: {
           type: 'string',
-          description: 'Tên loại thuốc cần đặt thêm (ví dụ: Atorvastatin, Amlodipine, Metformin).',
+          description: 'Name of medication to refill (e.g., Atorvastatin, Amlodipine, Metformin).',
         },
         quantity: {
           type: 'number',
-          description: 'Số lượng viên thuốc đặt bổ sung (mặc định 30 viên - 1 tháng dùng).',
+          description: 'Quantity of tablets to refill (defaults to 30 tablets - 1 month supply).',
         },
       },
       required: ['medicineName'],
@@ -52,10 +52,10 @@ export const orderRefillTool = {
     const quantity = args.quantity && args.quantity > 0 ? Number(args.quantity) : 30;
     const query = args.medicineName ? args.medicineName.trim() : '';
 
-    // 1. Tìm loại thuốc trong cơ sở dữ liệu
+    // 1. Locate medication in database records
     let matchedMed = await MedicineRepo.findByName(query);
 
-    // Fallback: nếu không tìm thấy chính xác theo tên, tìm thuốc đầu tiên có tồn kho thấp
+    // Fallback: if not found by exact name, locate first low-stock medicine
     if (!matchedMed) {
       const allMeds = await MedicineRepo.getAllMedicines();
       matchedMed = allMeds.find((m) => m.stockCount <= 5) || allMeds[0] || null;
@@ -72,15 +72,15 @@ export const orderRefillTool = {
     const previousStock = matchedMed.stockCount;
     const newStock = previousStock + quantity;
 
-    // 2. Cập nhật tồn kho trong SQLite (Write-Ahead Logging)
+    // 2. Update stock count in SQLite (Write-Ahead Logging)
     await MedicineRepo.refillMedicine(matchedMed.id, quantity);
 
-    // 3. Sinh mã đơn hàng Amazon Pharmacy chuẩn định dạng (114-XXXXXXX-XXXXXXX)
+    // 3. Generate authentic Amazon Pharmacy order ID (114-XXXXXXX-XXXXXXX)
     const part1 = Math.floor(1000000 + Math.random() * 9000000);
     const part2 = Math.floor(1000000 + Math.random() * 9000000);
     const orderId = `114-${part1}-${part2}`;
 
-    // 4. Ước tính ngày giao hàng Prime 2-Day
+    // 4. Estimate Prime 2-Day delivery date
     const deliveryDate = new Date();
     deliveryDate.setDate(deliveryDate.getDate() + 2);
     const deliveryFormatted = deliveryDate.toLocaleDateString('en-US', {

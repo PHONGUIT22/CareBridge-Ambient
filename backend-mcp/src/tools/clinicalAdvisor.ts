@@ -7,13 +7,13 @@ import { sendEmergencySMS, SendSMSResult } from '../aws/snsClient.js';
 export const clinicalAdvisorTool = {
   definition: {
     name: 'clinicalAdvisor',
-    description: "Nhận triệu chứng hoặc thắc mắc của người cao tuổi, đẩy vào AWS Bedrock (Claude 3.5 Sonnet) để phân tích lâm sàng và đưa ra lời khuyên an toàn.",
+    description: "Evaluate senior symptoms or health queries through AWS Bedrock (Claude 3.5 Sonnet / Haiku 4.5) for clinical triage and safety guidance.",
     inputSchema: {
       type: 'object',
       properties: {
         query: {
           type: 'string',
-          description: 'Câu nói hoặc mô tả triệu chứng của người bệnh (ví dụ: "I feel dizzy after taking my pill").',
+          description: 'Patient verbal statement or symptom description (e.g., "I feel dizzy after taking my pill").',
         },
       },
       required: ['query'],
@@ -23,7 +23,7 @@ export const clinicalAdvisorTool = {
   async handler(args: { query: string }) {
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // Thu thập ngữ cảnh lâm sàng thực tế của người bệnh từ Database
+    // Collect patient's real clinical context from database
     const [medicines, vitals] = await Promise.all([
       MedicineRepo.getAllMedicines(),
       VitalsRepo.getVitalsByDate(todayStr),
@@ -34,13 +34,13 @@ export const clinicalAdvisorTool = {
       ? `BP: ${vitals.systolic || '--'}/${vitals.diastolic || '--'} mmHg, Sugar: ${vitals.bloodSugar || '--'} mg/dL, HR: ${vitals.heartRate || '--'} bpm`
       : 'No vitals recorded today yet.';
 
-    // Phân tích thông qua AWS Bedrock
+    // Clinical analysis via AWS Bedrock
     const analysis: ClinicalAnalysisResult = await analyzeClinicalQuery(args.query, {
       currentMeds,
       recentVitals,
     });
 
-    // Nếu urgencyLevel là HIGH hoặc EMERGENCY, tự động kích hoạt AWS SNS Dispatch SMS khẩn cấp
+    // If urgencyLevel is HIGH or EMERGENCY, automatically dispatch emergency SMS via AWS SNS
     let smsDispatchResult: SendSMSResult | null = null;
     const isEmergencyRisk = analysis.urgencyLevel === 'EMERGENCY' || analysis.urgencyLevel === 'HIGH';
 
@@ -53,7 +53,7 @@ export const clinicalAdvisorTool = {
         const alertBody = `[CareBridge EMERGENCY ALERT] Eleanor reported severe symptoms: "${args.query}". Risk Level: ${analysis.urgencyLevel}. Current Vitals: ${recentVitals}. Immediate family assistance requested. Ambient station active.`;
         smsDispatchResult = await sendEmergencySMS(caregiverPhone, alertBody, caregiverName);
 
-        // Đảm bảo lời thoại phản hồi thông báo ngắn gọn dưới 20 từ cho AWS Polly render tức thì
+        // Ensure voice response is concise under 20 words for fast AWS Polly rendering
         if (analysis.urgencyLevel === 'EMERGENCY') {
           analysis.speechResponse =
             `Emergency flagged. Sit down immediately. An urgent SMS alert with your vitals has been sent to your daughter Sarah.`;

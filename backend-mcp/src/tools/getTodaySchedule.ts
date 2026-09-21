@@ -3,13 +3,13 @@ import { LogRepo, DailyLogItem } from '../database/logRepo.js';
 export const getTodayScheduleTool = {
   definition: {
     name: 'getTodaySchedule',
-    description: "Lấy toàn bộ lịch uống thuốc trong ngày, tỉ lệ tuân thủ phần trăm và liều thuốc sắp tới cần uống.",
+    description: "Retrieve the patient's daily medication schedule, percentage adherence rate, and next upcoming dose.",
     inputSchema: {
       type: 'object',
       properties: {
         date: {
           type: 'string',
-          description: 'Ngày cần lấy dạng YYYY-MM-DD. Mặc định là ngày hôm nay.',
+          description: 'Target date in YYYY-MM-DD format. Defaults to today.',
         },
       },
       required: [],
@@ -25,13 +25,13 @@ export const getTodayScheduleTool = {
     const pending = logs.filter((l) => l.status === 'pending').length;
     const adherenceRate = total > 0 ? Math.round((taken / total) * 100) : 100;
 
-    // Tìm cữ thuốc kế tiếp cần uống
+    // Identify next pending dose to take
     const nowTime = new Date().toTimeString().slice(0, 5); // "HH:MM"
     const nextPendingDose = logs.find((l) => l.status === 'pending' && l.scheduledTime >= nowTime) 
       || logs.find((l) => l.status === 'pending') 
       || null;
 
-    // Câu tóm tắt giọng nói cho Alexa đọc
+    // Voice response summary for Alexa speech synthesis
     let speechSummary = '';
     if (total === 0) {
       speechSummary = "You have no scheduled medications for today.";

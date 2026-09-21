@@ -31,7 +31,7 @@ const DAY_MAP: Record<number, string> = {
 
 export const LogRepo = {
   /**
-   * Quét lịch uống thuốc và tự động sinh bản ghi cho ngày dateStr nếu chưa có
+   * Scan medication schedule and automatically generate intake logs for dateStr if not already present
    */
   async generateLogsForDate(dateStr: string): Promise<void> {
     const db = getDatabase();
@@ -73,7 +73,7 @@ export const LogRepo = {
   },
 
   /**
-   * Lấy lịch uống thuốc chi tiết theo ngày kèm thông tin thuốc
+   * Retrieve detailed intake logs for a specific date joined with medication information
    */
   async getLogsByDate(dateStr: string): Promise<DailyLogItem[]> {
     const db = getDatabase();
@@ -119,12 +119,12 @@ export const LogRepo = {
   },
 
   /**
-   * Chuyển đổi trạng thái khi click nút "I Took My Pill"
+   * Toggle intake status when clicking "I Took My Pill" button
    */
   async toggleLogStatus(logId: string, currentStatus: LogStatus): Promise<void> {
     const db = getDatabase();
 
-    // Tìm medicineId để trừ hoặc cộng kho
+    // Find medicineId to increment or decrement inventory
     const log = db.prepare('SELECT medicine_id FROM intake_logs WHERE id = ?').get(logId) as any;
 
     if (currentStatus === 'taken') {
@@ -139,7 +139,7 @@ export const LogRepo = {
   },
 
   /**
-   * Cập nhật trạng thái trực tiếp (dùng cho MCP Tool của Alexa)
+   * Directly update dose status (used by Alexa MCP Tools)
    */
   async updateStatusDirect(logId: string, status: LogStatus, notes?: string): Promise<void> {
     const db = getDatabase();

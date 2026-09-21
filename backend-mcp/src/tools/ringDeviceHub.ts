@@ -35,7 +35,7 @@ export const ringDeviceHubTool = {
   definition: {
     name: 'ringDeviceHub',
     description:
-      'Tích hợp hệ sinh thái thiết bị thông minh Ring (Ring Video Doorbell Pro & Ring Smart Access Lock). Cho phép kiểm tra camera thềm cửa, nhận diện kiện hàng Amazon Pharmacy giao tới, và tự động mở chốt cửa an toàn cho nhân viên cứu hộ/cấp cứu khi có sự cố y tế.',
+      'Integrate Ring smart home ecosystem (Ring Video Doorbell Pro & Ring Smart Access Lock). Check front porch camera, verify Amazon Pharmacy deliveries, and unlock door for emergency paramedics.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -43,11 +43,11 @@ export const ringDeviceHubTool = {
           type: 'string',
           enum: ['checkFrontPorch', 'triggerEmergencyDoorUnlock', 'getDeviceStatus'],
           description:
-            'Hành động cần thực hiện: checkFrontPorch (kiểm tra kiện hàng/camera trước cửa), triggerEmergencyDoorUnlock (mở chốt cửa cấp cứu y tế), getDeviceStatus (trạng thái thiết bị).',
+            'Action to perform: checkFrontPorch (inspect porch/package), triggerEmergencyDoorUnlock (emergency paramedic access), getDeviceStatus (device health).',
         },
         reason: {
           type: 'string',
-          description: 'Lý do thực hiện (ví dụ: "Medical Emergency Alert", "Medication Refill Delivery").',
+          description: 'Reason for triggering device action (e.g. "Medical Emergency Alert", "Medication Refill Delivery").',
         },
       },
       required: ['action'],
@@ -83,7 +83,7 @@ export const ringDeviceHubTool = {
       };
     }
 
-    // Mặc định: checkFrontPorch (Kiểm tra camera thềm cửa & phát hiện kiện thuốc)
+    // Default action: checkFrontPorch (Inspect front porch camera & detect prescription parcel)
     const speechText = 'Ring Doorbell: Amazon Pharmacy package delivered at your front porch.';
     return {
       success: true,

@@ -33,8 +33,8 @@ interface InteractionRule {
 }
 
 /**
- * Cơ sở dữ liệu tương tác dược lý lâm sàng thường gặp ở người cao tuổi
- * (Biên soạn theo tiêu chuẩn Beers Criteria & Lexicomp Drug Interactions)
+ * Geriatric clinical drug-drug interaction matrix
+ * (Compiled according to Beers Criteria & Lexicomp Drug Interactions standards)
  */
 const CLINICAL_INTERACTION_RULES: InteractionRule[] = [
   // 1. Aspirin + Warfarin / Coumadin / Anticoagulants
@@ -135,7 +135,7 @@ const CLINICAL_INTERACTION_RULES: InteractionRule[] = [
 ];
 
 /**
- * Kiểm tra tương tác thuốc giữa loại thuốc mới dự định thêm và danh mục thuốc hiện tại
+ * Check drug interactions between a newly added drug and the patient's active medication regimen
  */
 export async function checkDrugInteractions(
   newDrugName: string,
@@ -143,7 +143,7 @@ export async function checkDrugInteractions(
 ): Promise<DrugInteractionCheckResult> {
   const cleanNewDrug = newDrugName.trim().toLowerCase();
 
-  // Nếu không truyền danh sách thuốc hiện tại, tự động đọc từ SQLite database
+  // If no explicit medicine list provided, automatically load from SQLite database
   let activeMeds: string[] = [];
   if (currentMedicinesList && currentMedicinesList.length > 0) {
     activeMeds = currentMedicinesList;
@@ -160,7 +160,7 @@ export async function checkDrugInteractions(
   const warnings: DrugInteractionWarning[] = [];
 
   for (const rule of CLINICAL_INTERACTION_RULES) {
-    // Trường hợp 1: newDrug khớp drugA và một thuốc hiện tại khớp drugB
+    // Case 1: newDrug matches drugA and an active med matches drugB
     const newMatchesA = rule.drugAKeywords.some((k) => cleanNewDrug.includes(k));
     if (newMatchesA) {
       for (const currentMed of activeMeds) {
@@ -181,7 +181,7 @@ export async function checkDrugInteractions(
       }
     }
 
-    // Trường hợp 2: newDrug khớp drugB và một thuốc hiện tại khớp drugA
+    // Case 2: newDrug matches drugB and an active med matches drugA
     const newMatchesB = rule.drugBKeywords.some((k) => cleanNewDrug.includes(k));
     if (newMatchesB) {
       for (const currentMed of activeMeds) {
@@ -203,7 +203,7 @@ export async function checkDrugInteractions(
     }
   }
 
-  // Sắp xếp cảnh báo: CRITICAL -> HIGH -> MODERATE
+  // Sort warnings: CRITICAL -> HIGH -> MODERATE
   const severityRank: Record<InteractionSeverity, number> = {
     CRITICAL: 1,
     HIGH: 2,

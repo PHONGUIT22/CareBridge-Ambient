@@ -69,7 +69,7 @@ export const MedicineRepo = {
   },
 
   /**
-   * Tăng giảm số lượng viên thuốc tồn kho (+1 khi huỷ uống, -1 khi đã uống)
+   * Update medication stock inventory (+1 on undo/pending, -1 on taken)
    */
   async updateStock(medicineId: string, delta: number): Promise<number> {
     const db = getDatabase();
