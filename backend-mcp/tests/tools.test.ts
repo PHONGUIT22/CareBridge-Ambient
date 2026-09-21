@@ -7,6 +7,7 @@ import { logDoseStatusTool } from '../src/tools/logDoseStatus.js';
 import { orderRefillTool } from '../src/tools/orderRefill.js';
 import { ringDeviceHubTool } from '../src/tools/ringDeviceHub.js';
 import { checkDrugInteractions } from '../src/services/drugInteractionService.js';
+import { negotiateAdherenceTool, GUARDIAN_PERSONAS } from '../src/tools/negotiateAdherence.js';
 
 describe('CareBridge Ambient Core MCP Tools Suite', () => {
   beforeAll(async () => {
@@ -14,7 +15,7 @@ describe('CareBridge Ambient Core MCP Tools Suite', () => {
     await seedDemoData(false);
   });
 
-  // TEST 1: getTodaySchedule tính đúng tỷ lệ tuân thủ & cữ tiếp theo
+  // TEST 1: getTodaySchedule calculates accurate adherence rate & next dose
   describe('Tool: getTodaySchedule', () => {
     it('calculates accurate adherence rate and returns daily schedule array', async () => {
       const todayStr = new Date().toISOString().split('T')[0];
@@ -40,7 +41,7 @@ describe('CareBridge Ambient Core MCP Tools Suite', () => {
     });
   });
 
-  // TEST 2: logDoseStatus cập nhật trạng thái taken và tự động cập nhật tồn kho SQLite WAL
+  // TEST 2: logDoseStatus updates taken status and automatically updates SQLite WAL inventory
   describe('Tool: logDoseStatus', () => {
     it('marks dose as taken, saves clinical note, and returns updated stock', async () => {
       const allMeds = await MedicineRepo.getAllMedicines();
@@ -80,7 +81,7 @@ describe('CareBridge Ambient Core MCP Tools Suite', () => {
     });
   });
 
-  // TEST 3: orderRefill sinh đúng định dạng mã đơn hàng Amazon (114-XXXXXXX-XXXXXXX) & cộng +30 viên
+  // TEST 3: orderRefill generates valid Amazon order ID (114-XXXXXXX-XXXXXXX) & adds +30 units
   describe('Tool: orderRefill', () => {
     it('creates authentic Amazon Pharmacy order ID (114-XXXXXXX-XXXXXXX) and increments inventory', async () => {
       const allMeds = await MedicineRepo.getAllMedicines();
@@ -114,7 +115,7 @@ describe('CareBridge Ambient Core MCP Tools Suite', () => {
     });
   });
 
-  // TEST 4: ringDeviceHub kiểm tra camera thềm cửa và mở chốt cửa cấp cứu
+  // TEST 4: ringDeviceHub checks porch camera and unlocks emergency door for paramedics
   describe('Tool: ringDeviceHub', () => {
     it('checks front porch camera and detects delivered Amazon Pharmacy package', async () => {
       const result = await ringDeviceHubTool.handler({ action: 'checkFrontPorch' });
@@ -145,7 +146,7 @@ describe('CareBridge Ambient Core MCP Tools Suite', () => {
     });
   });
 
-  // TEST 5: drugInteractionService kiểm tra tương tác thuốc nguy hiểm (Beers Criteria)
+  // TEST 5: drugInteractionService detects hazardous drug interactions (Beers Criteria)
   describe('Service: drugInteractionService', () => {
     it('detects CRITICAL bleeding risk when adding Warfarin with Aspirin on board', async () => {
       const result = await checkDrugInteractions('Warfarin', [
@@ -185,4 +186,77 @@ describe('CareBridge Ambient Core MCP Tools Suite', () => {
       expect(result.warnings.length).toBe(0);
     });
   });
+
+  // TEST 6: negotiateAdherence deploys AI Health Guardians & Sarah Circuit-Breaker
+  describe('Tool: negotiateAdherence & The Health Guardians', () => {
+    it('correctly returns persona response, appropriate escalation level, and rich card payload', async () => {
+      const result = await negotiateAdherenceTool.handler({
+        medicineName: 'Amlodipine (Norvasc) 5mg',
+        refusalReason: 'Tastes bitter',
+        personaId: 'nurse_betty',
+        turnCount: 1,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.persona).toBeDefined();
+      expect(result.persona.id).toBe('nurse_betty');
+      expect(result.persona.displayName).toBe('Nurse Betty');
+      expect(result.escalationLevel).toBe('MILD');
+      expect(result.sarahNotified).toBe(false);
+      expect(result.speechResponse).toContain('Amlodipine (Norvasc) 5mg');
+      expect(result.speechResponse).toContain('Price Is Right');
+
+      // Verify richCard payload for Echo Show 10
+      expect(result.richCard).toBeDefined();
+      expect(result.richCard.type).toBe('GuardianNegotiation');
+      expect(result.richCard.guardianName).toBe('Nurse Betty');
+      expect(result.richCard.quote).toBe(result.speechResponse);
+      expect(result.richCard.avatar).toBe('🩺');
+      expect(result.richCard.turnCount).toBe(1);
+      expect(result.richCard.callSarahAction).toBe(false);
+      expect(result.richCard.medicineName).toBe('Amlodipine (Norvasc) 5mg');
+    });
+
+    it('triggers SARAH_CIRCUIT_BREAKER and dispatches simulated SNS SMS when turnCount >= 2 or explicit refusal is passed', async () => {
+      const result = await negotiateAdherenceTool.handler({
+        medicineName: 'Amlodipine (Norvasc) 5mg',
+        refusalReason: 'I refuse to take it today',
+        personaId: 'dr_reynolds',
+        turnCount: 2,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.escalationLevel).toBe('SARAH_CIRCUIT_BREAKER');
+      expect(result.sarahNotified).toBe(true);
+      expect(result.snsMessageId).toBeDefined();
+      expect(result.speechResponse).toContain('Sarah at work (+1 555-0199)');
+      expect(result.richCard.callSarahAction).toBe(true);
+      expect(result.richCard.sarahPhone).toBe('+1 555-0199');
+    });
+
+    it('verifies all 4 personas return valid non-empty character-accurate speech text', async () => {
+      const personas: Array<'nurse_betty' | 'dr_reynolds' | 'grandson_leo' | 'sergeant_miller'> = [
+        'nurse_betty',
+        'dr_reynolds',
+        'grandson_leo',
+        'sergeant_miller',
+      ];
+
+      for (const pId of personas) {
+        const result = await negotiateAdherenceTool.handler({
+          medicineName: 'Atorvastatin 20mg',
+          personaId: pId,
+          turnCount: 1,
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.persona.id).toBe(pId);
+        expect(result.speechResponse.length).toBeGreaterThan(15);
+        expect(result.persona.displayName.length).toBeGreaterThan(0);
+        expect(result.persona.roleTitle.length).toBeGreaterThan(0);
+        expect(GUARDIAN_PERSONAS[pId]).toBeDefined();
+      }
+    });
+  });
 });
+

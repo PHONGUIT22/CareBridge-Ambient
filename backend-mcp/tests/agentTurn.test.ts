@@ -9,7 +9,7 @@ describe('CareBridge Ambient Agentic Loop & Voice Turn Orchestrator', () => {
     await seedDemoData(false);
   });
 
-  // TEST 1: Phân tích ý định hỏi lịch thuốc hôm nay -> getTodaySchedule
+  // TEST 1: Intent analysis for medication calendar -> getTodaySchedule
   it('dispatches getTodaySchedule tool when patient asks about daily medication calendar', async () => {
     const response = await handleAgentTurn({
       query: 'Alexa, what pills do I have scheduled for today?',
@@ -22,7 +22,7 @@ describe('CareBridge Ambient Agentic Loop & Voice Turn Orchestrator', () => {
     expect(response.speechResponse.length).toBeGreaterThan(0);
   });
 
-  // TEST 2: Phân tích ý định ghi nhận đã uống thuốc -> logDoseStatus
+  // TEST 2: Intent analysis for logging taken dose -> logDoseStatus
   it('dispatches logDoseStatus tool when patient confirms taking morning pills', async () => {
     const response = await handleAgentTurn({
       query: 'I just took my morning Amlodipine pills with breakfast',
@@ -35,7 +35,7 @@ describe('CareBridge Ambient Agentic Loop & Voice Turn Orchestrator', () => {
     expect(response.speechResponse).toBeDefined();
   });
 
-  // TEST 3: Phân tích ý định đặt thuốc bổ sung qua Amazon Pharmacy -> orderRefill
+  // TEST 3: Intent analysis for prescription refill via Amazon Pharmacy -> orderRefill
   it('dispatches orderRefill tool when patient requests a prescription refill', async () => {
     const response = await handleAgentTurn({
       query: 'I am running out of Lipitor, please order a refill for me',
@@ -48,7 +48,7 @@ describe('CareBridge Ambient Agentic Loop & Voice Turn Orchestrator', () => {
     expect(response.toolResult.quantityAdded).toBe(30);
   });
 
-  // TEST 4: Phân tích ý định kiểm tra chuông cửa Ring -> ringDeviceHub (checkFrontPorch)
+  // TEST 4: Intent analysis for checking Ring doorbell -> ringDeviceHub (checkFrontPorch)
   it('dispatches ringDeviceHub tool when patient asks about deliveries at the front porch', async () => {
     const response = await handleAgentTurn({
       query: 'Alexa, check if my medicine parcel arrived at the front door porch',
@@ -61,7 +61,7 @@ describe('CareBridge Ambient Agentic Loop & Voice Turn Orchestrator', () => {
     expect(response.toolResult?.doorLockStatus).toBe('LOCKED');
   });
 
-  // TEST 5: Phân tích ý định mở cửa khẩn cấp cho nhân viên y tế -> ringDeviceHub (triggerEmergencyDoorUnlock)
+  // TEST 5: Intent analysis for emergency door unlock for paramedics -> ringDeviceHub (triggerEmergencyDoorUnlock)
   it('dispatches emergency smart lock unlock when emergency or paramedics are mentioned', async () => {
     const response = await handleAgentTurn({
       query: 'Emergency medical alert! Please unlock the front door for incoming paramedics',
@@ -74,7 +74,7 @@ describe('CareBridge Ambient Agentic Loop & Voice Turn Orchestrator', () => {
     expect(response.speechResponse).toContain('unlocked the front door for incoming paramedics');
   });
 
-  // TEST 6: Phản hồi giao tiếp đàm thoại thông thường khi không yêu cầu tool
+  // TEST 6: Conversational voice response when no tool is required
   it('gracefully provides supportive voice response for conversational queries', async () => {
     const response = await handleAgentTurn({
       query: 'Hello Alexa, how is the weather today?',
@@ -84,4 +84,32 @@ describe('CareBridge Ambient Agentic Loop & Voice Turn Orchestrator', () => {
     expect(typeof response.speechResponse).toBe('string');
     expect(response.speechResponse.length).toBeGreaterThan(0);
   });
+
+  // TEST 7: Intent analysis for medication resistance -> routes to negotiateAdherence autonomously
+  it('dispatches negotiateAdherence tool when patient expresses reluctance to take pills', async () => {
+    const response = await handleAgentTurn({
+      query: "Alexa, I don't want to take my medication today",
+    });
+
+    expect(response.success).toBe(true);
+    expect(response.toolName).toBe('negotiateAdherence');
+    expect(response.toolResult).toBeDefined();
+    expect(response.toolResult.persona).toBeDefined();
+    expect(response.speechResponse.length).toBeGreaterThan(0);
+  });
+
+  // TEST 8: Intent analysis for explicit refusal triggers Sarah Circuit-Breaker
+  it('dispatches negotiateAdherence tool and activates Sarah Circuit-Breaker on vocal refusal', async () => {
+    const response = await handleAgentTurn({
+      query: 'Alexa, I refuse to take my Amlodipine pills today, leave me alone!',
+    });
+
+    expect(response.success).toBe(true);
+    expect(response.toolName).toBe('negotiateAdherence');
+    expect(response.toolResult).toBeDefined();
+    expect(response.toolResult.escalationLevel).toBe('SARAH_CIRCUIT_BREAKER');
+    expect(response.toolResult.sarahNotified).toBe(true);
+    expect(response.speechResponse).toContain('Sarah at work (+1 555-0199)');
+  });
 });
+
