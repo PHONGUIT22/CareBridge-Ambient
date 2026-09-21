@@ -36,10 +36,10 @@ const config: Config = {
           glow: 'rgba(77, 139, 255, 0.25)',
         },
         ambient: {
-          root: '#121420',       // Nền tổng thể sâu thẳm
-          surface: '#181B2A',    // Mặt phẳng cấp 1 (Header, Nav, Modal)
-          card: '#22273B',       // Bề mặt thẻ thuốc squircle
-          hover: '#2A3048',      // Trạng thái hover
+          root: '#121420',       // Deep background
+          surface: '#181B2A',    // Primary surface (Header, Nav, Modal)
+          card: '#22273B',       // Squircle pill card surface
+          hover: '#2A3048',      // Hover state
           border: 'rgba(255, 255, 255, 0.06)',
         },
         alexa: {
@@ -49,10 +49,10 @@ const config: Config = {
           deep: '#121420',
         },
         neon: {
-          emerald: '#10B981',    // Xanh ngọc bảo báo liều đã uống
+          emerald: '#10B981',    // Emerald green for taken doses
           emeraldGlow: 'rgba(16, 185, 129, 0.45)',
-          amber: '#F59E0B',      // Cảnh báo cữ sắp tới
-          rose: '#F43F5E',       // Nhịp tim / Huyết áp
+          amber: '#F59E0B',      // Amber warning for upcoming doses
+          rose: '#F43F5E',       // Rose for heart rate / blood pressure
         },
       },
       boxShadow: {
