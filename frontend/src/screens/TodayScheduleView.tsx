@@ -27,6 +27,7 @@ interface TodayScheduleViewProps {
   onOpenPaywall?: () => void;
   onDoseToggled?: () => void;
   refreshTrigger?: number;
+  isPro?: boolean;
 }
 
 export function TodayScheduleView({
@@ -35,6 +36,7 @@ export function TodayScheduleView({
   onOpenPaywall,
   onDoseToggled,
   refreshTrigger = 0,
+  isPro = false,
 }: TodayScheduleViewProps) {
   const {
     schedule,
@@ -122,20 +124,28 @@ export function TodayScheduleView({
             {onOpenPaywall && (
               <button
                 onClick={onOpenPaywall}
-                className="px-3 h-9 rounded-xl bg-amber-500/10 border border-amber-500/25 hover:border-amber-400/50 text-amber-300 font-medium text-xs flex items-center gap-1.5 shadow-sm transition-colors"
-                title="CareBridge Pro Features"
+                className={`px-3 h-9 rounded-xl font-medium text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 ${
+                  isPro
+                    ? 'bg-[#FF5733]/15 border border-[#FF5733]/35 text-[#FF5733]'
+                    : 'bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
+                }`}
+                title={isPro ? 'CareBridge Pro Active' : 'Upgrade to Clinical Pro'}
               >
                 <FontAwesomeIcon icon={faCrown} className="text-xs" />
-                <span>Pro</span>
+                <span>{isPro ? 'Pro active' : 'Free (Upgrade)'}</span>
               </button>
             )}
             <button
               onClick={() => {
+                if (!isPro && schedule.length >= 2) {
+                  onOpenPaywall?.();
+                  return;
+                }
                 if (onOpenAddModal) onOpenAddModal();
                 else setIsAddModalOpen(true);
               }}
               className="px-3.5 h-9 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] text-white font-medium text-xs shadow-sm active:scale-95 transition-all flex items-center gap-1.5"
-              title="Add new medication regimen"
+              title={!isPro && schedule.length >= 2 ? 'Free tier limit reached (2 slots max). Upgrade to Pro.' : 'Add new medication regimen'}
             >
               <FontAwesomeIcon icon={faPlus} className="text-xs" />
               <span>Add</span>
@@ -261,6 +271,24 @@ export function TodayScheduleView({
             </span>
           </div>
         </div>
+
+        {/* FREE TIER RESTRICTION WARNING BANNER */}
+        {!isPro && (
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between text-xs animate-fadeIn">
+            <div className="flex items-center gap-2.5 text-amber-300">
+              <FontAwesomeIcon icon={faCrown} className="text-amber-400" />
+              <span>
+                <strong>Free Tier Active:</strong> Limited to 2 prescription slots ({schedule.length}/2 slots used).
+              </span>
+            </div>
+            <button
+              onClick={onOpenPaywall}
+              className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold text-xs transition-colors shrink-0 shadow-sm active:scale-95"
+            >
+              Unlock Pro
+            </button>
+          </div>
+        )}
 
         {/* 4. TODAY'S SCHEDULE (2-COLUMN RESPONSIVE GRID) */}
         <div className="flex flex-col gap-3">

@@ -54,6 +54,9 @@ An ambient, glanceable operating system operating 24/7 on a bedside or kitchen c
 
 ## 3. Operating Environment & Hardware Form Factors
 
+> **Hardware Form Factor Notice (Simulator Architecture):**  
+> Because Alexa+ Add-ons and third-party Echo Show 10 runtime APIs are currently in private developer preview, CareBridge Ambient OS was engineered as a pixel-perfect **Echo Show 10 Ambient Display Hardware Simulator** adhering to official Amazon 10-foot viewing ergonomics, WCAG AAA contrast tokens, and signature hardware light bar simulation (`#00CAFF`).
+
 | Dimension | Specification | UX Impact |
 | :--- | :--- | :--- |
 | **Primary Device** | Amazon Echo Show 10 / 15 or 10-12" Bedside Tablet Dock | Landscape orientation, persistent always-on ambient screen. |

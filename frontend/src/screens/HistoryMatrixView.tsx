@@ -6,9 +6,19 @@ import { useHeatmap } from '../hooks/useHeatmap';
 import { pdfService } from '../services/pdfService';
 import { mcpClient } from '../services/mcpClient';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileArrowDown, faCircleCheck, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
+import { faFileArrowDown, faCircleCheck, faArrowsRotate, faLock, faCrown } from '@fortawesome/free-solid-svg-icons';
 
-export function HistoryMatrixView({ refreshTrigger = 0 }: { refreshTrigger?: number }) {
+interface HistoryMatrixViewProps {
+  refreshTrigger?: number;
+  isPro?: boolean;
+  onOpenPaywall?: () => void;
+}
+
+export function HistoryMatrixView({
+  refreshTrigger = 0,
+  isPro = false,
+  onOpenPaywall,
+}: HistoryMatrixViewProps) {
   const [isExporting, setIsExporting] = useState(false);
   const { medicines, rawLogs, rawVitals, loading, refetch } = useHeatmap();
 
@@ -26,6 +36,10 @@ export function HistoryMatrixView({ refreshTrigger = 0 }: { refreshTrigger?: num
   };
 
   const handleExportPDF = () => {
+    if (!isPro) {
+      onOpenPaywall?.();
+      return;
+    }
     setIsExporting(true);
     try {
       const avgAdherence =
@@ -76,13 +90,36 @@ export function HistoryMatrixView({ refreshTrigger = 0 }: { refreshTrigger?: num
             <button
               onClick={handleExportPDF}
               disabled={isExporting}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] text-white text-xs font-semibold active:scale-95 transition-all shadow-md"
+              className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold active:scale-95 transition-all shadow-md ${
+                isPro
+                  ? 'bg-[#FF5733] hover:bg-[#E64D2E] text-white'
+                  : 'bg-[#1E2330] hover:bg-[#252B3B] border border-amber-500/40 text-amber-300'
+              }`}
+              title={isPro ? 'Export PDF Report for Doctor' : 'Doctor PDF Export requires Clinical Pro'}
             >
-              <FontAwesomeIcon icon={faFileArrowDown} className="text-xs" />
-              <span>{isExporting ? 'Generating PDF...' : 'Export Doctor PDF'}</span>
+              <FontAwesomeIcon icon={isPro ? faFileArrowDown : faLock} className="text-xs" />
+              <span>{isExporting ? 'Generating PDF...' : isPro ? 'Export Doctor PDF' : 'Doctor PDF (Pro)'}</span>
             </button>
           </div>
         </div>
+
+        {/* FREE TIER NOTICE FOR MATRIX */}
+        {!isPro && (
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between text-xs animate-fadeIn">
+            <div className="flex items-center gap-2.5 text-amber-300">
+              <FontAwesomeIcon icon={faCrown} className="text-amber-400" />
+              <span>
+                <strong>Free Tier Active:</strong> 7-day adherence visible. Clinical Doctor PDF export is locked.
+              </span>
+            </div>
+            <button
+              onClick={onOpenPaywall}
+              className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold text-xs transition-colors shrink-0 shadow-sm active:scale-95"
+            >
+              Unlock Pro
+            </button>
+          </div>
+        )}
 
         {/* DANH SÁCH CÁC THẺ PUNCH-CARD POPULATED BỞI useHeatmap */}
         <div className="flex flex-col gap-4 mt-2">

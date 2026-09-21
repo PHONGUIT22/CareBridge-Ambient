@@ -115,12 +115,12 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
       }
       default:
-        throw new Error(`MCP Tool '${name}' không tồn tại.`);
+        throw new Error(`MCP Tool '${name}' does not exist.`);
     }
   } catch (error: any) {
     return {
       isError: true,
-      content: [{ type: 'text', text: `Lỗi thực thi tool '${name}': ${error.message}` }],
+      content: [{ type: 'text', text: `Error executing tool '${name}': ${error.message}` }],
     };
   }
 });
@@ -150,7 +150,7 @@ app.post('/message', async (req: Request, res: Response) => {
   const transport = sseTransports.get(sessionId);
 
   if (!transport) {
-    res.status(404).json({ error: 'Session MCP không tồn tại hoặc đã hết hạn.' });
+    res.status(404).json({ error: 'MCP Session does not exist or has expired.' });
     return;
   }
 
@@ -193,12 +193,12 @@ app.post('/api/toggle', async (req: Request, res: Response) => {
   try {
     const { logId, currentStatus } = req.body;
     if (!logId) {
-      res.status(400).json({ success: false, error: 'Thiếu logId.' });
+      res.status(400).json({ success: false, error: 'Missing logId parameter.' });
       return;
     }
 
     await LogRepo.toggleLogStatus(logId, currentStatus);
-    res.json({ success: true, message: 'Cập nhật trạng thái uống thuốc thành công.' });
+    res.json({ success: true, message: 'Medication dose status updated successfully.' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -239,11 +239,11 @@ app.post('/api/note', async (req: Request, res: Response) => {
   try {
     const { logId, notes } = req.body;
     if (!logId) {
-      res.status(400).json({ success: false, error: 'Thiếu logId.' });
+      res.status(400).json({ success: false, error: 'Missing logId parameter.' });
       return;
     }
     await LogRepo.updateLogNotes(logId, notes || '');
-    res.json({ success: true, message: 'Đã lưu ghi chú lâm sàng thành công.', logId, notes });
+    res.json({ success: true, message: 'Clinical note saved successfully.', logId, notes });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -287,7 +287,7 @@ app.post('/api/medicines', async (req: Request, res: Response) => {
   try {
     const { name, dosage, reminderTimes, daysOfWeek, stockCount, imageUri, type } = req.body;
     if (!name || !dosage) {
-      res.status(400).json({ success: false, error: 'Tên thuốc và liều dùng là bắt buộc.' });
+      res.status(400).json({ success: false, error: 'Medicine name and dosage are required.' });
       return;
     }
     const id = await MedicineRepo.addMedicine({
@@ -301,7 +301,7 @@ app.post('/api/medicines', async (req: Request, res: Response) => {
     });
     const todayStr = new Date().toISOString().split('T')[0];
     await LogRepo.generateLogsForDate(todayStr);
-    res.json({ success: true, id, message: 'Đã thêm thuốc mới thành công.' });
+    res.json({ success: true, id, message: 'New medicine added successfully.' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -312,11 +312,11 @@ app.delete('/api/medicines/:id', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
     if (!id) {
-      res.status(400).json({ success: false, error: 'Thiếu id thuốc.' });
+      res.status(400).json({ success: false, error: 'Missing medicine id.' });
       return;
     }
     await MedicineRepo.deleteMedicine(id);
-    res.json({ success: true, message: 'Đã xóa thuốc thành công.' });
+    res.json({ success: true, message: 'Medicine deleted successfully.' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -327,7 +327,7 @@ app.post('/api/medicines/check-interaction', async (req: Request, res: Response)
   try {
     const { newMedicineName, currentMedicines } = req.body || {};
     if (!newMedicineName || typeof newMedicineName !== 'string') {
-      res.status(400).json({ success: false, error: 'Thiếu tên thuốc cần kiểm tra (newMedicineName).' });
+      res.status(400).json({ success: false, error: 'Missing medicine name to check (newMedicineName).' });
       return;
     }
     const result = await checkDrugInteractions(newMedicineName, currentMedicines);
@@ -343,7 +343,7 @@ app.post('/api/advisor', async (req: Request, res: Response) => {
   try {
     const { query } = req.body;
     if (!query) {
-      res.status(400).json({ success: false, error: 'Thiếu câu hỏi (query).' });
+      res.status(400).json({ success: false, error: 'Missing question query.' });
       return;
     }
     const result = await clinicalAdvisorTool.handler({ query });
@@ -358,7 +358,7 @@ app.post('/api/agent/turn', async (req: Request, res: Response) => {
   try {
     const { query, context } = req.body || {};
     if (!query || typeof query !== 'string') {
-      res.status(400).json({ success: false, error: 'Thiếu câu lệnh người dùng (query).' });
+      res.status(400).json({ success: false, error: 'Missing user query for agent turn.' });
       return;
     }
     const result = await handleAgentTurn({ query, context });
@@ -374,7 +374,7 @@ app.post('/api/tts', async (req: Request, res: Response) => {
   try {
     const { text, voiceId } = req.body;
     if (!text || typeof text !== 'string') {
-      res.status(400).json({ success: false, error: 'Thiếu nội dung văn bản (text).' });
+      res.status(400).json({ success: false, error: 'Missing text content for TTS synthesis.' });
       return;
     }
 
@@ -383,7 +383,7 @@ app.post('/api/tts', async (req: Request, res: Response) => {
       res.status(200).json({
         success: false,
         fallback: true,
-        message: 'AWS Polly không khả dụng hoặc chưa cấu hình credentials. Chuyển sang Web Speech API fallback.',
+        message: 'AWS Polly is not configured or unavailable. Seamlessly fallback to Web Speech API.',
       });
       return;
     }
@@ -414,7 +414,7 @@ app.post('/api/tts', async (req: Request, res: Response) => {
 app.post('/api/seed', async (req: Request, res: Response) => {
   try {
     await seedDemoData(true);
-    res.json({ success: true, message: 'Đã tạo mới toàn bộ dữ liệu lâm sàng 30 ngày thành công!' });
+    res.json({ success: true, message: 'Reset and reseeded 30 days of clinical demo data successfully!' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }

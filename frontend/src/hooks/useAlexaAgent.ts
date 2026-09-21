@@ -139,7 +139,7 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
 
   const toggleListening = useCallback(() => {
     if (!recognitionRef.current) {
-      alert('Trình duyệt chưa hỗ trợ Web Speech API. Bạn có thể nhấn các nút mô phỏng câu lệnh bên dưới để trải nghiệm!');
+      alert('Your browser does not support the Web Speech API natively. Please use Google Chrome or click the quick simulation prompt chips below to test!');
       return;
     }
 

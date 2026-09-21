@@ -21,6 +21,10 @@
 
 **CareBridge Ambient OS** transforms smart displays (specifically the **Amazon Echo Show 10**) into a 24/7 proactive, glanceable healthcare station for seniors living independently and remote family caregivers.
 
+> [!NOTE]
+> **Hardware Form Factor Notice (Simulator Architecture):**  
+> Because Alexa+ Add-ons and third-party Echo Show 10 runtime APIs are currently in private developer preview, CareBridge Ambient OS was engineered as a pixel-perfect **Echo Show 10 Ambient Display Hardware Simulator** adhering to official Amazon 10-foot viewing ergonomics, WCAG AAA contrast tokens, and signature hardware light bar simulation (`#00CAFF`).
+
 Millions of older adults forget daily medications or misjudge acute symptoms (such as orthostatic hypotension or coronary distress). Traditional mobile apps fail because seniors suffer from tremors, low vision, and app-navigation fatigue. CareBridge solves this with:
 1. **Glanceable Bedside UX (6-Foot Rule):** High-contrast numerals, soothing dark surfaces, and oversized (56px+) tremor-tolerant touch targets (`"I TOOK MY PILL"`).
 2. **Signature Alexa Cyan Ambient Glow (`#00CAFF`):** Physical hardware light bar emulating the iconic Echo Show emittance along the screen bezel during speech intake, Bedrock reasoning, and Polly synthesis.
@@ -254,6 +258,10 @@ carebridge-ambient/
 - **Node.js:** v18.0.0+ (Node v20 LTS recommended)
 - **npm:** v9.0.0+
 - **AWS Account:** (Optional for live keys — system includes resilient offline simulation mode) with access to Bedrock (`ap-southeast-2`), Polly, and SNS.
+
+> [!TIP]
+> **Recommended Browser for Full Multimodal Voice Experience:**  
+> Please open the application in **Google Chrome** or **Microsoft Edge** on desktop for native Web Speech API microphone recognition. If testing on Safari or Firefox where Web Speech is restricted by default, you can use the **4 Quick-Test Prompt Chips** on the **Alexa Agent Console** (right panel in Dual Mode) for instantaneous 1-click evaluation without microphone permissions.
 
 ### 2. Clone & Install Monorepo
 ```bash

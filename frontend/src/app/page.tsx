@@ -107,13 +107,19 @@ export default function Home() {
   };
 
   const handleActivatePro = () => {
-    if (authSession) {
-      const updated: AuthSession = { ...authSession, isPro: true };
-      setAuthSession(updated);
-      try {
-        localStorage.setItem('carebridge_auth', JSON.stringify(updated));
-      } catch (e) {}
-    }
+    const updated: AuthSession = authSession
+      ? { ...authSession, isPro: true }
+      : {
+          isAuthenticated: true,
+          user: 'Sarah Connor',
+          role: 'caregiver',
+          isPro: true,
+        };
+    setAuthSession(updated);
+    try {
+      localStorage.setItem('carebridge_auth', JSON.stringify(updated));
+    } catch (e) {}
+    triggerGlobalRefresh();
     addToast({
       type: 'success',
       title: 'CareBridge Pro Unlocked',
@@ -122,17 +128,23 @@ export default function Home() {
   };
 
   const handleResetFreePlan = () => {
-    if (authSession) {
-      const updated: AuthSession = { ...authSession, isPro: false };
-      setAuthSession(updated);
-      try {
-        localStorage.setItem('carebridge_auth', JSON.stringify(updated));
-      } catch (e) {}
-    }
+    const updated: AuthSession = authSession
+      ? { ...authSession, isPro: false }
+      : {
+          isAuthenticated: true,
+          user: 'Sarah Connor',
+          role: 'caregiver',
+          isPro: false,
+        };
+    setAuthSession(updated);
+    try {
+      localStorage.setItem('carebridge_auth', JSON.stringify(updated));
+    } catch (e) {}
+    triggerGlobalRefresh();
     addToast({
       type: 'info',
       title: 'Reset to Free Plan',
-      message: 'Gated restrictions are now active for testing.',
+      message: 'Gated restrictions are now active for testing (2 slots, PDF locked).',
     });
   };
 
@@ -414,11 +426,18 @@ export default function Home() {
                     onDoseToggled={triggerGlobalRefresh}
                     onSwitchToDeskMode={() => setActiveTab('deskClock')}
                     onOpenPaywall={() => setIsPaywallOpen(true)}
+                    isPro={Boolean(authSession?.isPro)}
                   />
                 )}
 
                 {/* TAB 2: HISTORY MATRIX PUNCH-CARD */}
-                {activeTab === 'history' && <HistoryMatrixView refreshTrigger={refreshTrigger} />}
+                {activeTab === 'history' && (
+                  <HistoryMatrixView
+                    refreshTrigger={refreshTrigger}
+                    isPro={Boolean(authSession?.isPro)}
+                    onOpenPaywall={() => setIsPaywallOpen(true)}
+                  />
+                )}
 
                 {/* TAB 3: ANALYTICS CHỈ SỐ SINH TỒN */}
                 {activeTab === 'analytics' && <AnalyticsView refreshTrigger={refreshTrigger} />}
