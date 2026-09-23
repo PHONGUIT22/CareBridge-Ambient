@@ -113,7 +113,9 @@ export function MedicationPunchCard({
               {medicineName}
             </h3>
             <p className={`text-xs font-medium mt-0.5 ${theme.subtitle}`}>
-              {dosage} • Scheduled at {scheduledTime}
+              {dosage.includes('Doses/Day') || dosage.includes('08:00 & 18:00')
+                ? dosage
+                : `${dosage} • Scheduled at ${scheduledTime}`}
             </p>
           </div>
         </div>
