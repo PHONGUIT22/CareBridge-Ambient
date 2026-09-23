@@ -1,33 +1,44 @@
 import { getDatabase } from './db.js';
 import { MedicineRepo } from './medicineRepo.js';
 import { VitalsRepo } from './vitalsRepo.js';
+import { getLocalDateString } from '../utils/dateUtils.js';
 
-export async function seedDemoData(force: boolean = false): Promise<void> {
+export async function seedDemoData(
+  userIdOrForce: string | boolean = 'usr_demo',
+  force: boolean = false
+): Promise<void> {
   const db = getDatabase();
 
-  // Check if medication records already exist
-  const existingCount = db.prepare('SELECT COUNT(*) as count FROM medicines').get() as { count: number };
-  if (existingCount.count > 0 && !force) {
-    console.log('[Seed] Database already contains records, skipping seeder.');
+  let userId = 'usr_demo';
+  let isForce = force;
+
+  if (typeof userIdOrForce === 'boolean') {
+    isForce = userIdOrForce;
+    userId = 'usr_demo';
+  } else if (typeof userIdOrForce === 'string' && userIdOrForce.trim()) {
+    userId = userIdOrForce.trim();
+  }
+
+  // Check if medication records already exist for this user
+  const existingCount = db.prepare('SELECT COUNT(*) as count FROM medicines WHERE user_id = ?').get(userId) as { count: number };
+  if (existingCount && existingCount.count > 0 && !isForce) {
+    console.log(`[Seed] Database already contains records for user ${userId}, skipping seeder.`);
     return;
   }
 
-  console.log('[Seed] Initializing 30-day clinical sample dataset...');
+  console.log(`[Seed] Initializing 30-day clinical sample dataset for user: ${userId}...`);
 
-  // 1. Clear existing data if force = true
-  if (force) {
-    db.exec(`
-      DELETE FROM intake_logs;
-      DELETE FROM daily_vitals;
-      DELETE FROM medicines;
-      DELETE FROM caregiver_profile;
-    `);
+  // 1. Clear existing data for this user if isForce = true
+  if (isForce) {
+    db.prepare('DELETE FROM intake_logs WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM daily_vitals WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM medicines WHERE user_id = ?').run(userId);
   }
 
   // 2. Add realistic geriatric medication regimen
   const sampleMedicines = [
     {
-      id: 'med_amlodipine',
+      id: `${userId}_med_amlodipine`,
       name: 'Amlodipine (Norvasc)',
       dosage: '5mg - 1 Tablet',
       reminderTimes: ['08:00'],
@@ -36,7 +47,7 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
       type: 'medication' as const,
     },
     {
-      id: 'med_metformin',
+      id: `${userId}_med_metformin`,
       name: 'Metformin HCl',
       dosage: '500mg - Oral',
       reminderTimes: ['08:00', '18:00'],
@@ -45,7 +56,7 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
       type: 'medication' as const,
     },
     {
-      id: 'med_atorvastatin',
+      id: `${userId}_med_atorvastatin`,
       name: 'Atorvastatin (Lipitor)',
       dosage: '20mg - Evening',
       reminderTimes: ['20:00'],
@@ -54,7 +65,7 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
       type: 'medication' as const,
     },
     {
-      id: 'med_aspirin',
+      id: `${userId}_med_aspirin`,
       name: 'Baby Aspirin Cardio',
       dosage: '81mg - Chewable',
       reminderTimes: ['12:00'],
@@ -64,8 +75,13 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
     },
   ];
 
+  const thirtyFiveDaysAgo = new Date(Date.now() - 35 * 86400000).toISOString();
   for (const med of sampleMedicines) {
-    await MedicineRepo.addMedicine(med);
+    await MedicineRepo.addMedicine({
+      ...med,
+      userId,
+      createdAt: thirtyFiveDaysAgo,
+    });
   }
 
   // Initialize designated family caregiver profile
@@ -87,14 +103,14 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
 
   const seedTransaction = db.transaction(() => {
     const insertLogStmt = db.prepare(`
-      INSERT OR REPLACE INTO intake_logs (id, medicine_id, date, time, status, taken_at, notes, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO intake_logs (id, user_id, medicine_id, date, time, status, taken_at, notes, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (let i = 29; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(today.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(d);
 
       // --- GENERATE VITALS USING REALISTIC BIOMETRIC SINE-WAVE CURVES ---
       const systolic = Math.round(124 + 9 * Math.sin(i * 0.35) + (Math.random() * 4 - 2));
@@ -103,6 +119,7 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
       const heartRate = Math.round(72 + 6 * Math.sin(i * 0.45) + (Math.random() * 4 - 2));
 
       VitalsRepo.saveVitals({
+        userId,
         date: dateStr,
         systolic,
         diastolic,
@@ -114,7 +131,7 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
       // --- GENERATE MEDICATION INTAKE LOGS ---
       for (const med of sampleMedicines) {
         for (const time of med.reminderTimes) {
-          const logId = `log_${dateStr}_${med.id}_${time.replace(':', '')}`;
+          const logId = `log_${userId}_${dateStr}_${med.id}_${time.replace(':', '')}`;
           const isToday = i === 0;
 
           let status: 'taken' | 'pending' | 'skipped' = 'taken';
@@ -146,6 +163,7 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
 
           insertLogStmt.run(
             logId,
+            userId,
             med.id,
             dateStr,
             time,
@@ -160,5 +178,5 @@ export async function seedDemoData(force: boolean = false): Promise<void> {
   });
 
   seedTransaction();
-  console.log('>>> [Seed Complete] Created 4 medications, 30 days of biometric vitals and sample adherence logs!');
+  console.log(`>>> [Seed Complete] Created 4 medications, 30 days of biometric vitals and sample adherence logs for user ${userId}!`);
 }

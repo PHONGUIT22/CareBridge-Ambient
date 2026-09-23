@@ -36,8 +36,19 @@ export function initDB(): DatabaseType {
 
   // Create core database tables
   dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      pin TEXT,
+      role TEXT DEFAULT 'caregiver',
+      is_pro INTEGER DEFAULT 0,
+      is_demo INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS medicines (
       id TEXT PRIMARY KEY NOT NULL,
+      user_id TEXT,
       name TEXT NOT NULL,
       dosage TEXT NOT NULL,
       reminder_times TEXT NOT NULL,
@@ -45,11 +56,13 @@ export function initDB(): DatabaseType {
       image_uri TEXT,
       stock_count INTEGER DEFAULT 30,
       type TEXT DEFAULT 'medication',
-      created_at TEXT NOT NULL
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS intake_logs (
       id TEXT PRIMARY KEY NOT NULL,
+      user_id TEXT,
       medicine_id TEXT NOT NULL,
       date TEXT NOT NULL,
       time TEXT NOT NULL,
@@ -57,16 +70,20 @@ export function initDB(): DatabaseType {
       taken_at TEXT,
       notes TEXT,
       created_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (medicine_id) REFERENCES medicines(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS daily_vitals (
-      date TEXT PRIMARY KEY NOT NULL,
+      user_id TEXT NOT NULL,
+      date TEXT NOT NULL,
       systolic INTEGER,
       diastolic INTEGER,
       blood_sugar REAL,
       heart_rate INTEGER,
-      updated_at TEXT NOT NULL
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (user_id, date),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS caregiver_profile (
@@ -75,17 +92,67 @@ export function initDB(): DatabaseType {
       email TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
-
-    -- Optimize indexes for schedule queries and adherence heatmaps
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_log_unique ON intake_logs(medicine_id, date, time);
-    CREATE INDEX IF NOT EXISTS idx_log_date ON intake_logs(date);
   `);
 
+  // Ensure default demo user exists in users table for existing records
+  dbInstance.prepare(`
+    INSERT OR IGNORE INTO users (id, email, pin, role, is_pro, is_demo, created_at)
+    VALUES ('usr_demo', 'demo@gmail.com', '1234', 'caregiver', 1, 1, ?)
+  `).run(new Date().toISOString());
+
   // Defensive migration: ensure newer columns exist safely
+  migrateTableSafely('medicines', 'user_id', 'TEXT REFERENCES users(id) ON DELETE CASCADE');
   migrateTableSafely('medicines', 'image_uri', 'TEXT');
   migrateTableSafely('medicines', 'stock_count', 'INTEGER DEFAULT 30');
   migrateTableSafely('medicines', 'type', "TEXT DEFAULT 'medication'");
+  migrateTableSafely('intake_logs', 'user_id', 'TEXT REFERENCES users(id) ON DELETE CASCADE');
   migrateTableSafely('intake_logs', 'notes', 'TEXT');
+
+  // Migrate daily_vitals safely if it previously had date as sole primary key
+  const vitalsInfo = dbInstance.pragma('table_info(daily_vitals)') as Array<{ name: string; pk: number }>;
+  const hasVitalsUserId = vitalsInfo.some((col) => col.name === 'user_id');
+  const isOnlyDatePk = vitalsInfo.length > 0 && vitalsInfo.some((col) => col.name === 'date' && col.pk === 1) && !vitalsInfo.some((col) => col.name === 'user_id' && col.pk > 0);
+  if (isOnlyDatePk) {
+    const userIdColExpr = hasVitalsUserId ? "COALESCE(user_id, 'usr_demo')" : "'usr_demo'";
+    dbInstance.exec(`
+      CREATE TABLE IF NOT EXISTS daily_vitals_new (
+        user_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        systolic INTEGER,
+        diastolic INTEGER,
+        blood_sugar REAL,
+        heart_rate INTEGER,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (user_id, date),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+      INSERT OR IGNORE INTO daily_vitals_new (user_id, date, systolic, diastolic, blood_sugar, heart_rate, updated_at)
+      SELECT ${userIdColExpr}, date, systolic, diastolic, blood_sugar, heart_rate, updated_at FROM daily_vitals;
+      DROP TABLE daily_vitals;
+      ALTER TABLE daily_vitals_new RENAME TO daily_vitals;
+    `);
+  } else if (!hasVitalsUserId) {
+    migrateTableSafely('daily_vitals', 'user_id', 'TEXT REFERENCES users(id) ON DELETE CASCADE');
+  }
+
+  // Backfill existing records without user_id to demo user
+  try {
+    dbInstance.exec(`
+      UPDATE medicines SET user_id = 'usr_demo' WHERE user_id IS NULL;
+      UPDATE intake_logs SET user_id = 'usr_demo' WHERE user_id IS NULL;
+      UPDATE daily_vitals SET user_id = 'usr_demo' WHERE user_id IS NULL;
+    `);
+  } catch (err) {
+    // Ignore if column doesn't exist yet
+  }
+
+  // Optimize indexes for multi-user schedule queries and adherence heatmaps
+  dbInstance.exec(`
+    CREATE INDEX IF NOT EXISTS idx_log_date ON intake_logs(date);
+    CREATE INDEX IF NOT EXISTS idx_log_user_date ON intake_logs(user_id, date);
+    CREATE INDEX IF NOT EXISTS idx_medicines_user ON medicines(user_id);
+    CREATE INDEX IF NOT EXISTS idx_vitals_user_date ON daily_vitals(user_id, date);
+  `);
 
   console.log(`[SQLite] Database successfully connected at: ${DB_PATH}`);
   return dbInstance;
