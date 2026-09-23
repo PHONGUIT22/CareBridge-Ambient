@@ -680,7 +680,7 @@ export default function Home() {
                   : 'bg-slate-200/80 border border-slate-300 shadow-xl'
               }`}
             >
-              <div className="relative rounded-[24px] overflow-hidden bg-[#151922] border border-white/[0.08] h-full flex flex-col">
+              <div className="relative rounded-[24px] overflow-hidden bg-white border border-slate-200/80 h-full flex flex-col shadow-md">
                 <AlexaAgentConsole
                   voiceAgent={alexaAgent}
                   onTriggerVisualCard={handleTriggerVisualCard}

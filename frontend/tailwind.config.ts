@@ -72,6 +72,7 @@ const config: Config = {
         },
       },
       boxShadow: {
+        '2xs': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
         'clinical-card': '0 4px 20px rgba(0, 0, 0, 0.04)',
         'clinical-card-hover': '0 8px 30px rgba(0, 0, 0, 0.08)',
         'hero-blue': '0 10px 25px rgba(30, 58, 138, 0.22)',
