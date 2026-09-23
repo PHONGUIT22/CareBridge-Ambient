@@ -1,7 +1,27 @@
 export type LogStatus = 'pending' | 'taken' | 'skipped';
 
+export interface AuthSession {
+  userId?: string;
+  isAuthenticated: boolean;
+  user: string;
+  email?: string;
+  role: 'senior' | 'caregiver';
+  isPro: boolean;
+  isDemo?: boolean;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  role: 'senior' | 'caregiver';
+  isPro: boolean;
+  isDemo: boolean;
+  name?: string;
+}
+
 export interface DailyLogItem {
   logId: string;
+  userId?: string;
   medicineId: string;
   name: string;
   dosage: string;
@@ -17,6 +37,7 @@ export interface DailyLogItem {
 }
 
 export interface VitalRecord {
+  userId?: string;
   date: string;
   systolic?: number | null;
   diastolic?: number | null;
@@ -59,6 +80,7 @@ export interface HistoryDataResponse {
 
 export interface MedicineRecord {
   id: string;
+  userId?: string;
   name: string;
   dosage: string;
   reminderTimes: string[];

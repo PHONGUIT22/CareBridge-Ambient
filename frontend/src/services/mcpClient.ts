@@ -20,6 +20,20 @@ const API_BASE_URL =
 
 const DEFAULT_TIMEOUT_MS = 8000;
 
+function getActiveUserId(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const saved = localStorage.getItem('carebridge_auth_session');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return parsed.userId || null;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return null;
+}
+
 async function fetchWithTimeout(
   url: string,
   options: RequestInit = {},
@@ -28,9 +42,16 @@ async function fetchWithTimeout(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+  const headers = new Headers(options.headers || {});
+  const userId = getActiveUserId();
+  if (userId && !headers.has('x-user-id')) {
+    headers.set('x-user-id', userId);
+  }
+
   try {
     const response = await fetch(url, {
       ...options,
+      headers,
       signal: controller.signal,
     });
     return response;
@@ -45,6 +66,37 @@ async function fetchWithTimeout(
 }
 
 export const mcpClient = {
+  /**
+   * POST /api/auth/login
+   * Multi-user authentication & demo isolation
+   */
+  async login(credentials: {
+    email: string;
+    pin?: string;
+    role?: 'caregiver' | 'senior';
+  }): Promise<{
+    success: boolean;
+    user: {
+      id: string;
+      email: string;
+      role: 'caregiver' | 'senior';
+      isPro: boolean;
+      isDemo: boolean;
+      name?: string;
+    };
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Authentication failed: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
   /**
    * POST /api/agent/turn
    * Bedrock Claude Native Tool-Use & Agentic Loop Orchestrator
@@ -81,17 +133,27 @@ export const mcpClient = {
   },
 
   /**
-   * GET /api/today
-   * Fetch today's medication schedule, vitals, and caregiver profile
+   * GET /api/schedule?date=YYYY-MM-DD
+   * Fetch medication schedule, vitals, and caregiver profile for a specific date
    */
-  async getTodayData(): Promise<TodayDataResponse> {
-    const res = await fetchWithTimeout(`${API_BASE_URL}/api/today`, {
+  async getSchedule(dateStr?: string): Promise<TodayDataResponse> {
+    const url = dateStr
+      ? `${API_BASE_URL}/api/schedule?date=${encodeURIComponent(dateStr)}`
+      : `${API_BASE_URL}/api/schedule`;
+    const res = await fetchWithTimeout(url, {
       cache: 'no-store',
     });
     if (!res.ok) {
-      throw new Error(`Failed to fetch today data: ${res.statusText}`);
+      throw new Error(`Failed to fetch schedule: ${res.statusText}`);
     }
     return res.json();
+  },
+
+  /**
+   * Backward-compatible alias for getSchedule
+   */
+  async getTodayData(dateStr?: string): Promise<TodayDataResponse> {
+    return this.getSchedule(dateStr);
   },
 
   /**
@@ -250,6 +312,31 @@ export const mcpClient = {
   },
 
   /**
+   * PUT /api/medicines/:id
+   */
+  async updateMedicine(
+    id: string,
+    medicine: {
+      name: string;
+      dosage: string;
+      reminderTimes?: string[];
+      daysOfWeek?: string[];
+      stockCount?: number;
+      type?: 'medication' | 'routine';
+    }
+  ): Promise<{ success: boolean; message?: string }> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/api/medicines/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(medicine),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to update medicine: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
+  /**
    * DELETE /api/medicines/:id
    */
   async deleteMedicine(id: string): Promise<{ success: boolean; message?: string }> {
@@ -321,8 +408,11 @@ export const mcpClient = {
   },
 
   // Backward-compatible alias helpers
-  fetchTodayData() {
-    return this.getTodayData();
+  fetchSchedule(dateStr?: string) {
+    return this.getSchedule(dateStr);
+  },
+  fetchTodayData(dateStr?: string) {
+    return this.getSchedule(dateStr);
   },
   fetchHistory() {
     return this.getHistory();
