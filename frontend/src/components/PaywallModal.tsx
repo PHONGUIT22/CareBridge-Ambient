@@ -7,12 +7,6 @@ import {
   faXmark,
   faCheck,
   faBolt,
-  faFilePdf,
-  faBrain,
-  faRotateRight,
-  faCalendarDays,
-  faTableCells,
-  faShieldHalved,
 } from '@fortawesome/free-solid-svg-icons';
 import confetti from 'canvas-confetti';
 
@@ -31,7 +25,7 @@ export function PaywallModal({
   onResetFreePlan,
   isPro = false,
 }: PaywallModalProps) {
-  const [selectedTier, setSelectedTier] = useState<'monthly' | 'annual' | 'lifetime'>('annual');
+  const [selectedTier, setSelectedTier] = useState<'monthly' | 'yearly' | 'lifetime'>('monthly');
 
   if (!isOpen) return null;
 
@@ -41,11 +35,9 @@ export function PaywallModal({
         particleCount: 120,
         spread: 80,
         origin: { y: 0.6 },
-        colors: ['#FF5733', '#94A3B8', '#38BDF8', '#10B981'],
+        colors: ['#1E3A8A', '#2563EB', '#10B981', '#F59E0B'],
       });
-    } catch (e) {
-      console.warn('Confetti animation:', e);
-    }
+    } catch (_) {}
     onActivatePro();
     onClose();
   };
@@ -55,172 +47,145 @@ export function PaywallModal({
     onClose();
   };
 
-  const tiers = [
-    { id: 'monthly', name: 'Monthly', price: '$9.99', period: '/month', badge: null },
-    { id: 'annual', name: 'Annual', price: '$79.99', period: '/year', badge: 'Save 33%' },
-    { id: 'lifetime', name: 'Lifetime', price: '$99.99', period: 'one-time', badge: 'Best value' },
-  ];
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151922]/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#1E2330] border border-white/[0.08] w-full max-w-lg sm:max-w-xl rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative transform transition-all animate-scaleUp">
-        {/* Close button */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white border border-slate-100 w-full max-w-[440px] rounded-[28px] p-6 sm:p-7 text-slate-900 shadow-2xl relative transform transition-all animate-scaleUp">
+        {/* Close Button (image/5.png) */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl bg-[#151922] hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           title="Close"
         >
           <FontAwesomeIcon icon={faXmark} className="text-base" />
         </button>
 
-        {/* HEADER PRO */}
-        <div className="flex items-center gap-3.5 mb-5">
-          <div className="w-12 h-12 rounded-xl bg-[#FF5733] flex items-center justify-center text-white">
-            <FontAwesomeIcon icon={faCrown} className="text-xl" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
-                Unlock CareBridge Clinical Pro
-              </h3>
-              <span className="px-2.5 py-0.5 rounded-full bg-[#FF5733]/15 border border-[#FF5733]/30 text-[#FF5733] text-xs font-mono font-medium">
-                Clinical grade
-              </span>
+        {/* Top Chip: CAREBRIDGE PRO PAYWALL */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/60 text-amber-800 text-xs font-semibold shadow-2xs mb-2">
+          <FontAwesomeIcon icon={faCrown} className="text-xs text-amber-600" />
+          <span>CAREBRIDGE PRO PAYWALL</span>
+        </div>
+
+        {/* Title & Subtitle (image/5.png) */}
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          Unlock Clinical Power
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-600 mt-1 mb-5 leading-relaxed">
+          You have reached the Free limit (2 prescriptions). Upgrade to Pro for unlimited tracking & doctor reports.
+        </p>
+
+        {/* Feature Checklist (image/5.png) */}
+        <div className="space-y-2.5 mb-5">
+          <div className="flex items-center gap-3 text-xs sm:text-sm font-semibold text-slate-900">
+            <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <FontAwesomeIcon icon={faCheck} className="text-[10px]" />
             </div>
-            <p className="text-xs text-slate-400 mt-0.5 font-normal leading-relaxed">
-              Enterprise ambient telehealth and caregiver automation
-            </p>
+            <span>Unlimited Prescription Punch-Cards (No 2-med limit)</span>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs sm:text-sm font-semibold text-slate-900">
+            <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <FontAwesomeIcon icon={faCheck} className="text-[10px]" />
+            </div>
+            <span>Export Certified Clinical PDF Reports for Doctors</span>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs sm:text-sm font-semibold text-slate-900">
+            <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <FontAwesomeIcon icon={faCheck} className="text-[10px]" />
+            </div>
+            <span>Family Cloud Caregiver Alerts (OneSignal)</span>
           </div>
         </div>
 
-        {/* FEATURE COMPARISON TABLE */}
-        <div className="mb-5 rounded-2xl bg-[#151922] border border-white/[0.08] p-4">
-          <div className="grid grid-cols-3 pb-2.5 border-b border-white/[0.08] text-xs font-medium">
-            <span className="text-slate-400">Feature</span>
-            <span className="text-center text-slate-400">Free tier</span>
-            <span className="text-center text-[#FF5733] font-semibold">Clinical Pro</span>
-          </div>
-
-          <div className="divide-y divide-white/[0.06] text-xs">
-            <div className="grid grid-cols-3 py-2.5 items-center">
-              <span className="text-slate-200 font-normal flex items-center gap-1.5">
-                <FontAwesomeIcon icon={faBolt} className="text-[#FF5733] text-xs" />
-                <span>Prescriptions</span>
-              </span>
-              <span className="text-center text-slate-400 font-mono">2 slots</span>
-              <span className="text-center text-emerald-400 font-mono font-semibold">Unlimited</span>
-            </div>
-
-            <div className="grid grid-cols-3 py-2.5 items-center">
-              <span className="text-slate-200 font-normal flex items-center gap-1.5">
-                <FontAwesomeIcon icon={faTableCells} className="text-slate-400 text-xs" />
-                <span>History matrix</span>
-              </span>
-              <span className="text-center text-slate-400 font-mono">7-day log</span>
-              <span className="text-center text-emerald-400 font-mono font-semibold">Full 52-week</span>
-            </div>
-
-            <div className="grid grid-cols-3 py-2.5 items-center">
-              <span className="text-slate-200 font-normal flex items-center gap-1.5">
-                <FontAwesomeIcon icon={faFilePdf} className="text-slate-400 text-xs" />
-                <span>Doctor PDF export</span>
-              </span>
-              <span className="text-center text-slate-400 font-mono">Locked</span>
-              <span className="text-center text-emerald-400 font-mono font-semibold">Certified export</span>
-            </div>
-
-            <div className="grid grid-cols-3 py-2.5 items-center">
-              <span className="text-slate-200 font-normal flex items-center gap-1.5">
-                <FontAwesomeIcon icon={faBrain} className="text-slate-400 text-xs" />
-                <span>Bedrock AI triage</span>
-              </span>
-              <span className="text-center text-slate-400 font-mono">Core reminders</span>
-              <span className="text-center text-emerald-400 font-mono font-semibold">Real-time Claude 3.5</span>
-            </div>
-          </div>
-        </div>
-
-        {/* PRICING TIER PILLS */}
-        <div className="grid grid-cols-3 gap-2.5 mb-5">
-          {tiers.map((tier) => (
-            <button
-              key={tier.id}
-              type="button"
-              onClick={() => setSelectedTier(tier.id as any)}
-              className={`p-3 rounded-2xl text-center border transition-all relative ${
-                selectedTier === tier.id
-                  ? 'bg-[#151922] border-[#FF5733]'
-                  : 'bg-[#151922]/70 border-white/[0.06] hover:border-white/15'
-              }`}
-            >
-              {tier.badge && (
-                <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#FF5733] text-white text-xs font-mono font-medium whitespace-nowrap">
-                  {tier.badge}
-                </span>
-              )}
-              <h5 className="text-xs font-medium text-slate-400">{tier.name}</h5>
-              <p className="text-base font-mono font-bold text-white mt-0.5">{tier.price}</p>
-              <span className="text-xs font-mono text-slate-400 block">{tier.period}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* JUDGE SANDBOX BYPASS */}
-        <div className="p-4 rounded-2xl bg-[#151922] border border-white/[0.08] mb-5">
-          <div className="flex items-center gap-2 mb-2">
-            <FontAwesomeIcon icon={faShieldHalved} className="text-xs text-amber-300" />
-            <h4 className="text-xs font-semibold text-amber-300 tracking-normal">
-              Evaluator sandbox bypass
-            </h4>
-          </div>
-          <p className="text-xs text-slate-300 leading-relaxed mb-3">
-            Instant 1-click unlock or reset to test gated restrictions without credit card setup.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={handleInstantUnlock}
-              className="py-2.5 px-3 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] active:scale-95 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5"
-            >
-              <FontAwesomeIcon icon={faCrown} className="text-xs" />
-              <span>[Demo] Instant unlock Pro</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleResetFree}
-              className="py-2.5 px-3 rounded-xl bg-[#1E2330] hover:bg-white/10 border border-white/[0.08] active:scale-95 text-slate-300 hover:text-white font-medium text-xs transition-all flex items-center justify-center gap-1.5"
-            >
-              <FontAwesomeIcon icon={faRotateRight} className="text-xs" />
-              <span>Reset to Free plan</span>
-            </button>
-          </div>
-        </div>
-
-        {/* PRIMARY ACTION BUTTON */}
-        <div className="flex flex-col gap-2">
-          {isPro ? (
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-center text-xs font-medium flex items-center justify-center gap-2">
-              <FontAwesomeIcon icon={faCheck} />
-              <span>CareBridge Pro is active on this device</span>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleInstantUnlock}
-              className="w-full py-3.5 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] active:scale-[0.98] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2"
-            >
-              <FontAwesomeIcon icon={faCrown} className="text-sm" />
-              <span>Upgrade to Clinical Pro</span>
-            </button>
-          )}
-
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-colors"
+        {/* 3 Pricing Cards (image/5.png) */}
+        <div className="space-y-3 mb-5">
+          {/* 1. Monthly (POPULAR) */}
+          <div
+            onClick={() => setSelectedTier('monthly')}
+            className={`border-2 rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all ${
+              selectedTier === 'monthly'
+                ? 'border-[#1E3A8A] bg-blue-50/30 shadow-sm'
+                : 'border-slate-200 hover:border-slate-300 bg-white'
+            }`}
           >
-            {isPro ? 'Close' : 'Continue with free tier'}
-          </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-base text-[#1E3A8A]">Monthly</span>
+                <span className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  POPULAR
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Unlimited punch-cards, PDF export & family alerts
+              </p>
+            </div>
+            <span className="text-2xl font-bold text-[#1E3A8A]">$9.99</span>
+          </div>
+
+          {/* 2. Yearly */}
+          <div
+            onClick={() => setSelectedTier('yearly')}
+            className={`border-2 rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all ${
+              selectedTier === 'yearly'
+                ? 'border-[#1E3A8A] bg-blue-50/30 shadow-sm'
+                : 'border-slate-200 hover:border-slate-300 bg-white'
+            }`}
+          >
+            <div>
+              <span className="font-bold text-base text-[#1E3A8A]">Yearly</span>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Unlimited punch-cards, PDF export & family alerts
+              </p>
+            </div>
+            <span className="text-2xl font-bold text-[#1E3A8A]">$79.99</span>
+          </div>
+
+          {/* 3. Lifetime */}
+          <div
+            onClick={() => setSelectedTier('lifetime')}
+            className={`border-2 rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all ${
+              selectedTier === 'lifetime'
+                ? 'border-[#1E3A8A] bg-blue-50/30 shadow-sm'
+                : 'border-slate-200 hover:border-slate-300 bg-white'
+            }`}
+          >
+            <div>
+              <span className="font-bold text-base text-[#1E3A8A]">Lifetime</span>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Unlimited punch-cards, PDF export & family alerts
+              </p>
+            </div>
+            <span className="text-2xl font-bold text-[#1E3A8A]">$99.99</span>
+          </div>
         </div>
+
+        {/* Primary CTA Button (image/5.png) */}
+        <button
+          type="button"
+          onClick={handleInstantUnlock}
+          className="w-full py-4 rounded-xl bg-[#1E3A8A] hover:bg-[#1E40AF] active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md transition-all flex items-center justify-center gap-2"
+        >
+          <span>START FREE TRIAL & UNLOCK PRO</span>
+        </button>
+
+        {/* Instant Demo Unlock Button */}
+        <button
+          type="button"
+          onClick={handleInstantUnlock}
+          className="w-full mt-2.5 py-3 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-semibold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+        >
+          <FontAwesomeIcon icon={faBolt} className="text-xs" />
+          <span>[Demo] Instant Unlock Pro (Bypass Store)</span>
+        </button>
+
+        {/* Judge Demo Reset Link */}
+        <button
+          type="button"
+          onClick={handleResetFree}
+          className="mt-3 text-red-500 hover:text-red-700 font-semibold text-xs text-center block w-full transition-colors cursor-pointer"
+        >
+          [Judge Demo] Reset to Free Plan (Lock Features)
+        </button>
       </div>
     </div>
   );
