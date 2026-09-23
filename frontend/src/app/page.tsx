@@ -314,12 +314,12 @@ export default function Home() {
   // Render dark loading skeleton until localStorage is read to prevent hydration mismatch
   if (!isAuthLoaded) {
     return (
-      <div className="min-h-screen bg-[#151922] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#1E2330] border border-[#FF5733]/30 flex items-center justify-center">
-            <FontAwesomeIcon icon={faHeartPulse} className="text-[#FF5733]" />
+          <div className="w-12 h-12 rounded-2xl bg-[#1E3A8A] flex items-center justify-center text-white shadow-md">
+            <FontAwesomeIcon icon={faHeartPulse} className="text-xl" />
           </div>
-          <p className="text-xs text-slate-400 font-mono">Loading CareBridge Ambient OS...</p>
+          <p className="text-xs text-slate-500 font-mono font-medium">Loading CareBridge Ambient OS...</p>
         </div>
       </div>
     );
@@ -335,19 +335,35 @@ export default function Home() {
     );
   }
 
+  const isDeskClock = activeTab === 'deskClock';
+
   return (
-    <main className="min-h-screen bg-[#151922] text-slate-100 font-sans selection:bg-[#FF5733] selection:text-white flex flex-col justify-between">
+    <main
+      className={`min-h-screen font-sans selection:bg-[#2563EB] selection:text-white flex flex-col justify-between transition-colors duration-300 ${
+        isDeskClock ? 'bg-[#050811] text-white' : 'bg-[#F1F5F9] text-slate-900'
+      }`}
+    >
       {/* 1. TOP SIMULATOR & DEVICE CONTROL HEADER */}
-      <header className="bg-[#151922]/95 backdrop-blur-md border-b border-white/[0.08] px-4 py-2.5 flex items-center justify-between sticky top-0 z-40 gap-3">
+      <header
+        className={`px-4 py-2.5 flex items-center justify-between sticky top-0 z-40 gap-3 backdrop-blur-md transition-colors duration-300 ${
+          isDeskClock
+            ? 'bg-[#0B1120]/95 border-b border-white/[0.08] text-white'
+            : 'bg-white/95 border-b border-slate-200/80 text-slate-800 shadow-2xs'
+        }`}
+      >
         <div className="flex items-center gap-2.5 shrink-0">
-          {/* Smart Home Ambient Logo */}
-          <div className="w-8 h-8 rounded-xl bg-[#FF5733] flex items-center justify-center">
+          {/* CareBridge Royal Blue Logo Squircle */}
+          <div className="w-8 h-8 rounded-xl bg-[#1E3A8A] flex items-center justify-center text-white shadow-sm">
             <FontAwesomeIcon icon={faHeartPulse} className="text-white text-sm" />
           </div>
           <div>
-            <span className="font-semibold text-sm tracking-tight text-white flex items-center gap-1.5">
+            <span
+              className={`font-extrabold text-sm tracking-tight flex items-center gap-1.5 ${
+                isDeskClock ? 'text-white' : 'text-slate-900'
+              }`}
+            >
               <span>CareBridge</span>
-              <span className="text-[#FF5733] font-mono font-medium text-xs">Ambient OS</span>
+              <span className="text-[#2563EB] font-mono font-bold text-xs">Ambient OS</span>
             </span>
           </div>
         </div>
@@ -355,13 +371,19 @@ export default function Home() {
         {/* Persona Indicator & Pro Badge & Sign Out Button */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
           {/* Active Profile Pill */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1E2330] border border-white/[0.08] text-xs">
+          <div
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors ${
+              isDeskClock
+                ? 'bg-slate-900 border-slate-800 text-slate-200'
+                : 'bg-slate-50 border-slate-200/80 text-slate-700'
+            }`}
+          >
             <div className="leading-tight flex items-center gap-2">
-              <span className="font-medium text-white whitespace-nowrap">
+              <span className="whitespace-nowrap">
                 {authSession.role === 'senior' ? 'Eleanor Vance (Senior Mode)' : 'Sarah Connor (Caregiver)'}
               </span>
               {authSession.isPro && (
-                <span className="px-1.5 py-0.5 text-xs font-mono font-semibold rounded bg-[#FF5733]/15 text-[#FF5733] border border-[#FF5733]/30">
+                <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
                   Pro
                 </span>
               )}
@@ -371,10 +393,10 @@ export default function Home() {
           {/* Pro Badge / Upgrade Button */}
           <button
             onClick={() => setIsPaywallOpen(true)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all active:scale-95 ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
               authSession.isPro
-                ? 'bg-[#FF5733]/15 border border-[#FF5733]/40 text-[#FF5733]'
-                : 'bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
+                ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+                : 'bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100'
             }`}
             title="CareBridge Ambient Subscription Status"
           >
@@ -385,7 +407,11 @@ export default function Home() {
           {/* Switch Profile / Sign Out */}
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1E2330] hover:bg-[#252B3B] border border-white/[0.08] text-xs font-medium text-slate-300 hover:text-white transition-all active:scale-95"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all active:scale-95 ${
+              isDeskClock
+                ? 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-white'
+                : 'bg-white hover:bg-slate-100 border-slate-200/80 text-slate-700 hover:text-slate-900 shadow-2xs'
+            }`}
             title="Switch profile or sign out"
           >
             <FontAwesomeIcon icon={faRightFromBracket} className="text-xs" />
@@ -395,10 +421,12 @@ export default function Home() {
           {/* Echo Show 10 Dual View / Single Frame Toggle */}
           <button
             onClick={() => setIsDualMode(true)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
               isDualMode
-                ? 'bg-[#FF5733] text-white font-semibold'
-                : 'bg-[#1E2330] border border-white/[0.08] text-slate-400 hover:text-white'
+                ? 'bg-[#1E3A8A] text-white shadow-xs'
+                : isDeskClock
+                ? 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-2xs'
             }`}
             title="Echo Show 10 Dual View"
           >
@@ -419,7 +447,7 @@ export default function Home() {
               setRingDoorLockStatus('LOCKED');
               setRingCardOpen(true);
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#1399FF]/15 hover:bg-[#1399FF]/25 border border-[#1399FF]/40 text-[#1399FF] text-xs font-mono font-medium transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-medium transition-all active:scale-95 shadow-2xs"
             title="Preview Ring Doorbell Pro Camera"
           >
             <FontAwesomeIcon icon={faVideo} className="text-xs" />
@@ -428,10 +456,12 @@ export default function Home() {
 
           <button
             onClick={() => setIsDualMode(false)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
               !isDualMode
-                ? 'bg-[#FF5733] text-white font-semibold'
-                : 'bg-[#1E2330] border border-white/[0.08] text-slate-400 hover:text-white'
+                ? 'bg-[#1E3A8A] text-white shadow-xs'
+                : isDeskClock
+                ? 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-2xs'
             }`}
             title="Single Device Mobile View"
           >
@@ -447,20 +477,34 @@ export default function Home() {
           className={`w-full transition-all duration-500 ${
             isDualMode
               ? 'max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start justify-center'
-              : 'max-w-[430px] mx-auto'
+              : 'max-w-[440px] mx-auto'
           }`}
         >
           {/* DEVICE MOCKUP FRAME 1: MAIN DISPLAY SCREEN */}
           <div
             className={`${
               isDualMode ? 'lg:col-span-7 xl:col-span-8' : 'w-full'
-            } relative rounded-[32px] p-2 sm:p-2.5 bg-[#1E2330]/40 border border-white/[0.08] shadow-2xl`}
+            } relative rounded-[32px] p-2 sm:p-2.5 transition-all duration-300 ${
+              isDeskClock
+                ? 'bg-[#0B1528] border border-blue-900/40 shadow-2xl'
+                : 'bg-slate-200/80 border border-slate-300 shadow-xl'
+            }`}
           >
             {/* INNER SCREEN CONTAINER */}
-            <div className="relative rounded-[24px] overflow-hidden bg-[#151922] border border-white/[0.08] min-h-[720px] max-h-[850px] flex flex-col justify-between">
+            <div
+              className={`relative rounded-[24px] overflow-hidden min-h-[720px] max-h-[880px] flex flex-col justify-between transition-colors duration-300 ${
+                isDeskClock
+                  ? 'bg-[#050811] border border-slate-800 text-white'
+                  : 'bg-[#F8FAFC] border border-slate-200/60 text-slate-900'
+              }`}
+            >
               {/* TOP STATUS NOTCH / HARDWARE BAR */}
               <div className="w-full flex items-center justify-center pt-2.5 pb-1 relative z-20">
-                <div className="w-20 h-1 rounded-full bg-white/15" />
+                <div
+                  className={`w-20 h-1 rounded-full ${
+                    isDeskClock ? 'bg-white/20' : 'bg-slate-300'
+                  }`}
+                />
               </div>
 
               {/* SCROLLABLE VIEW CONTENT */}
@@ -500,9 +544,15 @@ export default function Home() {
                 )}
               </div>
 
-              {/* 3. FLOATING BOTTOM NAVIGATION BAR WITH ELEVATED CENTER MIC BUTTON */}
+              {/* 3. FLOATING BOTTOM NAVIGATION BAR (MATCHES image/3.png, image/4.png, image/7.png, image/8.png) */}
               <div className="sticky bottom-4 left-0 right-0 w-full px-4 z-30 pointer-events-auto">
-                <nav className="relative bg-[#1E2330]/95 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center justify-between border border-white/[0.08] shadow-xl">
+                <nav
+                  className={`relative rounded-2xl px-4 py-2 flex items-center justify-between border shadow-lg backdrop-blur-md transition-colors duration-300 ${
+                    isDeskClock
+                      ? 'bg-[#0B1528]/95 border-slate-800 text-slate-300'
+                      : 'bg-white/95 border-slate-200/80 text-slate-700 shadow-[0_10px_30px_rgba(0,0,0,0.08)]'
+                  }`}
+                >
                   {/* Left Navigation Tabs */}
                   <div className="flex items-center gap-5 pl-1">
                     {/* Tab 1: Caregiver */}
@@ -510,12 +560,12 @@ export default function Home() {
                       onClick={() => setActiveTab('caregiver')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'caregiver'
-                          ? 'text-[#FF5733] font-semibold'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'text-[#1E3A8A] font-bold'
+                          : 'text-slate-400 hover:text-slate-600 font-medium'
                       }`}
                     >
                       <FontAwesomeIcon icon={faShieldHalved} className="text-base" />
-                      <span className="text-xs font-medium mt-1">Caregiver</span>
+                      <span className="text-[11px] mt-1">Caregiver</span>
                     </button>
 
                     {/* Tab 2: History Matrix */}
@@ -523,24 +573,24 @@ export default function Home() {
                       onClick={() => setActiveTab('history')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'history'
-                          ? 'text-[#FF5733] font-semibold'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'text-[#1E3A8A] font-bold'
+                          : 'text-slate-400 hover:text-slate-600 font-medium'
                       }`}
                     >
                       <FontAwesomeIcon icon={faTableCells} className="text-base" />
-                      <span className="text-xs font-medium mt-1">History</span>
+                      <span className="text-[11px] mt-1">History Matrix</span>
                     </button>
                   </div>
 
-                  {/* ELEVATED HARDWARE-STYLE CENTER MIC BUTTON */}
+                  {/* ELEVATED CENTER HARDWARE-STYLE MIC BUTTON */}
                   <div className="relative -top-4 flex items-center justify-center">
                     {/* Visual voice feedback pill above Mic */}
                     {(alexaAgent.isListening || alexaAgent.isThinking || alexaAgent.isSpeaking) && (
-                      <div className="absolute -top-11 px-3 py-1.5 rounded-xl bg-[#1E2330] border border-[#00CAFF]/40 text-white text-xs font-medium shadow-lg backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none animate-fadeIn">
+                      <div className="absolute -top-11 px-3 py-1.5 rounded-xl bg-white border border-[#2563EB]/40 text-slate-900 text-xs font-semibold shadow-lg backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none animate-fadeIn">
                         <span
                           className={`w-2 h-2 rounded-full shrink-0 ${
                             alexaAgent.isThinking
-                              ? 'bg-[#4D8BFF] animate-spin'
+                              ? 'bg-[#2563EB] animate-spin'
                               : alexaAgent.isListening
                               ? 'bg-[#00CAFF] animate-ping'
                               : 'bg-[#00F5FF] animate-pulse'
@@ -560,14 +610,14 @@ export default function Home() {
 
                     <button
                       onClick={handleCenterMicClick}
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-md active:scale-95 ${
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-md active:scale-95 ${
                         alexaAgent.isListening
-                          ? 'bg-[#FF5733] text-white ring-4 ring-[#00CAFF]/70 shadow-[0_0_24px_rgba(0,202,255,0.75)]'
+                          ? 'bg-[#2563EB] text-white ring-4 ring-[#00CAFF]/70 shadow-[0_0_24px_rgba(0,202,255,0.75)]'
                           : alexaAgent.isThinking
-                          ? 'bg-[#4D8BFF] text-white ring-4 ring-[#00CAFF]/60 shadow-[0_0_20px_rgba(0,202,255,0.6)] animate-pulse'
+                          ? 'bg-[#2563EB] text-white ring-4 ring-[#00CAFF]/60 shadow-[0_0_20px_rgba(0,202,255,0.6)] animate-pulse'
                           : alexaAgent.isSpeaking
                           ? 'bg-[#00CAFF] text-slate-900 ring-4 ring-[#00CAFF]/50 shadow-[0_0_20px_rgba(0,202,255,0.6)]'
-                          : 'bg-[#FF5733] hover:bg-[#E64D2E] text-white'
+                          : 'bg-[#1E3A8A] hover:bg-[#1E40AF] text-white'
                       }`}
                       title={alexaAgent.isListening ? 'Click to stop listening' : 'Speak with Alexa Ambient assistant'}
                     >
@@ -585,12 +635,12 @@ export default function Home() {
                       onClick={() => setActiveTab('analytics')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'analytics'
-                          ? 'text-[#FF5733] font-semibold'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'text-[#1E3A8A] font-bold'
+                          : 'text-slate-400 hover:text-slate-600 font-medium'
                       }`}
                     >
                       <FontAwesomeIcon icon={faChartLine} className="text-base" />
-                      <span className="text-xs font-medium mt-1">Analytics</span>
+                      <span className="text-[11px] mt-1">Analytics</span>
                     </button>
 
                     {/* Tab 4: Desk Clock */}
@@ -598,12 +648,14 @@ export default function Home() {
                       onClick={() => setActiveTab('deskClock')}
                       className={`flex flex-col items-center transition-all ${
                         activeTab === 'deskClock'
-                          ? 'text-[#FF5733] font-semibold'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? isDeskClock
+                            ? 'text-teal-400 font-bold'
+                            : 'text-[#1E3A8A] font-bold'
+                          : 'text-slate-400 hover:text-slate-600 font-medium'
                       }`}
                     >
                       <FontAwesomeIcon icon={faClock} className="text-base" />
-                      <span className="text-xs font-medium mt-1">Desk mode</span>
+                      <span className="text-[11px] mt-1">Desk Clock</span>
                     </button>
                   </div>
                 </nav>
@@ -621,7 +673,13 @@ export default function Home() {
 
           {/* DEVICE MOCKUP FRAME 2: ALEXA AGENT CONSOLE (DUAL VIEW) */}
           {isDualMode && (
-            <div className="lg:col-span-5 xl:col-span-4 relative rounded-[32px] p-2 sm:p-2.5 bg-[#1E2330]/40 border border-white/[0.08] shadow-2xl h-[760px] flex flex-col">
+            <div
+              className={`lg:col-span-5 xl:col-span-4 relative rounded-[32px] p-2 sm:p-2.5 h-[760px] flex flex-col transition-all duration-300 ${
+                isDeskClock
+                  ? 'bg-[#0B1528] border border-blue-900/40 shadow-2xl'
+                  : 'bg-slate-200/80 border border-slate-300 shadow-xl'
+              }`}
+            >
               <div className="relative rounded-[24px] overflow-hidden bg-[#151922] border border-white/[0.08] h-full flex flex-col">
                 <AlexaAgentConsole
                   voiceAgent={alexaAgent}
@@ -640,14 +698,14 @@ export default function Home() {
 
       {/* QUICK VOICE FEEDBACK POPUP DURING LISTENING / THINKING */}
       {alexaAgent.isListening && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#1E2330] border border-[#FF5733] px-5 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-fadeIn">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#FF5733] animate-ping" />
-          <p className="text-xs font-medium text-white tracking-wide">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white border-2 border-[#2563EB] px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-fadeIn text-slate-900">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB] animate-ping" />
+          <p className="text-xs font-bold text-slate-900 tracking-wide">
             {alexaAgent.transcript ? `"${alexaAgent.transcript}"` : 'Alexa Ambient listening... Speak in English'}
           </p>
           <button
             onClick={alexaAgent.toggleListening}
-            className="p-1 rounded-lg text-slate-400 hover:text-white"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-800 transition-colors"
             title="Stop listening"
           >
             <FontAwesomeIcon icon={faXmark} className="text-sm" />
@@ -656,9 +714,9 @@ export default function Home() {
       )}
 
       {alexaAgent.isThinking && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#1E2330] border border-[#4D8BFF] px-5 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-fadeIn">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#4D8BFF] animate-spin" />
-          <p className="text-xs font-medium text-white tracking-wide">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white border-2 border-[#2563EB] px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-fadeIn text-slate-900">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB] animate-spin" />
+          <p className="text-xs font-bold text-slate-900 tracking-wide">
             Synthesizing clinical triage with Bedrock...
           </p>
         </div>

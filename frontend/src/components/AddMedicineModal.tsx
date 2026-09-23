@@ -116,22 +116,22 @@ export function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalPro
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151922]/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#1E2330] w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl p-6 shadow-2xl border border-white/[0.08] text-white transform transition-all animate-scaleUp">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-[28px] p-6 sm:p-7 shadow-2xl border border-slate-100 text-slate-900 transform transition-all animate-scaleUp">
         {/* HEADER */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#151922] text-[#FF5733] border border-[#FF5733]/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E3A8A] border border-blue-200/60 flex items-center justify-center">
               <FontAwesomeIcon icon={faCapsules} className="text-base" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white tracking-tight">Add medication regimen</h3>
-              <p className="text-xs text-slate-400 font-normal">Real-time Clinical Safety & Beers Criteria check</p>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Add medication regimen</h3>
+              <p className="text-xs text-slate-500 font-normal">Real-time Clinical Safety & Beers Criteria check</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-[#151922] hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <FontAwesomeIcon icon={faXmark} className="text-base" />
           </button>
@@ -142,11 +142,11 @@ export function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalPro
           {/* MEDICATION NAME INPUT WITH REAL-TIME CHECK INDICATOR */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-medium text-slate-400">
+              <label className="block text-xs font-semibold text-slate-700">
                 Medication name
               </label>
               {isCheckingInteraction && (
-                <span className="flex items-center gap-1.5 text-[11px] text-amber-400 animate-pulse">
+                <span className="flex items-center gap-1.5 text-[11px] text-blue-600 animate-pulse font-medium">
                   <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-[10px]" />
                   Checking drug interactions...
                 </span>
@@ -159,12 +159,12 @@ export function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalPro
                 placeholder="e.g. Warfarin, Simvastatin, Ibuprofen..."
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className={`w-full px-3.5 py-2.5 rounded-xl bg-[#151922] border text-white placeholder-slate-400 text-sm focus:outline-none transition-colors ${
+                className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border text-slate-900 placeholder-slate-400 text-sm focus:outline-none transition-colors ${
                   hasInteraction
                     ? isCritical
-                      ? 'border-rose-500/70 focus:border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.15)]'
-                      : 'border-amber-500/70 focus:border-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
-                    : 'border-white/[0.08] focus:border-[#FF5733]'
+                      ? 'border-rose-400 focus:border-rose-600 bg-rose-50/30'
+                      : 'border-amber-400 focus:border-amber-600 bg-amber-50/30'
+                    : 'border-slate-200 focus:border-[#1E3A8A] focus:bg-white'
                 }`}
               />
             </div>
@@ -175,8 +175,8 @@ export function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalPro
             <div
               className={`rounded-2xl p-4 border transition-all animate-fadeIn ${
                 isCritical
-                  ? 'bg-gradient-to-br from-rose-950/60 via-red-950/30 to-[#1E2330] border-rose-500/50 text-rose-200'
-                  : 'bg-gradient-to-br from-amber-950/60 via-orange-950/30 to-[#1E2330] border-amber-500/50 text-amber-200'
+                  ? 'bg-rose-50 border-rose-200 text-rose-950'
+                  : 'bg-amber-50 border-amber-200 text-amber-950'
               }`}
             >
               {/* Badge & Severity */}
@@ -184,49 +184,49 @@ export function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalPro
                 <div className="flex items-center gap-2">
                   <FontAwesomeIcon
                     icon={isCritical ? faShieldHalved : faTriangleExclamation}
-                    className={`text-base ${isCritical ? 'text-rose-400' : 'text-amber-400'}`}
+                    className={`text-base ${isCritical ? 'text-rose-600' : 'text-amber-600'}`}
                   />
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
                       isCritical
-                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                        : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        ? 'bg-rose-100 text-rose-800 border-rose-300'
+                        : 'bg-amber-100 text-amber-800 border-amber-300'
                     }`}
                   >
                     {isCritical ? 'Critical Contraindication' : 'Significant Drug Interaction'}
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-mono">
                   Beers Criteria
                 </span>
               </div>
 
               {/* Title & Conflict Summary */}
-              <h4 className="text-sm font-semibold text-white tracking-tight mb-1">
+              <h4 className="text-sm font-bold text-slate-900 tracking-tight mb-1">
                 {primaryWarning.title}
               </h4>
-              <p className="text-xs text-rose-200/90 mb-2">
-                <span className="font-semibold text-white">Conflict with active drug:</span>{' '}
-                <span className="px-1.5 py-0.5 rounded bg-black/40 font-mono text-[11px] text-amber-300 border border-amber-500/30">
+              <p className="text-xs text-slate-700 mb-2">
+                <span className="font-semibold text-slate-900">Conflict with active drug:</span>{' '}
+                <span className="px-1.5 py-0.5 rounded bg-white font-mono text-[11px] text-slate-900 border border-slate-200">
                   {primaryWarning.conflictingMedName}
                 </span>
               </p>
 
               {/* Clinical Risk & Mechanism */}
-              <div className="text-[11px] space-y-1.5 p-2.5 rounded-xl bg-black/30 border border-white/[0.05] text-slate-300 mb-3">
+              <div className="text-[11px] space-y-1.5 p-2.5 rounded-xl bg-white/80 border border-slate-200 text-slate-700 mb-3">
                 <p>
-                  <strong className="text-white">Clinical Risk:</strong> {primaryWarning.clinicalRisk}
+                  <strong className="text-slate-900">Clinical Risk:</strong> {primaryWarning.clinicalRisk}
                 </p>
                 <p>
-                  <strong className="text-slate-200">Pharmacology:</strong> {primaryWarning.mechanism}
+                  <strong className="text-slate-900">Pharmacology:</strong> {primaryWarning.mechanism}
                 </p>
-                <p className="text-amber-300/90 italic pt-1 border-t border-white/[0.08]">
+                <p className="text-amber-800 italic pt-1 border-t border-slate-200">
                   <strong>Recommendation:</strong> {primaryWarning.recommendation}
                 </p>
               </div>
 
               {/* DR. REYNOLDS CONSULTATION OVERRIDE CHECKBOX */}
-              <label className="flex items-start gap-3 p-2.5 rounded-xl bg-black/40 hover:bg-black/50 border border-white/10 cursor-pointer transition-colors group">
+              <label className="flex items-start gap-3 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer transition-colors group">
                 <div className="relative flex items-center justify-center mt-0.5">
                   <input
                     type="checkbox"
@@ -234,18 +234,18 @@ export function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalPro
                     onChange={(e) => setHasAcknowledgedDoctor(e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-5 h-5 rounded-lg border border-slate-400 peer-checked:bg-[#FF5733] peer-checked:border-[#FF5733] flex items-center justify-center transition-all">
+                  <div className="w-5 h-5 rounded-lg border border-slate-300 peer-checked:bg-[#1E3A8A] peer-checked:border-[#1E3A8A] flex items-center justify-center transition-all">
                     {hasAcknowledgedDoctor && (
                       <FontAwesomeIcon icon={faCheck} className="text-xs text-white" />
                     )}
                   </div>
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-white group-hover:text-amber-300 transition-colors">
-                    <FontAwesomeIcon icon={faUserDoctor} className="text-[#FF5733] text-xs" />
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                    <FontAwesomeIcon icon={faUserDoctor} className="text-[#1E3A8A] text-xs" />
                     <span>I have consulted Dr. Reynolds - Proceed anyway</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
+                  <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">
                     Overriding this safety block requires clinical approval. The override will be audited in the caregiver log.
                   </p>
                 </div>
@@ -255,7 +255,7 @@ export function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalPro
 
           {/* DOSAGE INPUT */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
               Dosage & form
             </label>
             <input
@@ -264,27 +264,27 @@ export function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalPro
               placeholder="e.g. 20mg - 1 tablet at bedtime"
               value={dosage}
               onChange={(e) => setDosage(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#151922] border border-white/[0.08] text-white placeholder-slate-400 text-sm focus:outline-none focus:border-[#FF5733] transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#1E3A8A] focus:bg-white transition-colors"
             />
           </div>
 
           {/* SCHEDULED TIME & STOCK */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-1">
-                <FontAwesomeIcon icon={faClock} className="text-[#FF5733] text-xs" />
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1">
+                <FontAwesomeIcon icon={faClock} className="text-[#1E3A8A] text-xs" />
                 <span>Scheduled time</span>
               </label>
               <input
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-[#151922] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-[#FF5733] transition-colors"
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-[#1E3A8A] focus:bg-white transition-colors"
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-1">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1">
                 <FontAwesomeIcon icon={faBoxesStacked} className="text-slate-400 text-xs" />
                 <span>Stock count</span>
               </label>
@@ -294,7 +294,7 @@ export function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalPro
                 max="365"
                 value={stock}
                 onChange={(e) => setStock(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-[#151922] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-[#FF5733] transition-colors"
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-[#1E3A8A] focus:bg-white transition-colors"
               />
             </div>
           </div>
@@ -303,17 +303,17 @@ export function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalPro
           <button
             type="submit"
             disabled={isSubmitting || isSafetyBlocked}
-            className={`w-full mt-2 py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+            className={`w-full mt-2 py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
               isSafetyBlocked
-                ? 'bg-rose-950/40 border border-rose-500/30 text-rose-300/60 cursor-not-allowed'
+                ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
                 : hasInteraction
-                ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-900/40 active:scale-[0.98]'
-                : 'bg-[#FF5733] hover:bg-[#E64D2E] text-white shadow-lg shadow-orange-900/30 active:scale-[0.98]'
+                ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-md active:scale-[0.98]'
+                : 'bg-[#1E3A8A] hover:bg-[#1E40AF] text-white shadow-md active:scale-[0.98]'
             }`}
           >
             {isSafetyBlocked ? (
               <>
-                <FontAwesomeIcon icon={faShieldHalved} className="text-rose-400 text-xs" />
+                <FontAwesomeIcon icon={faShieldHalved} className="text-rose-500 text-xs" />
                 <span>Safety Block: Consult Dr. Reynolds to Override</span>
               </>
             ) : hasInteraction ? (

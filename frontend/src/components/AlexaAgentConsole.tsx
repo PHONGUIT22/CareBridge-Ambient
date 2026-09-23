@@ -128,9 +128,9 @@ export function AlexaAgentConsole({
       case 'EMERGENCY':
         return 'bg-rose-500/15 text-rose-300 border-rose-500/30';
       default:
-        return 'bg-[#FF5733]/15 text-[#FF5733] border-[#FF5733]/30';
-    }
-  };
+        return 'bg-[#2563EB]/15 text-[#2563EB] border-[#2563EB]/30';
+      }
+    };
 
   const formatAdviceSteps = (text?: string) => {
     if (!text) return null;
@@ -144,7 +144,7 @@ export function AlexaAgentConsole({
         <div className="space-y-1 mt-1.5">
           {parts.map((part, i) => (
             <div key={i} className="flex items-start gap-1.5 text-xs text-slate-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#FF5733] mt-1.5 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] mt-1.5 shrink-0" />
               <span>{part}</span>
             </div>
           ))}
@@ -160,13 +160,13 @@ export function AlexaAgentConsole({
       <div className="px-4 py-3 border-b border-white/[0.08] shrink-0 bg-[#151922]/95 backdrop-blur-md">
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#FF5733] flex items-center justify-center text-white text-xs">
+            <div className="w-7 h-7 rounded-lg bg-[#2563EB] flex items-center justify-center text-white text-xs">
               <FontAwesomeIcon icon={faShieldHalved} />
             </div>
             <div>
               <h2 className="text-xs font-semibold text-white flex items-center gap-1.5 leading-none tracking-tight">
                 <span>Alexa Ambient Agent</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FF5733] animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00CAFF] animate-pulse" />
               </h2>
               <p className="text-xs text-slate-400 font-mono mt-0.5">
                 MCP Streamable HTTP - Claude Haiku 4.5
@@ -175,13 +175,13 @@ export function AlexaAgentConsole({
           </div>
           <div className="flex items-center gap-1.5">
             {isListening && (
-              <span className="px-2 py-0.5 rounded-full bg-[#FF5733]/15 border border-[#FF5733]/30 text-[#FF5733] text-xs font-mono font-medium flex items-center gap-1 animate-pulse">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FF5733] animate-ping" />
+              <span className="px-2 py-0.5 rounded-full bg-[#00CAFF]/15 border border-[#00CAFF]/30 text-[#00CAFF] text-xs font-mono font-medium flex items-center gap-1 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00CAFF] animate-ping" />
                 Listening
               </span>
             )}
             {isThinking && (
-              <span className="px-2 py-0.5 rounded-full bg-[#4D8BFF]/15 border border-[#4D8BFF]/30 text-[#4D8BFF] text-xs font-mono font-medium flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full bg-[#2563EB]/15 border border-[#2563EB]/30 text-[#38BDF8] text-xs font-mono font-medium flex items-center gap-1">
                 <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-[10px]" />
                 Thinking
               </span>
@@ -219,7 +219,7 @@ export function AlexaAgentConsole({
             <button
               key={idx}
               onClick={() => processVoiceQuery(item.prompt)}
-              className="inline-flex items-center px-2.5 py-1 rounded-lg bg-[#1E2330] hover:border-[#FF5733]/50 border border-white/[0.08] text-xs text-slate-300 hover:text-white whitespace-nowrap transition-all shrink-0 active:scale-95"
+              className="inline-flex items-center px-2.5 py-1 rounded-lg bg-[#1E2330] hover:border-[#2563EB]/50 border border-white/[0.08] text-xs text-slate-300 hover:text-white whitespace-nowrap transition-all shrink-0 active:scale-95"
             >
               <span>&ldquo;{item.label}&rdquo;</span>
             </button>
@@ -232,7 +232,7 @@ export function AlexaAgentConsole({
         className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4"
         style={{
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(255, 87, 51, 0.25) transparent',
+          scrollbarColor: 'rgba(37, 99, 235, 0.25) transparent',
         }}
       >
         {messages.map((msg: ChatMessage) => {
@@ -258,7 +258,7 @@ export function AlexaAgentConsole({
             <div key={msg.id} className="flex flex-col gap-2 items-start max-w-[95%] animate-fadeIn">
               {/* Alexa Header Tag */}
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-md bg-[#FF5733]/15 text-[#FF5733] border border-[#FF5733]/30 flex items-center justify-center text-xs">
+                <div className="w-5 h-5 rounded-md bg-[#2563EB]/15 text-[#38BDF8] border border-[#2563EB]/30 flex items-center justify-center text-xs">
                   <FontAwesomeIcon icon={faShieldHalved} />
                 </div>
                 <span className="text-xs font-semibold text-white tracking-tight">Alexa Copilot</span>
@@ -281,7 +281,7 @@ export function AlexaAgentConsole({
                 <div className="w-full flex flex-col gap-1">
                   <div className="flex items-center justify-between text-xs bg-[#151922] px-2.5 py-1.5 rounded-xl border border-white/[0.08] hover:border-white/15 transition-colors">
                     <div className="flex items-center gap-2">
-                      <span className="text-[#FF5733] flex items-center gap-1 font-mono font-medium">
+                      <span className="text-[#38BDF8] flex items-center gap-1 font-mono font-medium">
                         <FontAwesomeIcon icon={faBolt} className="text-xs" />
                         <span>
                           {msg.toolCall.toolName.startsWith('🧠')
@@ -332,7 +332,7 @@ export function AlexaAgentConsole({
                 {/* Structured Action Guidance */}
                 {msg.actionAdvice && (
                   <div className="mt-2 pt-2 border-t border-white/[0.06]">
-                    <div className="flex items-center gap-1.5 text-xs font-semibold text-[#FF5733] mb-1">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-[#38BDF8] mb-1">
                       <FontAwesomeIcon icon={faStethoscope} className="text-xs" />
                       <span>Action guidance</span>
                     </div>
@@ -355,8 +355,8 @@ export function AlexaAgentConsole({
         {/* Thinking / Bedrock Reasoning Indicator */}
         {isThinking && (
           <div className="flex items-center gap-2 text-xs text-slate-400 pl-1 py-1">
-            <div className="w-2 h-2 rounded-full bg-[#FF5733] animate-pulse" />
-            <span className="text-xs font-mono text-[#FF5733]">
+            <div className="w-2 h-2 rounded-full bg-[#00CAFF] animate-pulse" />
+            <span className="text-xs font-mono text-[#38BDF8]">
               AWS Bedrock Claude Haiku 4.5 reasoning...
             </span>
           </div>
@@ -369,9 +369,9 @@ export function AlexaAgentConsole({
       <div className="p-3 border-t border-white/[0.08] bg-[#151922]/95 backdrop-blur-md shrink-0 flex flex-col gap-2">
         {/* Dynamic Voice Recording / Listening Banner */}
         {isListening && (
-          <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#FF5733]/10 border border-[#FF5733]/30 text-[#FF5733] text-xs animate-pulse">
+          <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#2563EB]/10 border border-[#2563EB]/30 text-[#38BDF8] text-xs animate-pulse">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#FF5733] animate-ping" />
+              <span className="w-2 h-2 rounded-full bg-[#00CAFF] animate-ping" />
               <span className="truncate">
                 {transcript ? `"${transcript}"` : 'Listening to voice query... speak now'}
               </span>
@@ -398,19 +398,19 @@ export function AlexaAgentConsole({
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
             placeholder="Ask Alexa or report symptoms..."
-            className="w-full bg-[#1E2330] border border-white/[0.08] focus:border-[#FF5733] rounded-xl pl-3.5 pr-20 py-2.5 text-xs text-white placeholder-slate-400 outline-none transition-all shadow-inner"
+            className="w-full bg-[#1E2330] border border-white/[0.08] focus:border-[#2563EB] rounded-xl pl-3.5 pr-20 py-2.5 text-xs text-white placeholder-slate-400 outline-none transition-all shadow-inner"
           />
 
           {/* Action Buttons Pinned to Right Edge */}
           <div className="absolute right-1.5 flex items-center gap-1">
-            {/* Tactile Signal Coral Mic with Alexa Cyan Glow */}
+            {/* Mic with Alexa Cyan Glow */}
             <button
               type="button"
               onClick={toggleListening}
               className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
                 isListening
-                  ? 'bg-[#FF5733] text-white ring-2 ring-[#00CAFF]/70 shadow-[0_0_10px_rgba(0,202,255,0.6)]'
-                  : 'bg-[#151922] text-[#FF5733] hover:bg-[#FF5733]/20 border border-[#FF5733]/40'
+                  ? 'bg-[#2563EB] text-white ring-2 ring-[#00CAFF]/70 shadow-[0_0_10px_rgba(0,202,255,0.6)]'
+                  : 'bg-[#151922] text-[#38BDF8] hover:bg-[#2563EB]/20 border border-[#2563EB]/40'
               }`}
               title={isListening ? 'Click to stop listening' : 'Speak with Alexa'}
             >
@@ -421,7 +421,7 @@ export function AlexaAgentConsole({
             <button
               type="submit"
               disabled={!inputQuery.trim() || isThinking}
-              className="w-7 h-7 rounded-lg bg-[#151922] hover:bg-[#FF5733] text-slate-400 hover:text-white border border-white/[0.08] flex items-center justify-center transition-all disabled:opacity-30 disabled:pointer-events-none"
+              className="w-7 h-7 rounded-lg bg-[#151922] hover:bg-[#2563EB] text-slate-400 hover:text-white border border-white/[0.08] flex items-center justify-center transition-all disabled:opacity-30 disabled:pointer-events-none"
               title="Send text query"
             >
               <FontAwesomeIcon icon={faPaperPlane} className="text-xs" />

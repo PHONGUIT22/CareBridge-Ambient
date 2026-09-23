@@ -20,7 +20,7 @@ export const GUARDIAN_PERSONAS_LIST: GuardianPersona[] = [
     roleTitle: 'Attending Physician',
     avatarIcon: '👨‍⚕️',
     voiceTone: 'Clinical & Exact',
-    accentColor: '#2563EB',
+    accentColor: '#1E3A8A',
     themeColor: 'blue',
     description: 'Strict, authoritative hemodynamic risk data.',
   },
@@ -86,16 +86,20 @@ export function GuardianSelector({
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-2.5">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">
+          <span
+            className={`text-xs font-bold uppercase tracking-wider font-mono ${
+              compact ? 'text-slate-400' : 'text-slate-700'
+            }`}
+          >
             Active Health Guardian
           </span>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-[#FF5733]/15 text-[#FF5733] border border-[#FF5733]/30">
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
             AI Persona
           </span>
         </div>
-        <span className="text-[11px] text-slate-400">
+        <span className={`text-[11px] font-medium ${compact ? 'text-slate-400' : 'text-slate-500'}`}>
           Behavioral intervention engine
         </span>
       </div>
@@ -117,45 +121,55 @@ export function GuardianSelector({
               type="button"
               onClick={() => handleSelect(persona)}
               className={`relative text-left p-2.5 sm:p-3 rounded-2xl transition-all duration-200 border select-none ${
-                isSelected
-                  ? 'bg-[#1E2330] ring-1 ring-white/20 shadow-md translate-y-[-1px]'
-                  : 'bg-[#151922]/80 hover:bg-[#1E2330] border-white/[0.08] hover:border-white/15'
+                compact
+                  ? isSelected
+                    ? 'bg-[#0B1528] ring-2 ring-blue-500 shadow-md translate-y-[-1px]'
+                    : 'bg-slate-900/80 hover:bg-slate-800 border-slate-800'
+                  : isSelected
+                  ? 'bg-blue-50/70 border-2 border-[#1E3A8A] shadow-sm translate-y-[-1px]'
+                  : 'bg-white hover:bg-slate-50 border-slate-200/80'
               }`}
               style={{
-                borderColor: isSelected ? persona.accentColor : undefined,
+                borderColor: !compact && isSelected ? '#1E3A8A' : undefined,
               }}
             >
               {isRecommended && (
-                <span className="absolute -top-2 right-2 px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono shadow-sm">
+                <span className="absolute -top-2 right-2 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300 font-mono shadow-2xs">
                   Recommended
                 </span>
               )}
 
               <div className="flex items-center gap-2.5">
                 <span
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-base shrink-0 bg-white/[0.06] border border-white/[0.08]"
-                  style={{
-                    backgroundColor: isSelected ? `${persona.accentColor}20` : undefined,
-                    borderColor: isSelected ? `${persona.accentColor}40` : undefined,
-                  }}
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center text-base shrink-0 ${
+                    compact ? 'bg-white/10' : 'bg-slate-100'
+                  }`}
                 >
                   {persona.avatarIcon}
                 </span>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <h4 className="text-xs font-semibold text-white truncate">
+                    <h4
+                      className={`text-xs font-bold truncate ${
+                        compact ? 'text-white' : 'text-slate-900'
+                      }`}
+                    >
                       {persona.displayName}
                     </h4>
                   </div>
-                  <p className="text-[11px] text-slate-400 truncate mt-0.5 font-normal">
+                  <p
+                    className={`text-[11px] truncate mt-0.5 font-medium ${
+                      compact ? 'text-slate-400' : 'text-slate-500'
+                    }`}
+                  >
                     {persona.roleTitle}
                   </p>
                 </div>
               </div>
 
               {!compact && (
-                <p className="text-[10px] text-slate-300 mt-2 leading-relaxed line-clamp-2">
+                <p className="text-[10px] text-slate-600 mt-2 leading-relaxed line-clamp-2">
                   {persona.description}
                 </p>
               )}

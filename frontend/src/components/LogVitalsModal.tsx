@@ -59,22 +59,22 @@ export function LogVitalsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151922]/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#1E2330] w-full max-w-md rounded-3xl p-6 shadow-2xl border border-white/[0.08] text-white transform transition-all animate-scaleUp">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white w-full max-w-md rounded-[28px] p-6 sm:p-7 shadow-2xl border border-slate-100 text-slate-900 transform transition-all animate-scaleUp">
         {/* HEADER */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#151922] text-[#FF5733] border border-[#FF5733]/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E3A8A] border border-blue-200/60 flex items-center justify-center">
               <FontAwesomeIcon icon={faHeartPulse} className="text-base" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white tracking-tight">Record vitals reading</h3>
-              <p className="text-xs text-slate-400 font-normal">Automatic AHA classification and telemetry</p>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Record vitals reading</h3>
+              <p className="text-xs text-slate-500 font-normal">Automatic AHA classification and telemetry</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-[#151922] hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <FontAwesomeIcon icon={faXmark} className="text-base" />
           </button>
@@ -84,8 +84,8 @@ export function LogVitalsModal({
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3.5">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-1">
-                <FontAwesomeIcon icon={faHeartPulse} className="text-xs text-[#FF5733]" />
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1">
+                <FontAwesomeIcon icon={faHeartPulse} className="text-xs text-rose-500" />
                 <span>Systolic (mmHg)</span>
               </label>
               <input
@@ -94,13 +94,13 @@ export function LogVitalsModal({
                 max="250"
                 value={systolic}
                 onChange={(e) => setSystolic(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#151922] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-[#FF5733] transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-[#1E3A8A] focus:bg-white transition-colors"
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-1">
-                <FontAwesomeIcon icon={faHeartPulse} className="text-xs text-slate-400" />
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1">
+                <FontAwesomeIcon icon={faHeartPulse} className="text-xs text-blue-500" />
                 <span>Diastolic (mmHg)</span>
               </label>
               <input
@@ -109,15 +109,15 @@ export function LogVitalsModal({
                 max="160"
                 value={diastolic}
                 onChange={(e) => setDiastolic(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#151922] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-[#FF5733] transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-[#1E3A8A] focus:bg-white transition-colors"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-1">
-                <FontAwesomeIcon icon={faDroplet} className="text-xs text-slate-400" />
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1">
+                <FontAwesomeIcon icon={faDroplet} className="text-xs text-sky-500" />
                 <span>Blood sugar (mg/dL)</span>
               </label>
               <input
@@ -127,13 +127,13 @@ export function LogVitalsModal({
                 max="500"
                 value={bloodSugar}
                 onChange={(e) => setBloodSugar(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#151922] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-[#FF5733] transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-[#1E3A8A] focus:bg-white transition-colors"
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-1">
-                <FontAwesomeIcon icon={faBolt} className="text-xs text-slate-400" />
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1">
+                <FontAwesomeIcon icon={faBolt} className="text-xs text-emerald-500" />
                 <span>Heart rate (BPM)</span>
               </label>
               <input
@@ -142,7 +142,7 @@ export function LogVitalsModal({
                 max="200"
                 value={heartRate}
                 onChange={(e) => setHeartRate(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#151922] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-[#FF5733] transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-[#1E3A8A] focus:bg-white transition-colors"
               />
             </div>
           </div>
@@ -150,7 +150,7 @@ export function LogVitalsModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-3 py-3.5 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-md"
+            className="w-full mt-3 py-3.5 rounded-xl bg-[#1E3A8A] hover:bg-[#1E40AF] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-md"
           >
             <FontAwesomeIcon icon={faCheck} className="text-sm" />
             <span>{isSubmitting ? 'Recording vitals...' : 'Save vitals to SQLite WAL'}</span>
