@@ -3,17 +3,15 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faHeartPulse,
-  faShieldHalved,
-  faKey,
-  faUser,
-  faCheck,
-  faArrowRight,
-  faRotateRight,
-  faBolt,
+  faEnvelope,
   faLock,
+  faArrowRight,
+  faStar,
+  faShieldHalved,
   faClock,
-  faUserDoctor,
+  faFileLines,
+  faRotateRight,
+  faMoon,
 } from '@fortawesome/free-solid-svg-icons';
 import { mcpClient } from '../services/mcpClient';
 
@@ -30,71 +28,31 @@ interface AuthGateProps {
 
 export function AuthGate({ onLogin }: AuthGateProps) {
   const [email, setEmail] = useState('demo@gmail.com');
-  const [pin, setPin] = useState('');
+  const [passcode, setPasscode] = useState('1234');
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedPersona, setSelectedPersona] = useState<'senior' | 'caregiver'>('caregiver');
 
-  // Persist authentication session to localStorage
   const saveAndCompleteSession = (session: AuthSession) => {
     try {
-      localStorage.setItem('carebridge_auth', JSON.stringify(session));
+      localStorage.setItem('carebridge_auth_session', JSON.stringify(session));
     } catch (e) {
       console.warn('LocalStorage unavailable:', e);
     }
     onLogin(session);
   };
 
-  // 1. Evaluator Fast-Track: 1-Click automatic 30-day dataset seeding and authentication
-  const handleFastTrackDemo = async () => {
+  const handleSignIn = async (role: 'caregiver' | 'senior' = 'caregiver') => {
     setIsLoading(true);
-    setError(null);
-    setStatusMessage('Syncing 30 days of clinical WAL data via MCP...');
+    setStatusMessage('Syncing clinical records...');
 
     try {
-      await mcpClient.triggerDataSeed().catch((err) => {
-        console.warn('Data seed handled gracefully:', err);
-      });
-      setStatusMessage('Data verified! Authenticating Evaluator session...');
-
-      setTimeout(() => {
-        const session: AuthSession = {
-          isAuthenticated: true,
-          user: 'Eleanor Vance & Sarah Connor (Evaluator Sandbox)',
-          role: selectedPersona,
-          isPro: true,
-        };
-        saveAndCompleteSession(session);
-        setIsLoading(false);
-      }, 500);
-    } catch (err: any) {
-      setError('Connection note: Using cached demo session.');
-      const session: AuthSession = {
-        isAuthenticated: true,
-        user: 'Demo Evaluator',
-        role: selectedPersona,
-        isPro: true,
-      };
-      saveAndCompleteSession(session);
-      setIsLoading(false);
-    }
-  };
-
-  // 2. 1-Touch Persona Switcher
-  const handlePersonaLogin = async (role: 'senior' | 'caregiver') => {
-    setIsLoading(true);
-    setError(null);
-    setStatusMessage(
-      role === 'senior'
-        ? 'Opening Bedside Desk Mode for Eleanor Vance...'
-        : 'Loading Caregiver Clinical Hub for Sarah Connor...'
-    );
+      await mcpClient.triggerDataSeed().catch(() => {});
+    } catch (_) {}
 
     setTimeout(() => {
       const session: AuthSession = {
         isAuthenticated: true,
-        user: role === 'senior' ? 'Eleanor Vance' : 'Sarah Connor',
+        user: role === 'senior' ? 'Eleanor Vance (Senior)' : 'Sarah Connor (Caregiver)',
         role,
         isPro: true,
       };
@@ -103,243 +61,204 @@ export function AuthGate({ onLogin }: AuthGateProps) {
     }, 400);
   };
 
-  // 3. Senior-friendly numeric PIN keypad handler
-  const handlePinInput = (digit: string) => {
-    setError(null);
-    if (pin.length < 4) {
-      const newPin = pin + digit;
-      setPin(newPin);
-      if (newPin.length === 4) {
-        // Automatically verify when 4 digits are entered
-        handleVerifyPin(newPin);
-      }
-    }
-  };
-
-  const handleClearPin = () => {
-    setPin('');
-    setError(null);
-  };
-
-  const handleVerifyPin = (pinToVerify = pin) => {
-    if (pinToVerify.length !== 4) {
-      setError('Please enter a 4-digit PIN (e.g. 1234)');
-      return;
-    }
-
-    setIsLoading(true);
-    setStatusMessage('Verifying Bedside PIN...');
-    setTimeout(() => {
-      // Accept demo PIN 1234 or any valid 4-digit code in hackathon environment
-      const session: AuthSession = {
-        isAuthenticated: true,
-        user: selectedPersona === 'senior' ? 'Eleanor Vance' : 'Sarah Connor',
-        role: selectedPersona,
-        isPro: true,
-      };
-      saveAndCompleteSession(session);
-      setIsLoading(false);
-    }, 300);
+  const handleQuickFill = () => {
+    setEmail('demo@gmail.com');
+    setPasscode('1234');
+    handleSignIn('caregiver');
   };
 
   return (
-    <div className="min-h-screen bg-[#151922] text-white flex flex-col items-center justify-center p-4 sm:p-6 relative select-none font-sans">
-      {/* MAIN AUTHENTICATION CONTAINER */}
-      <div className="relative z-10 w-full max-w-xl bg-[#1E2330] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-2xl">
-        {/* 1. BRAND HEADER */}
-        <div className="flex flex-col items-center text-center pb-5 border-b border-white/[0.08]">
-          <div className="w-12 h-12 rounded-xl bg-[#FF5733] flex items-center justify-center text-white mb-3">
-            <FontAwesomeIcon icon={faHeartPulse} className="text-xl" />
-          </div>
-
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#151922] border border-white/[0.08] text-xs font-mono font-medium text-slate-300 mb-2">
-            <span className="w-2 h-2 rounded-full bg-[#FF5733] animate-pulse" />
-            <span>CareBridge Ambient OS</span>
-          </div>
-
-          <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
-            Clinical Ambient Companion
-          </h1>
-          <p className="text-xs text-slate-400 mt-1 font-normal leading-relaxed">
-            Ambient voice and touch-first telehealth for seniors and families
-          </p>
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col items-center justify-center p-4 sm:p-6 font-sans select-none">
+      {/* 1. BRAND HEADER (MATCHES image/1.png & image/2.png) */}
+      <div className="flex flex-col items-center text-center mb-2">
+        {/* CareBridge Royal Blue Squircle Logo with Heart Pulse */}
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[22px] sm:rounded-[26px] bg-[#1E3A8A] flex items-center justify-center text-white shadow-[0_8px_25px_rgba(30,58,138,0.25)] transition-transform hover:scale-105">
+          <svg
+            className="w-9 h-9 sm:w-11 sm:h-11 text-white"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            <path
+              d="M3 11h4l2-4 3 8 2.5-5 1.5 2h5"
+              fill="none"
+              stroke="#1E3A8A"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
 
-        {/* 2. EVALUATOR FAST-TRACK BANNER (FOR JUDGES) */}
-        <div className="mt-5 p-4 rounded-2xl bg-[#151922] border border-white/[0.08] relative overflow-hidden">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faShieldHalved} className="text-xs text-amber-300" />
-              <span className="text-xs font-semibold text-amber-300 tracking-normal">
-                Evaluator sandbox
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1E3A8A] tracking-tight mt-3">
+          CareBridge
+        </h1>
+        <p className="text-slate-600 font-medium text-xs sm:text-sm mt-1">
+          Senior Medication & Care Companion
+        </p>
+
+        {/* 3 Pill Badges */}
+        <div className="flex items-center justify-center gap-2 mt-3.5 mb-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/90 text-blue-700 border border-blue-200/60 text-xs font-semibold shadow-2xs">
+            <FontAwesomeIcon icon={faClock} className="text-[10px]" />
+            <span>Smart Schedule</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/90 text-blue-700 border border-blue-200/60 text-xs font-semibold shadow-2xs">
+            <FontAwesomeIcon icon={faShieldHalved} className="text-[10px]" />
+            <span>Vitals Audit</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/90 text-blue-700 border border-blue-200/60 text-xs font-semibold shadow-2xs">
+            <FontAwesomeIcon icon={faFileLines} className="text-[10px]" />
+            <span>Doctor PDF</span>
+          </span>
+        </div>
+      </div>
+
+      {/* 2. CAREGIVER PORTAL CARD (MATCHES image/2.png) */}
+      <div className="w-full max-w-[430px] bg-white rounded-[28px] border border-slate-100 shadow-[0_10px_35px_rgba(0,0,0,0.05)] p-6 sm:p-7">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+          Caregiver Portal
+        </h2>
+        <p className="text-xs text-slate-500 mt-1 mb-5 leading-relaxed">
+          Sign in to manage prescriptions, biometric vitals, and adherence reports.
+        </p>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSignIn('caregiver');
+          }}
+          className="flex flex-col gap-3.5"
+        >
+          {/* Caregiver Email */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Caregiver Email
+            </label>
+            <div className="relative flex items-center">
+              <span className="absolute left-3.5 text-slate-400">
+                <FontAwesomeIcon icon={faEnvelope} className="text-xs" />
               </span>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="demo@gmail.com"
+                className="w-full pl-9 pr-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-900 placeholder-slate-400 text-xs sm:text-sm font-medium focus:outline-none focus:border-blue-600 focus:bg-white transition-all"
+              />
             </div>
-            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-mono font-medium">
-              Pre-configured
-            </span>
           </div>
 
-          <p className="text-xs text-slate-300 leading-relaxed mb-3">
-            Pre-fills credentials (<span className="text-white font-mono font-bold">demo@gmail.com</span> / PIN <span className="text-white font-mono font-bold">1234</span>) and loads 30 days of clinical WAL data via MCP in 1 click.
-          </p>
+          {/* Passcode / PIN */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Passcode / PIN (Optional)
+            </label>
+            <div className="relative flex items-center">
+              <span className="absolute left-3.5 text-slate-400">
+                <FontAwesomeIcon icon={faLock} className="text-xs" />
+              </span>
+              <input
+                type="password"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                placeholder="••••"
+                className="w-full pl-9 pr-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-900 placeholder-slate-400 text-xs sm:text-sm font-medium focus:outline-none focus:border-blue-600 focus:bg-white transition-all"
+              />
+            </div>
+          </div>
 
+          {/* Primary Action Button: Sign In with Email -> */}
           <button
-            onClick={handleFastTrackDemo}
+            type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] active:scale-[0.98] text-white font-semibold text-xs transition-all flex items-center justify-center gap-2"
+            className="w-full mt-1 py-3.5 rounded-xl bg-[#1E3A8A] hover:bg-[#1E40AF] active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
                 <FontAwesomeIcon icon={faRotateRight} className="text-xs animate-spin" />
-                <span>{statusMessage || 'Initializing Environment...'}</span>
+                <span>{statusMessage || 'Signing in...'}</span>
               </>
             ) : (
               <>
-                <FontAwesomeIcon icon={faBolt} className="text-xs" />
-                <span>Sign in with demo (1-click evaluator pass)</span>
+                <span>Sign In with Email</span>
+                <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
               </>
             )}
           </button>
-        </div>
+        </form>
 
-        {/* 3. 1-TOUCH PERSONA SWITCHER */}
-        <div className="mt-5">
-          <label className="block text-xs font-medium text-slate-400 mb-2.5">
-            Select Ambient Persona
-          </label>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Persona 1: Eleanor Vance (Senior) */}
-            <button
-              onClick={() => {
-                setSelectedPersona('senior');
-                handlePersonaLogin('senior');
-              }}
-              disabled={isLoading}
-              className={`p-3.5 rounded-2xl text-left border transition-all ${
-                selectedPersona === 'senior'
-                  ? 'bg-[#151922] border-[#FF5733]'
-                  : 'bg-[#151922]/70 border-white/[0.06] hover:border-white/15'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#1E2330] border border-white/[0.08] flex items-center justify-center text-slate-200 shrink-0">
-                  <FontAwesomeIcon icon={faUser} className="text-sm text-[#FF5733]" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-semibold text-white">Eleanor Vance</h4>
-                  <p className="text-xs text-[#FF5733] font-mono font-medium">Age 78 - Patient</p>
-                </div>
-              </div>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                Bedside Desk Clock, high-contrast voice prompts, and 1-touch pill confirmation.
-              </p>
-            </button>
-
-            {/* Persona 2: Sarah Connor (Caregiver) */}
-            <button
-              onClick={() => {
-                setSelectedPersona('caregiver');
-                handlePersonaLogin('caregiver');
-              }}
-              disabled={isLoading}
-              className={`p-3.5 rounded-2xl text-left border transition-all ${
-                selectedPersona === 'caregiver'
-                  ? 'bg-[#151922] border-[#FF5733]'
-                  : 'bg-[#151922]/70 border-white/[0.06] hover:border-white/15'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#1E2330] border border-white/[0.08] flex items-center justify-center text-slate-200 shrink-0">
-                  <FontAwesomeIcon icon={faUserDoctor} className="text-sm text-slate-300" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-semibold text-white">Sarah Connor</h4>
-                  <p className="text-xs text-slate-300 font-mono font-medium">Daughter & Caregiver</p>
-                </div>
-              </div>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                Clinical Hub: 30-day matrix, biometrics telemetry, and doctor PDF audits.
-              </p>
-            </button>
-          </div>
-        </div>
-
-        {/* 4. SENIOR-FRIENDLY BEDSIDE PIN PAD */}
-        <div className="mt-5 pt-4 border-t border-white/[0.08]">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faLock} className="text-[#FF5733] text-xs" />
-              <span>Bedside touch PIN pad</span>
-            </span>
-
-            {/* Display PIN Dots */}
-            <div className="flex items-center gap-2">
-              {[0, 1, 2, 3].map((idx) => (
-                <div
-                  key={idx}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
-                    pin.length > idx
-                      ? 'bg-[#FF5733] scale-110'
-                      : 'bg-[#151922] border border-white/20'
-                  }`}
-                />
-              ))}
+        {/* Hackathon Judge Quick Access Card (image/2.png) */}
+        <div className="mt-4 p-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] flex items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-full bg-amber-400 text-white flex items-center justify-center shrink-0">
+              <FontAwesomeIcon icon={faStar} className="text-[10px]" />
+            </div>
+            <div className="text-[11px] sm:text-xs text-amber-950 font-normal leading-snug">
+              <span>Hackathon Judge Quick Access: </span>
+              <strong className="font-semibold text-amber-900 font-mono">demo@gmail.com / 1234</strong>
+              <span className="text-amber-800 block text-[10px]">(Preloads 30-Day Clinical Data)</span>
             </div>
           </div>
-
-          {error && (
-            <p className="text-xs text-rose-400 font-medium mb-2 text-center">{error}</p>
-          )}
-
-          {/* Large Keypad Grid (Touch-Ergonomics for Seniors) */}
-          <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
-            {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-              <button
-                key={digit}
-                type="button"
-                onClick={() => handlePinInput(digit)}
-                disabled={isLoading}
-                className="h-12 rounded-xl bg-[#151922] border border-white/[0.08] hover:border-white/20 hover:bg-[#1E2330] active:scale-95 text-white font-mono font-bold text-lg transition-all flex items-center justify-center"
-              >
-                {digit}
-              </button>
-            ))}
-
-            <button
-              type="button"
-              onClick={handleClearPin}
-              disabled={isLoading}
-              className="h-12 rounded-xl bg-[#151922] border border-white/[0.08] hover:bg-rose-500/10 text-slate-400 hover:text-rose-300 active:scale-95 font-medium text-xs transition-all flex items-center justify-center"
-            >
-              Clear
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handlePinInput('0')}
-              disabled={isLoading}
-              className="h-12 rounded-xl bg-[#151922] border border-white/[0.08] hover:border-white/20 hover:bg-[#1E2330] active:scale-95 text-white font-mono font-bold text-lg transition-all flex items-center justify-center"
-            >
-              0
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleVerifyPin()}
-              disabled={isLoading}
-              className="h-12 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] active:scale-95 text-white font-semibold text-sm transition-all flex items-center justify-center gap-1.5"
-            >
-              <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
-              <span>Enter</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleQuickFill}
+            disabled={isLoading}
+            className="px-2.5 py-1 rounded-lg bg-[#FEF3C7] hover:bg-[#FDE68A] active:scale-95 text-amber-900 font-bold text-xs shrink-0 transition-colors shadow-2xs flex items-center gap-1"
+          >
+            <span>Fill</span>
+            <span>✏️</span>
+          </button>
         </div>
 
-        {/* FOOTER METADATA */}
-        <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-slate-400 font-mono">
-          <span>AWS Bedrock - Claude 3.5 Sonnet</span>
-          <span>SQLite WAL - MCP SSE</span>
+        {/* Divider: OR CONTINUE WITHOUT ACCOUNT */}
+        <div className="relative my-4 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200" />
+          </div>
+          <span className="relative bg-white px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            OR CONTINUE WITHOUT ACCOUNT
+          </span>
+        </div>
+
+        {/* Guest Caregiver Button (image/2.png) */}
+        <button
+          type="button"
+          onClick={() => handleSignIn('caregiver')}
+          disabled={isLoading}
+          className="w-full p-3 sm:p-3.5 rounded-xl bg-blue-50/40 hover:bg-blue-50/80 border border-blue-200/60 flex items-center justify-between text-left transition-all active:scale-[0.98] group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#1E3A8A] flex items-center justify-center shrink-0 group-hover:bg-[#1E3A8A] group-hover:text-white transition-colors">
+              <FontAwesomeIcon icon={faShieldHalved} className="text-base" />
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                Continue as Guest Caregiver
+              </h4>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Instant local access • No cloud account required
+              </p>
+            </div>
+          </div>
+          <FontAwesomeIcon
+            icon={faArrowRight}
+            className="text-xs text-blue-700 group-hover:translate-x-1 transition-transform mr-1"
+          />
+        </button>
+
+        {/* Switch to Senior Mode Link */}
+        <div className="mt-4 pt-3 border-t border-slate-100 text-center">
+          <button
+            type="button"
+            onClick={() => handleSignIn('senior')}
+            className="text-xs font-semibold text-slate-500 hover:text-[#1E3A8A] transition-colors inline-flex items-center gap-1.5"
+          >
+            <FontAwesomeIcon icon={faMoon} className="text-xs text-sky-600" />
+            <span>Switch to Senior Bedside Nightstand Mode (Eleanor Vance, 78)</span>
+          </button>
         </div>
       </div>
     </div>
