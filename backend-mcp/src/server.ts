@@ -23,7 +23,7 @@ if (fs.existsSync(backendEnvPath)) {
 }
 
 // Initialize Database and Seeder
-import { initDB } from './database/db.js';
+import { initDB, getDatabase } from './database/db.js';
 import { seedDemoData } from './database/seedDemoData.js';
 import { MedicineRepo } from './database/medicineRepo.js';
 import { LogRepo } from './database/logRepo.js';
@@ -38,6 +38,7 @@ import { clinicalAdvisorTool } from './tools/clinicalAdvisor.js';
 import { orderRefillTool } from './tools/orderRefill.js';
 import { ringDeviceHubTool } from './tools/ringDeviceHub.js';
 import { negotiateAdherenceTool } from './tools/negotiateAdherence.js';
+import { getLocalDateString } from './utils/dateUtils.js';
 import { handleAgentTurn } from './tools/agentTurnHandler.js';
 import { synthesizeSpeech } from './aws/pollyClient.js';
 import { checkDrugInteractions } from './services/drugInteractionService.js';
@@ -49,9 +50,8 @@ const PORT = Number(process.env.MCP_PORT || process.env.PORT) || 3001;
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// 1. INITIALIZE DATABASE & SEED DEMO DATA IF FIRST RUN
+// 1. INITIALIZE DATABASE SCHEMA & SYSTEM TABLES
 initDB();
-seedDemoData(false);
 
 // ==========================================
 // 2. SETUP MCP SERVER (Spec 2025-11-25)
@@ -167,13 +167,104 @@ app.post('/message', async (req: Request, res: Response) => {
 // 4. REST APIS FOR NEXT.JS FRONTEND
 // ==========================================
 
-// Fetch primary dashboard data (Today's schedule + Vitals + Caregiver)
-app.get('/api/today', async (req: Request, res: Response) => {
+/**
+ * Helper to extract active authenticated user ID from request headers, query, or body
+ */
+function extractUserId(req: Request): string | undefined {
+  const fromHeader = req.headers['x-user-id'];
+  if (typeof fromHeader === 'string' && fromHeader.trim()) {
+    return fromHeader.trim();
+  }
+  const fromQuery = req.query.userId;
+  if (typeof fromQuery === 'string' && fromQuery.trim()) {
+    return fromQuery.trim();
+  }
+  if (req.body && typeof req.body.userId === 'string' && req.body.userId.trim()) {
+    return req.body.userId.trim();
+  }
+  return undefined;
+}
+
+// POST /api/auth/login - Multi-user authentication & demo isolation
+app.post('/api/auth/login', async (req: Request, res: Response) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const { email, pin, role } = req.body || {};
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      res.status(400).json({ success: false, error: 'Email address is required.' });
+      return;
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPin = pin !== undefined && pin !== null ? String(pin).trim() : '';
+    const userRole = role === 'senior' ? 'senior' : 'caregiver';
+
+    const isDemoAccount = normalizedEmail === 'demo@gmail.com' && normalizedPin === '1234';
+    const db = getDatabase();
+
+    let user = db.prepare('SELECT * FROM users WHERE email = ?').get(normalizedEmail) as any;
+
+    if (!user) {
+      const id = isDemoAccount ? 'usr_demo' : `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const isPro = isDemoAccount ? 1 : 0;
+      const isDemo = isDemoAccount ? 1 : 0;
+      const createdAt = new Date().toISOString();
+
+      db.prepare(`
+        INSERT INTO users (id, email, pin, role, is_pro, is_demo, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(id, normalizedEmail, normalizedPin || null, userRole, isPro, isDemo, createdAt);
+
+      user = {
+        id,
+        email: normalizedEmail,
+        pin: normalizedPin || null,
+        role: userRole,
+        is_pro: isPro,
+        is_demo: isDemo,
+        created_at: createdAt,
+      };
+    } else {
+      // If demo account logging in, make sure is_demo and is_pro are 1
+      if (isDemoAccount && (!user.is_demo || !user.is_pro)) {
+        db.prepare('UPDATE users SET is_demo = 1, is_pro = 1 WHERE id = ?').run(user.id);
+        user.is_demo = 1;
+        user.is_pro = 1;
+      }
+    }
+
+    // Seed demo data ONLY when email is demo@gmail.com and pin is 1234
+    if (isDemoAccount) {
+      await seedDemoData(user.id, false);
+    }
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: userRole,
+        isPro: Boolean(user.is_pro),
+        isDemo: Boolean(user.is_demo),
+        name: userRole === 'senior'
+          ? (isDemoAccount ? 'Eleanor Vance (Senior)' : `${user.email} (Senior)`)
+          : (isDemoAccount ? 'Sarah Connor (Caregiver)' : `${user.email} (Caregiver)`),
+      },
+    });
+  } catch (error: any) {
+    console.error('[Auth Login Error]:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/schedule - Fetch schedule + vitals + caregiver for targetDate (defaults to today)
+app.get('/api/schedule', async (req: Request, res: Response) => {
+  try {
+    const today = getLocalDateString();
+    const targetDate = (req.query.date as string) || today;
+    const userId = extractUserId(req);
     const [schedule, vitals, caregiver] = await Promise.all([
-      LogRepo.getLogsByDate(today),
-      VitalsRepo.getVitalsByDate(today),
+      LogRepo.getLogsByDate(targetDate, userId),
+      VitalsRepo.getVitalsByDate(targetDate, userId),
       CaregiverRepo.getCaregiver(),
     ]);
 
@@ -183,7 +274,36 @@ app.get('/api/today', async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      date: today,
+      date: targetDate,
+      adherenceRate,
+      schedule,
+      vitals,
+      caregiver,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Backward-compatible alias for /api/today -> forwards to date-filtered schedule
+app.get('/api/today', async (req: Request, res: Response) => {
+  try {
+    const today = getLocalDateString();
+    const targetDate = (req.query.date as string) || today;
+    const userId = extractUserId(req);
+    const [schedule, vitals, caregiver] = await Promise.all([
+      LogRepo.getLogsByDate(targetDate, userId),
+      VitalsRepo.getVitalsByDate(targetDate, userId),
+      CaregiverRepo.getCaregiver(),
+    ]);
+
+    const total = schedule.length;
+    const taken = schedule.filter((s) => s.status === 'taken').length;
+    const adherenceRate = total > 0 ? Math.round((taken / total) * 100) : 100;
+
+    res.json({
+      success: true,
+      date: targetDate,
       adherenceRate,
       schedule,
       vitals,
@@ -213,7 +333,8 @@ app.post('/api/toggle', async (req: Request, res: Response) => {
 // Log or update dose status (Alexa voice command or direct UI action)
 app.post('/api/dose', async (req: Request, res: Response) => {
   try {
-    const result = await logDoseStatusTool.handler(req.body);
+    const userId = extractUserId(req);
+    const result = await logDoseStatusTool.handler({ ...req.body, userId });
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -223,7 +344,8 @@ app.post('/api/dose', async (req: Request, res: Response) => {
 // Amazon Pharmacy 1-Click medication refill
 app.post('/api/refill', async (req: Request, res: Response) => {
   try {
-    const result = await orderRefillTool.handler(req.body);
+    const userId = extractUserId(req);
+    const result = await orderRefillTool.handler({ ...req.body, userId });
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -258,7 +380,8 @@ app.post('/api/note', async (req: Request, res: Response) => {
 // Quick vitals recording from QuickVitalsBar
 app.post('/api/vitals', async (req: Request, res: Response) => {
   try {
-    const result = await recordVitalsTool.handler(req.body);
+    const userId = extractUserId(req);
+    const result = await recordVitalsTool.handler({ ...req.body, userId });
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -268,9 +391,10 @@ app.post('/api/vitals', async (req: Request, res: Response) => {
 // Fetch 30-day historical matrix for punch-card visualization & clinician report
 app.get('/api/history', async (req: Request, res: Response) => {
   try {
+    const userId = extractUserId(req);
     const [logs, vitals] = await Promise.all([
-      LogRepo.getAllLogs(),
-      VitalsRepo.getAllVitals(),
+      LogRepo.getAllLogs(userId),
+      VitalsRepo.getAllVitals(userId),
     ]);
     res.json({ success: true, logs, vitals });
   } catch (error: any) {
@@ -281,7 +405,8 @@ app.get('/api/history', async (req: Request, res: Response) => {
 // All medicines catalog and inventory levels
 app.get('/api/medicines', async (req: Request, res: Response) => {
   try {
-    const medicines = await MedicineRepo.getAllMedicines();
+    const userId = extractUserId(req);
+    const medicines = await MedicineRepo.getAllMedicines(userId);
     res.json({ success: true, medicines });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -291,12 +416,14 @@ app.get('/api/medicines', async (req: Request, res: Response) => {
 // Add new medicine to catalog
 app.post('/api/medicines', async (req: Request, res: Response) => {
   try {
+    const userId = extractUserId(req);
     const { name, dosage, reminderTimes, daysOfWeek, stockCount, imageUri, type } = req.body;
     if (!name || !dosage) {
       res.status(400).json({ success: false, error: 'Medicine name and dosage are required.' });
       return;
     }
     const id = await MedicineRepo.addMedicine({
+      userId,
       name,
       dosage,
       reminderTimes: reminderTimes || ['08:00'],
@@ -305,9 +432,57 @@ app.post('/api/medicines', async (req: Request, res: Response) => {
       imageUri,
       type: type || 'medication',
     });
-    const todayStr = new Date().toISOString().split('T')[0];
-    await LogRepo.generateLogsForDate(todayStr);
+    const todayStr = getLocalDateString();
+    await LogRepo.generateLogsForDate(todayStr, userId);
     res.json({ success: true, id, message: 'New medicine added successfully.' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update medicine in catalog
+app.put('/api/medicines/:id', async (req: Request, res: Response) => {
+  try {
+    const userId = extractUserId(req);
+    const id = String(req.params.id);
+    if (!id) {
+      res.status(400).json({ success: false, error: 'Missing medicine id.' });
+      return;
+    }
+
+    const { name, dosage, reminderTimes, daysOfWeek, stockCount, type, imageUri } = req.body || {};
+
+    await MedicineRepo.updateMedicine(
+      id,
+      {
+        name,
+        dosage,
+        reminderTimes,
+        daysOfWeek,
+        stockCount: stockCount !== undefined ? Number(stockCount) : undefined,
+        type,
+        imageUri,
+      },
+      userId
+    );
+
+    // Synchronize today's pending intake logs if reminderTimes or schedule changed
+    const todayStr = getLocalDateString();
+    const db = getDatabase();
+    if (reminderTimes && Array.isArray(reminderTimes)) {
+      if (userId) {
+        db.prepare(
+          "DELETE FROM intake_logs WHERE medicine_id = ? AND date = ? AND status = 'pending' AND user_id = ?"
+        ).run(id, todayStr, userId);
+      } else {
+        db.prepare(
+          "DELETE FROM intake_logs WHERE medicine_id = ? AND date = ? AND status = 'pending'"
+        ).run(id, todayStr);
+      }
+    }
+    await LogRepo.generateLogsForDate(todayStr, userId);
+
+    res.json({ success: true, message: 'Medicine updated successfully.' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -316,12 +491,13 @@ app.post('/api/medicines', async (req: Request, res: Response) => {
 // Delete medicine from catalog
 app.delete('/api/medicines/:id', async (req: Request, res: Response) => {
   try {
+    const userId = extractUserId(req);
     const id = String(req.params.id);
     if (!id) {
       res.status(400).json({ success: false, error: 'Missing medicine id.' });
       return;
     }
-    await MedicineRepo.deleteMedicine(id);
+    await MedicineRepo.deleteMedicine(id, userId);
     res.json({ success: true, message: 'Medicine deleted successfully.' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -430,8 +606,9 @@ app.post('/api/tts', async (req: Request, res: Response) => {
 // Reset and reseed 30-day clinical demo dataset
 app.post('/api/seed', async (req: Request, res: Response) => {
   try {
-    await seedDemoData(true);
-    res.json({ success: true, message: 'Reset and reseeded 30 days of clinical demo data successfully!' });
+    const userId = extractUserId(req) || 'usr_demo';
+    await seedDemoData(userId, true);
+    res.json({ success: true, message: `Reset and reseeded 30 days of clinical demo data for user ${userId} successfully!` });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
