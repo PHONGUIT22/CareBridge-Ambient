@@ -2,7 +2,13 @@
 
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCapsules, faNotesMedical, faCheck } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCheck,
+  faPills,
+  faPencil,
+  faClock,
+  faUtensils,
+} from '@fortawesome/free-solid-svg-icons';
 import confetti from 'canvas-confetti';
 
 export interface MedicineCardItem {
@@ -36,106 +42,106 @@ export function MedicineCard({
 
   const handleToggle = () => {
     if (!isTaken) {
-      confetti({
-        particleCount: 40,
-        spread: 50,
-        origin: { y: 0.8 },
-        colors: ['#00CAFF', '#10B981', '#38BDF8'],
-      });
+      try {
+        confetti({
+          particleCount: 45,
+          spread: 60,
+          origin: { y: 0.8 },
+          colors: ['#2563EB', '#10B981', '#38BDF8'],
+        });
+      } catch (_) {}
     }
     onToggleStatus(item.logId, item.status);
   };
 
   return (
-    <div
-      className={`rounded-2xl p-4 transition-all duration-200 relative flex flex-col justify-between alexa-card-interactive ${
-        isTaken
-          ? 'bg-[#1E2330] border border-[#FF5733]'
-          : 'bg-[#1E2330] border border-white/[0.08] hover:border-white/15'
-      }`}
-    >
-      {/* Top row: Status label and physical tactile toggle switch */}
-      <div className="flex items-center justify-between gap-2">
-        <span
-          className={`text-xs font-medium transition-colors ${
-            isTaken ? 'text-[#FF5733]' : 'text-slate-400'
-          }`}
-        >
-          {isTaken ? 'Taken' : 'Pending'}
-        </span>
+    <div className="bg-white rounded-[24px] border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-4 sm:p-5 flex items-start justify-between gap-3.5 sm:gap-4 transition-all hover:shadow-[0_8px_25px_rgba(0,0,0,0.07)]">
+      {/* 1. LEFT STATUS CIRCLE BADGE (MATCHES image/3.png & image/6.png) */}
+      <button
+        type="button"
+        onClick={handleToggle}
+        className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90 ${
+          isTaken
+            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/60'
+            : 'bg-blue-50 text-blue-600 border border-blue-200/60 hover:bg-blue-100'
+        }`}
+        title={isTaken ? 'Dose completed (Click to toggle)' : 'Click to mark dose as taken'}
+      >
+        <FontAwesomeIcon
+          icon={isTaken ? faCheck : faClock}
+          className={`text-lg ${isTaken ? 'text-emerald-600 stroke-[3]' : 'text-blue-600'}`}
+        />
+      </button>
 
-        {/* Physical Toggle Switch */}
-        <button
-          onClick={handleToggle}
-          type="button"
-          role="switch"
-          aria-checked={isTaken}
-          className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-[#151922] border border-white/[0.12] transition-colors duration-200 focus:outline-none"
-          title={isTaken ? 'Click to mark as pending' : 'Click to mark as taken'}
-        >
-          <span
-            className={`pointer-events-none inline-flex h-4 w-4 transform items-center justify-center rounded-full transition duration-200 ease-in-out ${
-              isTaken
-                ? 'translate-x-6 bg-[#FF5733] text-white'
-                : 'translate-x-1 bg-slate-500 text-transparent'
-            }`}
-          >
-            {isTaken && <FontAwesomeIcon icon={faCheck} className="text-[9px]" />}
-          </span>
-        </button>
-      </div>
-
-      {/* Card Center: Icon squircle, Name, Time & Dosage */}
-      <div className="flex flex-col items-center justify-center text-center my-3 w-full">
-        <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all bg-[#151922] border border-white/[0.08] ${
-            isTaken ? 'text-[#FF5733]' : 'text-slate-300'
-          }`}
-        >
-          {item.imageUri ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.imageUri} alt={item.name} className="w-9 h-9 rounded-lg object-cover" />
-          ) : (
-            <FontAwesomeIcon icon={faCapsules} className="text-lg" />
-          )}
-        </div>
-
-        <h4
-          className="font-semibold text-white tracking-[-0.01em] text-sm mt-2.5 truncate w-full text-center px-1"
-          title={item.name}
-        >
+      {/* 2. CENTER MEDICATION DETAILS (MATCHES image/3.png & image/6.png) */}
+      <div className="flex-1 min-w-0">
+        <h4 className="font-bold text-slate-900 text-sm sm:text-base leading-snug truncate">
           {item.name}
         </h4>
 
-        <p className="text-xs text-slate-300 font-normal leading-relaxed mt-0.5 text-center truncate w-full px-1">
-          {item.scheduledTime} - {item.dosage}
+        {/* Pill Stock Chip with Pencil */}
+        <div className="flex items-center gap-2 mt-1">
+          <span className="bg-blue-50/80 border border-blue-200/60 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1.5">
+            <FontAwesomeIcon icon={faPills} className="text-[10px]" />
+            <span>{item.stockCount ?? 60} pills</span>
+            <FontAwesomeIcon icon={faPencil} className="text-[9px] text-blue-500" />
+          </span>
+        </div>
+
+        {/* Dosage Info */}
+        <p className="text-slate-500 text-xs font-medium mt-1">
+          {item.dosage} • Take 1 pill
         </p>
+
+        {/* Taken / Scheduled Status Text */}
+        <p
+          className={`text-xs font-medium mt-0.5 ${
+            isTaken ? 'text-emerald-600' : 'text-slate-400'
+          }`}
+        >
+          {isTaken
+            ? `Taken at ${item.takenAt || item.scheduledTime}`
+            : `Scheduled at ${item.scheduledTime}`}
+        </p>
+
+        {/* Dietary / Clinical Note Chip with Pencil */}
+        <button
+          type="button"
+          onClick={() => onOpenNoteModal?.(item)}
+          className="bg-blue-50/60 hover:bg-blue-100/70 border border-blue-100 text-blue-700 text-[11px] font-medium rounded-lg px-2.5 py-1 mt-2 inline-flex items-center gap-1.5 transition-colors cursor-pointer text-left"
+          title="Edit intake instruction or clinical observation note"
+        >
+          <FontAwesomeIcon icon={faUtensils} className="text-[10px] text-blue-600" />
+          <span className="truncate max-w-[200px]">
+            {item.notes || 'Taken with breakfast'}
+          </span>
+          <FontAwesomeIcon icon={faPencil} className="text-[9px] text-blue-500" />
+        </button>
       </div>
 
-      {/* Footer: Stock pill and clinical note icon */}
-      <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.06] text-xs">
-        <span
-          className={`px-2.5 py-0.5 rounded-md border font-mono tabular-nums text-xs font-medium ${
-            (item.stockCount ?? 30) <= 5
-              ? 'bg-amber-500/15 border-amber-500/30 text-amber-300 animate-pulse'
-              : 'bg-[#151922] border-white/[0.08] text-slate-200'
-          }`}
-          title={(item.stockCount ?? 30) <= 5 ? 'Low stock! Say "Alexa, order refill"' : undefined}
-        >
-          {(item.stockCount ?? 30) <= 5 ? `⚠️ ${item.stockCount ?? 30} left` : `${item.stockCount ?? 30} pills left`}
-        </span>
-
-        <button
-          onClick={() => onOpenNoteModal?.(item)}
-          className={`p-1.5 rounded-lg transition-colors flex items-center justify-center ${
-            item.notes
-              ? 'bg-[#FF5733]/15 text-[#FF5733] border border-[#FF5733]/30'
-              : 'text-slate-400 hover:text-white hover:bg-white/[0.06]'
-          }`}
-          title={item.notes ? `Clinical note: ${item.notes}` : 'Add clinical note'}
-        >
-          <FontAwesomeIcon icon={faNotesMedical} className="text-xs" />
-        </button>
+      {/* 3. RIGHT STATUS BADGE / ACTION BUTTON (MATCHES image/3.png & image/6.png) */}
+      <div className="shrink-0 flex items-center">
+        {isTaken ? (
+          <button
+            type="button"
+            onClick={handleToggle}
+            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-3.5 sm:px-4 py-2 rounded-full text-xs flex items-center gap-1.5 border border-emerald-200/60 shadow-2xs active:scale-95 transition-all"
+            title="Mark as pending"
+          >
+            <FontAwesomeIcon icon={faCheck} className="text-xs" />
+            <span>Taken</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleToggle}
+            className="bg-[#1E3A8A] hover:bg-[#1E40AF] text-white font-bold px-3.5 sm:px-4 py-2 rounded-full text-xs shadow-sm active:scale-95 transition-all flex items-center gap-1.5"
+            title="Mark dose as completed"
+          >
+            <FontAwesomeIcon icon={faCheck} className="text-xs" />
+            <span>Mark Taken</span>
+          </button>
+        )}
       </div>
     </div>
   );
