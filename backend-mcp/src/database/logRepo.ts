@@ -5,6 +5,7 @@ export type LogStatus = 'pending' | 'taken' | 'skipped';
 
 export interface DailyLogItem {
   logId: string;
+  userId?: string;
   medicineId: string;
   name: string;
   dosage: string;
@@ -33,25 +34,24 @@ export const LogRepo = {
   /**
    * Scan medication schedule and automatically generate intake logs for dateStr if not already present
    */
-  async generateLogsForDate(dateStr: string): Promise<void> {
+  async generateLogsForDate(dateStr: string, userId?: string): Promise<void> {
     const db = getDatabase();
     const [year, month, day] = dateStr.split('-').map(Number);
     const targetDate = new Date(year, month - 1, day);
     const dayCode = DAY_MAP[targetDate.getDay()];
 
-    const allMeds = await MedicineRepo.getAllMedicines();
+    const allMeds = await MedicineRepo.getAllMedicines(userId);
     if (allMeds.length === 0) return;
 
     const insertStmt = db.prepare(`
-      INSERT OR IGNORE INTO intake_logs (id, medicine_id, date, time, status, taken_at, created_at)
-      VALUES (?, ?, ?, ?, 'pending', NULL, ?)
+      INSERT OR IGNORE INTO intake_logs (id, user_id, medicine_id, date, time, status, taken_at, created_at)
+      VALUES (?, ?, ?, ?, ?, 'pending', NULL, ?)
     `);
 
     const insertBatch = db.transaction(() => {
       for (const med of allMeds) {
         const medStartDate = med.createdAt.split('T')[0];
-
-        if (!med.daysOfWeek.includes('ALL') && dateStr < medStartDate) {
+        if (dateStr < medStartDate) {
           continue;
         }
 
@@ -61,9 +61,10 @@ export const LogRepo = {
 
         if (isScheduledToday) {
           for (const time of med.reminderTimes) {
-            const logId = `log_${dateStr}_${med.id}_${time.replace(':', '')}`;
+            const effectiveUserId = userId || med.userId || 'usr_demo';
+            const logId = `log_${effectiveUserId}_${dateStr}_${med.id}_${time.replace(':', '')}`;
             const now = new Date().toISOString();
-            insertStmt.run(logId, med.id, dateStr, time, now);
+            insertStmt.run(logId, effectiveUserId, med.id, dateStr, time, now);
           }
         }
       }
@@ -75,13 +76,14 @@ export const LogRepo = {
   /**
    * Retrieve detailed intake logs for a specific date joined with medication information
    */
-  async getLogsByDate(dateStr: string): Promise<DailyLogItem[]> {
+  async getLogsByDate(dateStr: string, userId?: string): Promise<DailyLogItem[]> {
     const db = getDatabase();
-    await this.generateLogsForDate(dateStr);
+    await this.generateLogsForDate(dateStr, userId);
 
     const query = `
       SELECT 
         l.id as logId,
+        l.user_id as userId,
         m.id as medicineId,
         m.name as name,
         m.dosage as dosage,
@@ -95,14 +97,17 @@ export const LogRepo = {
         l.notes as notes
       FROM intake_logs l
       INNER JOIN medicines m ON l.medicine_id = m.id
-      WHERE l.date = ?
+      WHERE l.date = ? ${userId ? 'AND l.user_id = ?' : ''}
       ORDER BY l.time ASC, m.name ASC
     `;
 
-    const rows = db.prepare(query).all(dateStr) as any[];
+    const rows = userId
+      ? (db.prepare(query).all(dateStr, userId) as any[])
+      : (db.prepare(query).all(dateStr) as any[]);
 
     return rows.map((r) => ({
       logId: r.logId,
+      userId: r.userId,
       medicineId: r.medicineId,
       name: r.name,
       dosage: r.dosage,
@@ -160,11 +165,12 @@ export const LogRepo = {
     }
   },
 
-  async getAllLogs(): Promise<DailyLogItem[]> {
+  async getAllLogs(userId?: string): Promise<DailyLogItem[]> {
     const db = getDatabase();
     const query = `
       SELECT 
         l.id as logId,
+        l.user_id as userId,
         m.id as medicineId,
         m.name as name,
         m.dosage as dosage,
@@ -177,12 +183,17 @@ export const LogRepo = {
         l.notes as notes
       FROM intake_logs l
       INNER JOIN medicines m ON l.medicine_id = m.id
+      ${userId ? 'WHERE l.user_id = ?' : ''}
       ORDER BY l.date DESC, l.time ASC
     `;
 
-    const rows = db.prepare(query).all() as any[];
+    const rows = userId
+      ? (db.prepare(query).all(userId) as any[])
+      : (db.prepare(query).all() as any[]);
+
     return rows.map((r) => ({
       logId: r.logId,
+      userId: r.userId,
       medicineId: r.medicineId,
       name: r.name,
       dosage: r.dosage,
