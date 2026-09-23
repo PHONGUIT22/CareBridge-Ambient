@@ -10,19 +10,22 @@ import { mcpClient } from '../services/mcpClient';
 import { VitalsRecord } from '../types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faCapsules,
   faShieldHalved,
+  faUser,
   faMoon,
+  faCrown,
   faPlus,
-  faBolt,
+  faCalendarDays,
+  faChevronLeft,
+  faChevronRight,
+  faClock,
   faHeartPulse,
   faDroplet,
-  faClock,
-  faCrown,
-  faShieldCat,
+  faBolt,
+  faPencil,
+  faCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { GuardianSelector } from '../components/GuardianSelector';
-import { soundFxService } from '../services/soundFxService';
 
 interface TodayScheduleViewProps {
   onSwitchToDeskMode?: () => void;
@@ -47,7 +50,6 @@ export function TodayScheduleView({
     schedule,
     vitals,
     caregiverName,
-    adherenceRate,
     toggleDoseStatus,
     saveNote,
     recordVitals,
@@ -57,6 +59,7 @@ export function TodayScheduleView({
   const [activeNoteItem, setActiveNoteItem] = useState<MedicineCardItem | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isVitalsModalOpen, setIsVitalsModalOpen] = useState(false);
+  const [selectedDayIndex, setSelectedDayIndex] = useState(3); // Default to Friday 11
 
   useEffect(() => {
     refetch();
@@ -90,56 +93,69 @@ export function TodayScheduleView({
   const totalCount = schedule.length || 1;
   const calculatedAdherence = Math.round((takenCount / totalCount) * 100);
 
-  return (
-    <div className="min-h-full text-white p-4 font-sans select-none pb-28">
-      <div className="max-w-2xl mx-auto flex flex-col gap-5">
-        {/* 1. TOP HEADER: BRANDING & CAREGIVER BADGE */}
-        <div className="flex items-center justify-between h-12 pt-1">
-          <div className="flex items-center gap-3">
-            {/* Tactile Hardware Logo Icon */}
-            <div className="w-8 h-8 rounded-xl bg-[#FF5733] flex items-center justify-center text-white shadow-sm">
-              <FontAwesomeIcon icon={faCapsules} className="text-sm" />
-            </div>
+  // 5-day calendar selector strip items (matches image/3.png & image/6.png)
+  const calendarDays = [
+    { dayNumber: 8, weekday: 'TUE' },
+    { dayNumber: 9, weekday: 'WED' },
+    { dayNumber: 10, weekday: 'THU' },
+    { dayNumber: 11, weekday: 'FRI' },
+    { dayNumber: 12, weekday: 'SAT' },
+    { dayNumber: 13, weekday: 'SUN' },
+  ];
 
-            <div className="flex flex-col justify-center">
-              <div className="flex items-center gap-2 leading-none">
-                <span className="text-xs font-semibold tracking-wide text-white">
-                  CareBridge Ambient
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium">
-                  Live
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1 leading-none font-normal">
-                <FontAwesomeIcon icon={faShieldHalved} className="text-slate-400 text-xs" />
-                <span>Caregiver: {caregiverName}</span>
-              </p>
-            </div>
+  // SVG Gauge calculations
+  const radius = 28;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (calculatedAdherence / 100) * circumference;
+
+  return (
+    <div className="min-h-full bg-[#F8FAFC] text-slate-900 p-4 sm:p-5 font-sans select-none pb-28">
+      <div className="max-w-xl mx-auto flex flex-col gap-4">
+        {/* 1. TOP HEADER BAR (MATCHES image/3.png & image/6.png) */}
+        <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
+          {/* Left: CAREGIVER VIEW & Sarah Jenkins Pills */}
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold shadow-2xs">
+              <FontAwesomeIcon icon={faShieldHalved} className="text-[10px]" />
+              <span>CAREGIVER VIEW</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold shadow-2xs">
+              <FontAwesomeIcon icon={faUser} className="text-[10px]" />
+              <span>Sarah Jenkins</span>
+            </span>
           </div>
 
-          {/* Action buttons */}
+          {/* Right: Desk, Pro Status, and Add Button */}
           <div className="flex items-center gap-2">
             <button
               onClick={onSwitchToDeskMode}
-              className="w-9 h-9 rounded-xl bg-[#1E2330] border border-white/[0.08] hover:border-white/20 text-slate-300 hover:text-white alexa-card-interactive flex items-center justify-center transition-colors shadow-sm"
-              title="Switch to Bedside Desk Clock"
+              className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-800 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs active:scale-95"
+              title="Switch to Senior Bedside Nightstand Mode"
             >
-              <FontAwesomeIcon icon={faMoon} className="text-xs" />
+              <FontAwesomeIcon icon={faMoon} className="text-xs text-sky-600" />
+              <span>Desk</span>
             </button>
-            {onOpenPaywall && (
+
+            {isPro ? (
               <button
                 onClick={onOpenPaywall}
-                className={`px-3 h-9 rounded-xl font-medium text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 ${
-                  isPro
-                    ? 'bg-[#FF5733]/15 border border-[#FF5733]/35 text-[#FF5733]'
-                    : 'bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
-                }`}
-                title={isPro ? 'CareBridge Pro Active' : 'Upgrade to Clinical Pro'}
+                className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs"
+                title="CareBridge Pro Active"
               >
-                <FontAwesomeIcon icon={faCrown} className="text-xs" />
-                <span>{isPro ? 'Pro active' : 'Free (Upgrade)'}</span>
+                <FontAwesomeIcon icon={faCrown} className="text-xs text-emerald-600" />
+                <span>PRO ACTIVE</span>
+              </button>
+            ) : (
+              <button
+                onClick={onOpenPaywall}
+                className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs"
+                title="Upgrade to CareBridge Pro"
+              >
+                <FontAwesomeIcon icon={faCrown} className="text-xs text-amber-600" />
+                <span>UPGRADE PRO</span>
               </button>
             )}
+
             <button
               onClick={() => {
                 if (!isPro && schedule.length >= 2) {
@@ -149,146 +165,198 @@ export function TodayScheduleView({
                 if (onOpenAddModal) onOpenAddModal();
                 else setIsAddModalOpen(true);
               }}
-              className="px-3.5 h-9 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] text-white font-medium text-xs shadow-sm active:scale-95 transition-all flex items-center gap-1.5"
-              title={!isPro && schedule.length >= 2 ? 'Free tier limit reached (2 slots max). Upgrade to Pro.' : 'Add new medication regimen'}
+              className="w-8 h-8 rounded-xl bg-[#1E3A8A] hover:bg-[#1E40AF] text-white flex items-center justify-center font-bold text-sm shadow-sm active:scale-95 transition-all"
+              title="Add new medication"
             >
               <FontAwesomeIcon icon={faPlus} className="text-xs" />
-              <span>Add</span>
             </button>
           </div>
         </div>
 
-        {/* 2. BIOMETRIC TELEMETRY CARDS */}
-        <div>
-          <div className="flex items-center justify-between mb-2.5">
-            <h3 className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
-              <span>Biometric Telemetry</span>
-            </h3>
+        {/* Dynamic Big Date Title */}
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
+          Friday, Sep 11
+        </h1>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsVitalsModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1E2330] hover:bg-[#252B3B] border border-white/[0.1] text-slate-200 text-xs font-medium transition-colors shadow-sm active:scale-95"
-              >
-                <FontAwesomeIcon icon={faPlus} className="text-xs" />
-                <span>Log Vitals</span>
-              </button>
+        {/* 2. HERO COMPLIANCE GRADIENT CARD (MATCHES image/3.png & image/6.png) */}
+        <div className="bg-gradient-to-br from-[#1E40AF] via-[#1E3A8A] to-[#2563EB] text-white rounded-[28px] p-5 sm:p-6 shadow-[0_10px_25px_rgba(30,58,138,0.22)] relative overflow-hidden">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-sky-200 font-mono">
+                  DAILY COMPLIANCE
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white mt-1">
+                Good Morning, Sarah
+              </h2>
+              <p className="text-xs sm:text-sm text-sky-100 mt-0.5 font-medium">
+                {takenCount} of {totalCount} doses completed
+              </p>
+            </div>
+
+            {/* Circular Progress Ring Gauge */}
+            <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
+              <svg className="w-20 h-20 -rotate-90 transform" viewBox="0 0 72 72">
+                {/* Background track circle */}
+                <circle
+                  cx="36"
+                  cy="36"
+                  r={radius}
+                  stroke="rgba(255, 255, 255, 0.2)"
+                  strokeWidth="5"
+                  fill="transparent"
+                />
+                {/* Progress bar circle */}
+                <circle
+                  cx="36"
+                  cy="36"
+                  r={radius}
+                  stroke="#38BDF8"
+                  strokeWidth="5"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  fill="transparent"
+                  className="transition-all duration-700 ease-out"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span className="text-base sm:text-lg font-extrabold text-white leading-none">
+                  {calculatedAdherence}%
+                </span>
+                <span className="text-[8px] font-bold text-sky-200 tracking-wider mt-0.5">
+                  ADHERENCE
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            {/* Card 1: Blood Pressure */}
+          {/* Bottom Vitals Row inside Hero Card */}
+          <div className="flex items-center gap-2 mt-5 pt-3 border-t border-white/15 flex-wrap">
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-[#1E2330] border border-white/[0.08] rounded-2xl p-3.5 flex flex-col justify-between alexa-card-interactive group text-left cursor-pointer hover:border-white/15"
+              className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white rounded-xl px-2.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-300">
-                  Blood Pressure
-                </span>
-                <div className="w-7 h-7 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-slate-300">
-                  <FontAwesomeIcon icon={faHeartPulse} className="text-xs text-slate-300" />
-                </div>
-              </div>
-              <div className="mt-2.5 flex items-baseline">
-                <span className="text-2xl font-mono font-bold tabular-nums text-white">
-                  {vitals?.systolic && vitals?.diastolic
-                    ? `${vitals.systolic}/${vitals.diastolic}`
-                    : '122/82'}
-                </span>
-                <span className="text-xs font-mono text-slate-400 ml-1.5">mmHg</span>
-              </div>
+              <FontAwesomeIcon icon={faHeartPulse} className="text-rose-300 text-xs" />
+              <span>{vitals?.systolic ? `${vitals.systolic}/${vitals.diastolic}` : '123/82'} BP</span>
             </button>
 
-            {/* Card 2: Blood Sugar */}
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-[#1E2330] border border-white/[0.08] rounded-2xl p-3.5 flex flex-col justify-between alexa-card-interactive group text-left cursor-pointer hover:border-white/15"
+              className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white rounded-xl px-2.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-300">
-                  Blood Sugar
-                </span>
-                <div className="w-7 h-7 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-slate-300">
-                  <FontAwesomeIcon icon={faDroplet} className="text-xs text-slate-300" />
-                </div>
-              </div>
-              <div className="mt-2.5 flex items-baseline">
-                <span className="text-2xl font-mono font-bold tabular-nums text-white">
-                  {vitals?.bloodSugar ?? '106.8'}
-                </span>
-                <span className="text-xs font-mono text-slate-400 ml-1.5">mg/dL</span>
-              </div>
+              <FontAwesomeIcon icon={faDroplet} className="text-sky-300 text-xs" />
+              <span>{vitals?.bloodSugar ?? '94.1'} Sugar</span>
             </button>
 
-            {/* Card 3: Heart Rate */}
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-[#1E2330] border border-white/[0.08] rounded-2xl p-3.5 flex flex-col justify-between alexa-card-interactive group text-left cursor-pointer hover:border-white/15"
+              className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white rounded-xl px-2.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-300">
-                  Heart Rate
-                </span>
-                <div className="w-7 h-7 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-slate-300">
-                  <FontAwesomeIcon icon={faHeartPulse} className="text-xs text-slate-300" />
-                </div>
-              </div>
-              <div className="mt-2.5 flex items-baseline">
-                <span className="text-2xl font-mono font-bold tabular-nums text-white">
-                  {vitals?.heartRate ?? '71'}
-                </span>
-                <span className="text-xs font-mono text-slate-400 ml-1.5">BPM</span>
-              </div>
+              <FontAwesomeIcon icon={faBolt} className="text-emerald-300 text-xs" />
+              <span>{vitals?.heartRate ?? '75'} BPM</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsVitalsModalOpen(true)}
+              className="bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-semibold flex items-center gap-1 transition-colors ml-auto cursor-pointer"
+            >
+              <FontAwesomeIcon icon={faPencil} className="text-[10px]" />
+              <span>+ Log</span>
             </button>
           </div>
         </div>
 
-        {/* 3. TACTILE INDUSTRIAL PROGRESS BAR */}
-        <div className="p-4 rounded-2xl bg-[#1E2330] border border-white/[0.08] shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-300">
-              Today&apos;s progress
-            </span>
-            <span className="text-sm font-mono font-bold tabular-nums text-[#FF5733]">
-              {adherenceRate !== undefined ? adherenceRate : calculatedAdherence}%
-            </span>
+        {/* 3. 5-DAY CALENDAR SELECTOR STRIP (MATCHES image/3.png & image/6.png) */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+              September 2026
+            </h3>
+            <button
+              type="button"
+              className="bg-blue-50/80 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+            >
+              <FontAwesomeIcon icon={faCalendarDays} className="text-xs" />
+              <span>View Calendar</span>
+            </button>
           </div>
 
-          <div className="h-2 w-full bg-white/[0.08] rounded-full overflow-hidden mt-3">
-            <div
-              className="h-full bg-[#FF5733] rounded-full transition-all duration-500"
-              style={{
-                width: `${adherenceRate !== undefined ? adherenceRate : calculatedAdherence}%`,
-              }}
-            />
-          </div>
+          <div className="flex items-center justify-between gap-1 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedDayIndex((prev) => Math.max(0, prev - 1))}
+              className="p-1.5 text-slate-400 hover:text-slate-700 transition-colors"
+            >
+              <FontAwesomeIcon icon={faChevronLeft} className="text-xs" />
+            </button>
 
-          <div className="mt-2.5 flex items-center justify-between text-xs text-slate-300 font-normal">
-            <span>
-              {takenCount} of {totalCount} doses completed
-            </span>
-            <span className="text-xs text-slate-400 font-mono">
-              {calculatedAdherence === 100 ? 'All doses completed' : `${totalCount - takenCount} remaining today`}
-            </span>
+            <div className="flex-1 flex items-center justify-around gap-1.5">
+              {calendarDays.map((item, idx) => {
+                const isSelected = selectedDayIndex === idx;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedDayIndex(idx)}
+                    className={`rounded-2xl p-2 sm:p-2.5 w-12 sm:w-14 flex flex-col items-center justify-center transition-all ${
+                      isSelected
+                        ? 'bg-[#1E3A8A] text-white shadow-md scale-105'
+                        : 'bg-white border border-slate-200/80 text-slate-700 hover:border-blue-300 shadow-2xs'
+                    }`}
+                  >
+                    <span className="text-base sm:text-lg font-bold leading-tight">
+                      {item.dayNumber}
+                    </span>
+                    <span
+                      className={`text-[10px] font-semibold tracking-wider mt-0.5 ${
+                        isSelected ? 'text-sky-200' : 'text-slate-500'
+                      }`}
+                    >
+                      {item.weekday}
+                    </span>
+                    <span
+                      className={`text-[10px] font-black leading-none mt-1 ${
+                        isSelected ? 'text-sky-300' : 'text-blue-900'
+                      }`}
+                    >
+                      ••
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedDayIndex((prev) => Math.min(calendarDays.length - 1, prev + 1))
+              }
+              className="p-1.5 text-slate-400 hover:text-slate-700 transition-colors"
+            >
+              <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
+            </button>
           </div>
         </div>
 
-        {/* FREE TIER RESTRICTION WARNING BANNER */}
+        {/* FREE TIER NOTICE BANNER */}
         {!isPro && (
-          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between text-xs animate-fadeIn">
-            <div className="flex items-center gap-2.5 text-amber-300">
-              <FontAwesomeIcon icon={faCrown} className="text-amber-400" />
+          <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between text-xs text-amber-900">
+            <div className="flex items-center gap-2">
+              <FontAwesomeIcon icon={faCrown} className="text-amber-600 text-sm" />
               <span>
-                <strong>Free Tier Active:</strong> Limited to 2 prescription slots ({schedule.length}/2 slots used).
+                <strong>Free Tier Active:</strong> Limited to 2 prescriptions ({schedule.length}/2 slots used).
               </span>
             </div>
             <button
               onClick={onOpenPaywall}
-              className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold text-xs transition-colors shrink-0 shadow-sm active:scale-95"
+              className="px-2.5 py-1 rounded-lg bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-xs shrink-0 transition-colors shadow-2xs"
             >
               Unlock Pro
             </button>
@@ -296,45 +364,34 @@ export function TodayScheduleView({
         )}
 
         {/* ACTIVE HEALTH GUARDIAN BEHAVIORAL INTERVENTION SELECTOR */}
-        <div className="p-4 rounded-2xl bg-[#1E2330] border border-white/[0.08] shadow-sm">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4">
           <GuardianSelector />
         </div>
 
-        {/* 4. TODAY'S SCHEDULE (2-COLUMN RESPONSIVE GRID) */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-white tracking-[-0.01em] text-sm">
-                Today&apos;s Schedule
-              </h3>
-              <span className="px-2 py-0.5 rounded-md bg-[#151922] border border-white/[0.08] text-xs font-mono font-medium text-slate-300">
-                {schedule.length} total
-              </span>
+        {/* 4. MEDICATION SCHEDULE LIST (MATCHES image/3.png & image/6.png) */}
+        <div>
+          <div className="flex items-center justify-between mt-2 mb-3">
+            <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+              <FontAwesomeIcon icon={faClock} className="text-[#1E3A8A] text-sm" />
+              <span>08:00</span>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onTriggerGuardianRefusal?.('Amlodipine (Norvasc) 5mg')}
-                className="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
-                title="Test Refusal: Engage active AI Guardian persuasion flow"
-              >
-                <span>🛡️ Test Refusal</span>
-              </button>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium">
-                {takenCount} taken
-              </span>
-              <span className="px-2 py-0.5 rounded-md bg-[#FF5733]/15 border border-[#FF5733]/30 text-[#FF5733] text-xs font-mono font-medium">
-                {schedule.length - takenCount} pending
-              </span>
-            </div>
+
+            <button
+              type="button"
+              onClick={() => onTriggerGuardianRefusal?.('Amlodipine (Norvasc) 5mg')}
+              className="px-3 py-1 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-2xs active:scale-95"
+              title="Test Refusal: Engage active AI Guardian persuasion flow"
+            >
+              <span>🛡️ Test Refusal</span>
+            </button>
           </div>
 
           {schedule.length === 0 ? (
-            <div className="bg-[#1E2330] border border-white/[0.08] rounded-2xl p-6 text-center text-slate-400 text-xs">
+            <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-8 text-center text-slate-400 text-xs">
               No medications scheduled for today.
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-3">
               {[...schedule]
                 .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime))
                 .map((item) => (
@@ -353,7 +410,7 @@ export function TodayScheduleView({
         </div>
       </div>
 
-      {/* DOSE NOTE MODAL */}
+      {/* MODALS */}
       <DoseNoteModal
         isOpen={!!activeNoteItem}
         onClose={() => setActiveNoteItem(null)}
@@ -363,14 +420,12 @@ export function TodayScheduleView({
         initialNote={activeNoteItem?.notes || ''}
       />
 
-      {/* ADD NEW MEDICATION MODAL */}
       <AddMedicineModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddMedicine}
       />
 
-      {/* LOG VITALS MODAL (+ LOG) */}
       <LogVitalsModal
         isOpen={isVitalsModalOpen}
         onClose={() => setIsVitalsModalOpen(false)}
