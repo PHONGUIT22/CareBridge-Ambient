@@ -12,8 +12,8 @@ import {
   faCapsules,
   faShieldHalved,
   faChevronRight,
-  faHeartPulse,
   faBan,
+  faHeartPulse,
 } from '@fortawesome/free-solid-svg-icons';
 import confetti from 'canvas-confetti';
 import { GuardianSelector } from '../components/GuardianSelector';
@@ -53,7 +53,7 @@ export function DeskModeView({
     fetchSchedule();
   }, [refreshTrigger, fetchSchedule]);
 
-  // Automatically find next pending dose based on real time
+  // Find next pending dose
   const upcomingDose = useMemo(() => {
     const pendingList = schedule.filter((s) => s.status === 'pending');
     if (pendingList.length === 0) return null;
@@ -61,14 +61,13 @@ export function DeskModeView({
     const now = new Date();
     const currentHourMin = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    // Find nearest upcoming pending dose (preferring upcoming or closest overdue)
     const sorted = [...pendingList].sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
     const nextAfterNow = sorted.find((s) => s.scheduledTime >= currentHourMin);
 
     return nextAfterNow || sorted[0];
   }, [schedule]);
 
-  const totalDoses = schedule.length || 1;
+  const totalDoses = schedule.length || 4;
   const completedDoses = schedule.filter((s) => s.status === 'taken').length;
   const progressPercent = Math.round((completedDoses / totalDoses) * 100);
 
@@ -94,7 +93,6 @@ export function DeskModeView({
     const takingLogId = upcomingDose.logId;
     const medName = upcomingDose.name;
 
-    // Instant optimistic status update
     setSchedule((prev) =>
       prev.map((item) =>
         item.logId === takingLogId
@@ -118,95 +116,99 @@ export function DeskModeView({
   };
 
   return (
-    <div className="min-h-full text-white flex flex-col justify-between p-4 sm:p-6 select-none overflow-hidden font-sans">
-      {/* 1. TOP STATUS BAR */}
-      <div className="flex items-center justify-between w-full max-w-lg mx-auto pt-2">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1E2330] border border-white/[0.08] text-slate-300 text-xs font-medium shadow-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-          <span>Ambient Nightstand</span>
+    <div className="min-h-full bg-[#050811] text-white flex flex-col justify-between p-4 sm:p-6 select-none font-sans pb-28">
+      {/* 1. TOP STATUS BAR (MATCHES image/8.png) */}
+      <div className="flex items-center justify-between w-full max-w-lg mx-auto pt-1">
+        {/* Senior Nightstand Mode Chip */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-teal-400 text-xs font-semibold shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+          <span>SENIOR NIGHTSTAND MODE</span>
         </div>
 
+        {/* Caregiver Hub Button */}
         <button
           onClick={onSwitchToCaregiver}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1E2330] hover:bg-[#252B3B] text-slate-300 hover:text-white text-xs font-medium transition-colors border border-white/[0.08] shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition-colors border border-slate-800 shadow-sm"
         >
-          <FontAwesomeIcon icon={faShieldHalved} className="text-xs text-[#FF5733]" />
+          <FontAwesomeIcon icon={faShieldHalved} className="text-xs text-sky-400" />
           <span>Caregiver Hub</span>
           <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
         </button>
       </div>
 
-      {/* 2. SENIOR CLOCK */}
-      <div className="my-auto py-6">
+      {/* 2. GIANT HARDWARE CLOCK (MATCHES image/8.png) */}
+      <div className="my-auto py-8">
         <SeniorClock />
       </div>
 
-      {/* 3. UPCOMING DOSE CARD & ACTION BUTTON */}
-      <div className="w-full max-w-lg mx-auto flex flex-col gap-4 pb-4">
-        {/* Active Health Guardian Persona Selector */}
-        <div className="bg-[#1E2330] rounded-2xl p-3 border border-white/[0.08] shadow-sm">
-          <GuardianSelector compact />
-        </div>
-
-        {/* Compliance Progress Track */}
-        <div className="bg-[#1E2330] rounded-2xl p-3.5 border border-white/[0.08] shadow-sm">
-          <div className="flex items-center justify-between text-xs font-medium mb-2">
-            <span className="text-slate-300">Today&apos;s adherence</span>
-            <span className="text-white font-mono tabular-nums font-bold">
-              {completedDoses} / {totalDoses} doses ({progressPercent}%)
+      {/* 3. ADHERENCE & UPCOMING DOSE CARDS (MATCHES image/8.png) */}
+      <div className="w-full max-w-lg mx-auto flex flex-col gap-4">
+        {/* Compliance Progress Track Card (image/8.png) */}
+        <div className="bg-[#0B1528] rounded-2xl p-4 border border-blue-900/40 shadow-sm">
+          <div className="flex items-center justify-between text-xs font-bold mb-2">
+            <span className="text-slate-400 tracking-wider uppercase font-mono text-[11px]">
+              TODAY&apos;S ADHERENCE
+            </span>
+            <span className="text-sky-400 font-mono tabular-nums">
+              {completedDoses} / {totalDoses} Doses
             </span>
           </div>
-          <div className="w-full h-2 bg-white/[0.08] rounded-full overflow-hidden">
+          <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#FF5733] transition-all duration-500 rounded-full"
+              className="h-full bg-[#10B981] transition-all duration-500 rounded-full"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
 
-        {/* Next Dose Card or Completed Notice */}
+        {/* Active Health Guardian Persona Selector */}
+        <div className="bg-[#0B1528] rounded-2xl p-3 border border-blue-900/40 shadow-sm">
+          <GuardianSelector compact />
+        </div>
+
+        {/* Next Dose Card (image/8.png) */}
         {upcomingDose ? (
-          <div className="bg-[#1E2330] rounded-2xl p-5 border border-[#FF5733] shadow-sm">
+          <div className="border-2 border-blue-600/50 bg-[#0B1528] rounded-[24px] p-5 sm:p-6 shadow-xl relative">
             <div className="flex items-start justify-between gap-3 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-[#151922] border border-white/[0.08] flex items-center justify-center text-[#FF5733] shrink-0">
-                  <FontAwesomeIcon icon={faCapsules} className="text-lg" />
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                  <FontAwesomeIcon icon={faCapsules} className="text-xl" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-[#FF5733]">
-                    Upcoming dose at {upcomingDose.scheduledTime}
+                  <p className="text-xs font-bold text-amber-400 uppercase tracking-wider font-mono">
+                    UPCOMING DOSE AT {upcomingDose.scheduledTime}
                   </p>
-                  <h2 className="text-xl sm:text-2xl font-semibold text-white mt-0.5 tracking-[-0.01em]">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mt-0.5 tracking-tight">
                     {upcomingDose.name}
                   </h2>
-                  <p className="text-xs text-slate-300 font-normal leading-relaxed">{upcomingDose.dosage}</p>
+                  <p className="text-xs text-slate-400 font-medium mt-0.5">{upcomingDose.dosage} • Take 1 pill</p>
                 </div>
               </div>
 
-              {/* Alexa TTS Read-Aloud Button */}
+              {/* Alexa Audio Speaker Button */}
               <button
                 onClick={handleSpeakMedicine}
-                className="w-11 h-11 rounded-xl bg-[#151922] hover:bg-[#252B3B] text-slate-300 hover:text-white border border-white/[0.08] flex items-center justify-center transition-colors active:scale-95 shrink-0 shadow-sm"
-                title="Hear Alexa read medication name"
+                className="w-11 h-11 rounded-2xl bg-blue-600/30 text-sky-400 border border-blue-500/40 hover:bg-blue-600/50 flex items-center justify-center transition-colors active:scale-95 shrink-0"
+                title="Hear Alexa read medication reminder"
               >
                 <FontAwesomeIcon icon={faVolumeHigh} className="text-base" />
               </button>
             </div>
 
-            {/* Tactile Signal Coral Button */}
+            {/* Giant Emerald Tactile Action Button: I TOOK MY PILL (image/8.png) */}
             <button
               onClick={handleTakePill}
-              className="w-full py-4 rounded-xl bg-[#FF5733] hover:bg-[#E64D2E] text-white font-semibold text-base tracking-normal flex items-center justify-center gap-2.5 shadow-sm active:scale-[0.98] transition-all"
+              className="w-full py-4 sm:py-5 rounded-2xl bg-[#10B981] hover:bg-[#059669] text-white font-black text-lg sm:text-xl tracking-wide flex items-center justify-center gap-3 shadow-[0_4px_25px_rgba(16,185,129,0.45)] active:scale-[0.98] transition-all"
             >
-              <FontAwesomeIcon icon={faCheck} className="text-lg" />
-              <span>I Took My Pill</span>
+              <FontAwesomeIcon icon={faCheck} className="text-xl stroke-[3]" />
+              <span>I TOOK MY PILL</span>
             </button>
 
-            {/* Skip Dose Guardian Negotiation Trigger Button */}
+            {/* Skip Dose Guardian Negotiation Button */}
             <button
               type="button"
               onClick={() => onTriggerGuardianRefusal?.(upcomingDose.name)}
-              className="w-full mt-2.5 py-3 rounded-xl bg-[#151922] hover:bg-rose-500/15 text-rose-300 hover:text-rose-200 text-xs font-semibold tracking-normal flex items-center justify-center gap-2 border border-rose-500/30 active:scale-[0.98] transition-all"
+              className="w-full mt-3 py-2.5 rounded-xl bg-transparent hover:bg-rose-500/10 text-rose-300 hover:text-rose-200 text-xs font-semibold flex items-center justify-center gap-2 border border-rose-500/30 active:scale-[0.98] transition-all"
               title="Trigger AI Health Guardian refusal negotiation flow"
             >
               <FontAwesomeIcon icon={faBan} className="text-xs text-rose-400" />
@@ -214,13 +216,13 @@ export function DeskModeView({
             </button>
           </div>
         ) : (
-          <div className="bg-[#1E2330] rounded-2xl p-6 text-center border border-white/[0.08] shadow-sm">
+          <div className="bg-[#0B1528] rounded-[24px] p-6 text-center border border-blue-900/40 shadow-sm">
             <FontAwesomeIcon
               icon={faHeartPulse}
-              className="text-3xl text-[#FF5733] mx-auto mb-2"
+              className="text-3xl text-emerald-400 mx-auto mb-2"
             />
-            <h3 className="text-base font-semibold text-white tracking-[-0.01em]">All Medications Completed</h3>
-            <p className="text-xs text-slate-300 mt-1 font-normal leading-relaxed">
+            <h3 className="text-base font-bold text-white tracking-tight">All Medications Completed</h3>
+            <p className="text-xs text-slate-400 mt-1 font-normal">
               All {schedule.length} scheduled doses for today are logged. Rest well!
             </p>
           </div>
