@@ -8,6 +8,7 @@ import {
   faPencil,
   faClock,
   faUtensils,
+  faTrashCan,
 } from '@fortawesome/free-solid-svg-icons';
 import confetti from 'canvas-confetti';
 
@@ -17,6 +18,7 @@ export interface MedicineCardItem {
   name: string;
   dosage: string;
   scheduledTime: string;
+  date?: string;
   status: 'pending' | 'taken' | 'skipped';
   isTaken: boolean;
   takenAt?: string;
@@ -26,21 +28,34 @@ export interface MedicineCardItem {
   type?: 'medication' | 'routine';
 }
 
+export const isFutureDose = (dateStr?: string, scheduledTime?: string): boolean => {
+  if (!dateStr || !scheduledTime) return false;
+  const now = new Date();
+  const doseDateTime = new Date(`${dateStr}T${scheduledTime}:00`);
+  return doseDateTime.getTime() > now.getTime();
+};
+
 interface MedicineCardProps {
   item: MedicineCardItem;
   onToggleStatus: (logId: string, currentStatus: 'pending' | 'taken' | 'skipped') => void;
   onOpenNoteModal?: (item: MedicineCardItem) => void;
   onRefillStock?: (medicineId: string) => void;
+  onEdit?: (item: MedicineCardItem) => void;
+  onDelete?: (medicineId: string) => void;
 }
 
 export function MedicineCard({
   item,
   onToggleStatus,
   onOpenNoteModal,
+  onEdit,
+  onDelete,
 }: MedicineCardProps) {
   const isTaken = item.status === 'taken';
+  const isFuture = isFutureDose(item.date, item.scheduledTime) && item.status === 'pending';
 
   const handleToggle = () => {
+    if (isFuture) return;
     if (!isTaken) {
       try {
         confetti({
@@ -59,33 +74,77 @@ export function MedicineCard({
       {/* 1. LEFT STATUS CIRCLE BADGE (MATCHES image/3.png & image/6.png) */}
       <button
         type="button"
+        disabled={isFuture}
         onClick={handleToggle}
-        className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90 ${
-          isTaken
-            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/60'
-            : 'bg-blue-50 text-blue-600 border border-blue-200/60 hover:bg-blue-100'
+        className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-transform ${
+          isFuture
+            ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-75'
+            : isTaken
+            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/60 active:scale-90'
+            : 'bg-blue-50 text-blue-600 border border-blue-200/60 hover:bg-blue-100 active:scale-90'
         }`}
-        title={isTaken ? 'Dose completed (Click to toggle)' : 'Click to mark dose as taken'}
+        title={
+          isFuture
+            ? 'Upcoming (Scheduled)'
+            : isTaken
+            ? 'Dose completed (Click to toggle)'
+            : 'Click to mark dose as taken'
+        }
       >
         <FontAwesomeIcon
           icon={isTaken ? faCheck : faClock}
-          className={`text-lg ${isTaken ? 'text-emerald-600 stroke-[3]' : 'text-blue-600'}`}
+          className={`text-lg ${
+            isFuture ? 'text-slate-400' : isTaken ? 'text-emerald-600 stroke-[3]' : 'text-blue-600'
+          }`}
         />
       </button>
 
       {/* 2. CENTER MEDICATION DETAILS (MATCHES image/3.png & image/6.png) */}
       <div className="flex-1 min-w-0">
-        <h4 className="font-bold text-slate-900 text-sm sm:text-base leading-snug truncate">
-          {item.name}
-        </h4>
+        <div className="flex items-center justify-between gap-2">
+          <h4 className="font-bold text-slate-900 text-sm sm:text-base leading-snug truncate">
+            {item.name}
+          </h4>
+          <div className="flex items-center gap-1 shrink-0">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(item)}
+                className="w-7 h-7 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors cursor-pointer"
+                title="Edit prescription"
+              >
+                <FontAwesomeIcon icon={faPencil} className="text-xs" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm(`Are you sure you want to delete this prescription (${item.name})?`)) {
+                    onDelete(item.medicineId);
+                  }
+                }}
+                className="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
+                title="Delete prescription"
+              >
+                <FontAwesomeIcon icon={faTrashCan} className="text-xs" />
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Pill Stock Chip with Pencil */}
         <div className="flex items-center gap-2 mt-1">
-          <span className="bg-blue-50/80 border border-blue-200/60 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => onEdit?.(item)}
+            className="bg-blue-50/80 border border-blue-200/60 text-blue-700 hover:bg-blue-100 text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Edit stock or prescription details"
+          >
             <FontAwesomeIcon icon={faPills} className="text-[10px]" />
             <span>{item.stockCount ?? 60} pills</span>
             <FontAwesomeIcon icon={faPencil} className="text-[9px] text-blue-500" />
-          </span>
+          </button>
         </div>
 
         {/* Dosage Info */}
@@ -101,6 +160,8 @@ export function MedicineCard({
         >
           {isTaken
             ? `Taken at ${item.takenAt || item.scheduledTime}`
+            : isFuture
+            ? `Upcoming • ${item.scheduledTime}`
             : `Scheduled at ${item.scheduledTime}`}
         </p>
 
@@ -130,6 +191,16 @@ export function MedicineCard({
           >
             <FontAwesomeIcon icon={faCheck} className="text-xs" />
             <span>Taken</span>
+          </button>
+        ) : isFuture ? (
+          <button
+            type="button"
+            disabled
+            className="bg-slate-100 border border-slate-200 text-slate-400 font-semibold px-3.5 sm:px-4 py-2 rounded-full text-xs flex items-center gap-1.5 cursor-not-allowed opacity-80"
+            title="Upcoming (Scheduled)"
+          >
+            <FontAwesomeIcon icon={faClock} className="text-xs text-slate-400" />
+            <span>Upcoming</span>
           </button>
         ) : (
           <button

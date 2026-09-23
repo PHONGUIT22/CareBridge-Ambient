@@ -16,10 +16,13 @@ import {
 import { mcpClient } from '../services/mcpClient';
 
 export interface AuthSession {
+  userId?: string;
   isAuthenticated: boolean;
   user: string;
+  email?: string;
   role: 'senior' | 'caregiver';
   isPro: boolean;
+  isDemo?: boolean;
 }
 
 interface AuthGateProps {
@@ -41,30 +44,69 @@ export function AuthGate({ onLogin }: AuthGateProps) {
     onLogin(session);
   };
 
-  const handleSignIn = async (role: 'caregiver' | 'senior' = 'caregiver') => {
+  const handleSignIn = async (
+    role: 'caregiver' | 'senior' = 'caregiver',
+    overrideEmail?: string,
+    overridePin?: string
+  ) => {
     setIsLoading(true);
-    setStatusMessage('Syncing clinical records...');
+    setStatusMessage('Authenticating...');
+
+    const targetEmail = (overrideEmail !== undefined ? overrideEmail : email).trim();
+    const targetPin = (overridePin !== undefined ? overridePin : passcode).trim();
 
     try {
-      await mcpClient.triggerDataSeed().catch(() => {});
-    } catch (_) {}
-
-    setTimeout(() => {
-      const session: AuthSession = {
-        isAuthenticated: true,
-        user: role === 'senior' ? 'Eleanor Vance (Senior)' : 'Sarah Connor (Caregiver)',
+      const res = await mcpClient.login({
+        email: targetEmail,
+        pin: targetPin,
         role,
-        isPro: true,
+      });
+
+      if (res.success && res.user) {
+        const session: AuthSession = {
+          userId: res.user.id,
+          isAuthenticated: true,
+          user: res.user.name || (res.user.role === 'senior' ? `${res.user.email} (Senior)` : `${res.user.email} (Caregiver)`),
+          email: res.user.email,
+          role,
+          isPro: res.user.isPro,
+          isDemo: res.user.isDemo,
+        };
+        saveAndCompleteSession(session);
+      } else {
+        setStatusMessage('Authentication failed.');
+      }
+    } catch (err: any) {
+      console.warn('Backend login fallback:', err.message);
+      // Fallback in case backend server is temporarily unreachable
+      const isDemo = targetEmail.toLowerCase() === 'demo@gmail.com' && targetPin === '1234';
+      const fallbackUserId = isDemo ? 'usr_demo' : `usr_${Date.now()}`;
+      const session: AuthSession = {
+        userId: fallbackUserId,
+        isAuthenticated: true,
+        user: isDemo
+          ? (role === 'senior' ? 'Eleanor Vance (Senior)' : 'Sarah Connor (Caregiver)')
+          : `${targetEmail} (${role === 'senior' ? 'Senior' : 'Caregiver'})`,
+        email: targetEmail,
+        role,
+        isPro: isDemo,
+        isDemo,
       };
       saveAndCompleteSession(session);
+    } finally {
       setIsLoading(false);
-    }, 400);
+    }
   };
 
   const handleQuickFill = () => {
     setEmail('demo@gmail.com');
     setPasscode('1234');
-    handleSignIn('caregiver');
+    handleSignIn('caregiver', 'demo@gmail.com', '1234');
+  };
+
+  const handleGuestSignIn = () => {
+    const guestEmail = `guest_${Math.random().toString(36).substring(2, 7)}@carebridge.local`;
+    handleSignIn('caregiver', guestEmail, '');
   };
 
   return (
@@ -226,7 +268,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
         {/* Guest Caregiver Button (image/2.png) */}
         <button
           type="button"
-          onClick={() => handleSignIn('caregiver')}
+          onClick={handleGuestSignIn}
           disabled={isLoading}
           className="w-full p-3 sm:p-3.5 rounded-xl bg-blue-50/40 hover:bg-blue-50/80 border border-blue-200/60 flex items-center justify-between text-left transition-all active:scale-[0.98] group"
         >
@@ -253,7 +295,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
         <div className="mt-4 pt-3 border-t border-slate-100 text-center">
           <button
             type="button"
-            onClick={() => handleSignIn('senior')}
+            onClick={() => handleSignIn('senior', email, passcode)}
             className="text-xs font-semibold text-slate-500 hover:text-[#1E3A8A] transition-colors inline-flex items-center gap-1.5"
           >
             <FontAwesomeIcon icon={faMoon} className="text-xs text-sky-600" />

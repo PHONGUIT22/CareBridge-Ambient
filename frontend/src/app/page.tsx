@@ -88,7 +88,7 @@ export default function Home() {
     setAuthSession(session);
     addToast({
       type: 'success',
-      title: `Welcome, ${session.role === 'caregiver' ? 'Sarah' : 'Eleanor'}!`,
+      title: `Welcome, ${session.user}!`,
       message: session.isPro
         ? 'CareBridge Ambient Pro Activated (Unlimited Sync & AWS SNS Alerts).'
         : 'CareBridge Ambient Ready (Evaluator Mode).',
@@ -515,6 +515,7 @@ export default function Home() {
                     refreshTrigger={refreshTrigger}
                     onDoseToggled={triggerGlobalRefresh}
                     onSwitchToDeskMode={() => setActiveTab('deskClock')}
+                    onSwitchToHistory={() => setActiveTab('history')}
                     onOpenPaywall={() => setIsPaywallOpen(true)}
                     onTriggerGuardianRefusal={handleTriggerGuardianRefusal}
                     isPro={Boolean(authSession?.isPro)}

@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MedicineCard, MedicineCardItem } from '../components/MedicineCard';
 import { DoseNoteModal } from '../components/DoseNoteModal';
 import { AddMedicineModal } from '../components/AddMedicineModal';
+import { EditMedicineModal } from '../components/EditMedicineModal';
 import { LogVitalsModal } from '../components/LogVitalsModal';
 import { useMedicines } from '../hooks/useMedicines';
 import { mcpClient } from '../services/mcpClient';
@@ -24,11 +25,15 @@ import {
   faBolt,
   faPencil,
   faCircle,
+  faXmark,
+  faTableCells,
 } from '@fortawesome/free-solid-svg-icons';
 import { GuardianSelector } from '../components/GuardianSelector';
+import { getLocalDateString } from '../utils/dateUtils';
 
 interface TodayScheduleViewProps {
   onSwitchToDeskMode?: () => void;
+  onSwitchToHistory?: () => void;
   onOpenAddModal?: () => void;
   onOpenPaywall?: () => void;
   onDoseToggled?: () => void;
@@ -39,6 +44,7 @@ interface TodayScheduleViewProps {
 
 export function TodayScheduleView({
   onSwitchToDeskMode,
+  onSwitchToHistory,
   onOpenAddModal,
   onOpenPaywall,
   onDoseToggled,
@@ -46,6 +52,10 @@ export function TodayScheduleView({
   refreshTrigger = 0,
   isPro = false,
 }: TodayScheduleViewProps) {
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(() => {
+    return getLocalDateString();
+  });
+
   const {
     schedule,
     vitals,
@@ -54,12 +64,14 @@ export function TodayScheduleView({
     saveNote,
     recordVitals,
     refetch,
-  } = useMedicines();
+  } = useMedicines(selectedDateStr);
 
   const [activeNoteItem, setActiveNoteItem] = useState<MedicineCardItem | null>(null);
+  const [editingMedicine, setEditingMedicine] = useState<MedicineCardItem | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isVitalsModalOpen, setIsVitalsModalOpen] = useState(false);
-  const [selectedDayIndex, setSelectedDayIndex] = useState(3); // Default to Friday 11
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [stripOffset, setStripOffset] = useState(0);
 
   useEffect(() => {
     refetch();
@@ -85,6 +97,31 @@ export function TodayScheduleView({
     }
   };
 
+  const handleUpdateMedicine = async (updated: {
+    name: string;
+    dosage: string;
+    reminderTimes: string[];
+    daysOfWeek: string[];
+    stockCount: number;
+  }) => {
+    if (!editingMedicine) return;
+    try {
+      await mcpClient.updateMedicine(editingMedicine.medicineId, updated);
+      await refetch();
+    } catch (e) {
+      console.error('Failed to update medicine:', e);
+    }
+  };
+
+  const handleDeleteMedicine = async (medicineId: string) => {
+    try {
+      await mcpClient.deleteMedicine(medicineId);
+      await refetch();
+    } catch (e) {
+      console.error('Failed to delete medicine:', e);
+    }
+  };
+
   const handleSaveVitals = async (newVitals: Partial<VitalsRecord>) => {
     await recordVitals(newVitals);
   };
@@ -93,15 +130,48 @@ export function TodayScheduleView({
   const totalCount = schedule.length || 1;
   const calculatedAdherence = Math.round((takenCount / totalCount) * 100);
 
-  // 5-day calendar selector strip items (matches image/3.png & image/6.png)
-  const calendarDays = [
-    { dayNumber: 8, weekday: 'TUE' },
-    { dayNumber: 9, weekday: 'WED' },
-    { dayNumber: 10, weekday: 'THU' },
-    { dayNumber: 11, weekday: 'FRI' },
-    { dayNumber: 12, weekday: 'SAT' },
-    { dayNumber: 13, weekday: 'SUN' },
-  ];
+  // Dynamic 6-day calendar strip centered on current date (today - 2 to today + 3 when stripOffset = 0)
+  const calendarDays = useMemo(() => {
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() + stripOffset - 2 + i);
+      const dayNumber = d.getDate();
+      const weekday = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+      const dateStr = getLocalDateString(d);
+      const isToday = d.toDateString() === new Date().toDateString();
+      return {
+        date: d,
+        dayNumber,
+        weekday,
+        dateStr,
+        isToday,
+      };
+    });
+  }, [stripOffset]);
+
+  const bigDateTitle = useMemo(() => {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+    });
+  }, []);
+
+  const heroDateSubtitle = useMemo(() => {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, []);
+
+  const stripMonthYear = useMemo(() => {
+    const centerDate = calendarDays[2]?.date || new Date();
+    return centerDate.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    });
+  }, [calendarDays]);
 
   // SVG Gauge calculations
   const radius = 28;
@@ -175,7 +245,7 @@ export function TodayScheduleView({
 
         {/* Dynamic Big Date Title */}
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
-          Friday, Sep 11
+          {bigDateTitle}
         </h1>
 
         {/* 2. HERO COMPLIANCE GRADIENT CARD (MATCHES image/3.png & image/6.png) */}
@@ -273,15 +343,17 @@ export function TodayScheduleView({
           </div>
         </div>
 
-        {/* 3. 5-DAY CALENDAR SELECTOR STRIP (MATCHES image/3.png & image/6.png) */}
+        {/* 3. DYNAMIC 6-DAY CALENDAR SELECTOR STRIP */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-slate-900 text-sm sm:text-base">
-              September 2026
+              {stripMonthYear}
             </h3>
             <button
               type="button"
-              className="bg-blue-50/80 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+              onClick={() => setIsCalendarModalOpen(true)}
+              className="bg-blue-50/80 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95 shadow-2xs"
+              title="Open full monthly calendar & adherence schedule"
             >
               <FontAwesomeIcon icon={faCalendarDays} className="text-xs" />
               <span>View Calendar</span>
@@ -291,23 +363,26 @@ export function TodayScheduleView({
           <div className="flex items-center justify-between gap-1 sm:gap-2">
             <button
               type="button"
-              onClick={() => setSelectedDayIndex((prev) => Math.max(0, prev - 1))}
+              onClick={() => setStripOffset((prev) => prev - 3)}
               className="p-1.5 text-slate-400 hover:text-slate-700 transition-colors"
+              title="Shift 3 days earlier"
             >
               <FontAwesomeIcon icon={faChevronLeft} className="text-xs" />
             </button>
 
             <div className="flex-1 flex items-center justify-around gap-1.5">
-              {calendarDays.map((item, idx) => {
-                const isSelected = selectedDayIndex === idx;
+              {calendarDays.map((item) => {
+                const isSelected = item.dateStr === selectedDateStr;
                 return (
                   <button
-                    key={idx}
+                    key={item.dateStr}
                     type="button"
-                    onClick={() => setSelectedDayIndex(idx)}
+                    onClick={() => setSelectedDateStr(item.dateStr)}
                     className={`rounded-2xl p-2 sm:p-2.5 w-12 sm:w-14 flex flex-col items-center justify-center transition-all ${
                       isSelected
                         ? 'bg-[#1E3A8A] text-white shadow-md scale-105'
+                        : item.isToday
+                        ? 'bg-blue-50 border-2 border-[#1E3A8A] text-[#1E3A8A] shadow-2xs font-bold'
                         : 'bg-white border border-slate-200/80 text-slate-700 hover:border-blue-300 shadow-2xs'
                     }`}
                   >
@@ -323,7 +398,7 @@ export function TodayScheduleView({
                     </span>
                     <span
                       className={`text-[10px] font-black leading-none mt-1 ${
-                        isSelected ? 'text-sky-300' : 'text-blue-900'
+                        isSelected ? 'text-sky-300' : item.isToday ? 'text-[#1E3A8A]' : 'text-blue-900'
                       }`}
                     >
                       ••
@@ -335,10 +410,9 @@ export function TodayScheduleView({
 
             <button
               type="button"
-              onClick={() =>
-                setSelectedDayIndex((prev) => Math.min(calendarDays.length - 1, prev + 1))
-              }
+              onClick={() => setStripOffset((prev) => prev + 3)}
               className="p-1.5 text-slate-400 hover:text-slate-700 transition-colors"
+              title="Shift 3 days later"
             >
               <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
             </button>
@@ -370,7 +444,22 @@ export function TodayScheduleView({
 
         {/* 4. MEDICATION SCHEDULE LIST (MATCHES image/3.png & image/6.png) */}
         <div>
-          <div className="flex items-center justify-between mt-2 mb-3">
+          {/* Schedule Section Title with Prescriptions vs Doses Badge */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold text-slate-900 tracking-tight">
+                Medication Schedule
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[#1E3A8A] text-xs font-bold shadow-2xs">
+                4 Prescriptions • 5 Daily Doses
+              </span>
+            </div>
+            <span className="text-xs text-slate-500 font-medium">
+              {takenCount} of {totalCount} completed
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between mt-1 mb-3">
             <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
               <FontAwesomeIcon icon={faClock} className="text-[#1E3A8A] text-sm" />
               <span>08:00</span>
@@ -403,6 +492,8 @@ export function TodayScheduleView({
                       if (onDoseToggled) onDoseToggled();
                     }}
                     onOpenNoteModal={(selected) => setActiveNoteItem(selected)}
+                    onEdit={(selected) => setEditingMedicine(selected)}
+                    onDelete={handleDeleteMedicine}
                   />
                 ))}
             </div>
@@ -426,12 +517,147 @@ export function TodayScheduleView({
         onAdd={handleAddMedicine}
       />
 
+      <EditMedicineModal
+        isOpen={!!editingMedicine}
+        onClose={() => setEditingMedicine(null)}
+        medicine={editingMedicine}
+        onSave={handleUpdateMedicine}
+      />
+
       <LogVitalsModal
         isOpen={isVitalsModalOpen}
         onClose={() => setIsVitalsModalOpen(false)}
         onSave={handleSaveVitals}
         currentVitals={vitals}
       />
+
+      {/* 4. FULL MONTH CALENDAR MODAL */}
+      {isCalendarModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-[28px] border border-slate-200/80 shadow-2xl w-full max-w-sm overflow-hidden flex flex-col p-5">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#1E3A8A] border border-blue-200 flex items-center justify-center text-sm font-bold">
+                  <FontAwesomeIcon icon={faCalendarDays} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium">Monthly Medication Timeline</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCalendarModalOpen(false)}
+                className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors"
+              >
+                <FontAwesomeIcon icon={faXmark} className="text-xs" />
+              </button>
+            </div>
+
+            {/* Weekday headers */}
+            <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
+              {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((day) => (
+                <div key={day} className="text-[11px] font-bold text-slate-400 py-0.5">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Days grid dynamically calculated for current month */}
+            {(() => {
+              const now = new Date();
+              const year = now.getFullYear();
+              const month = now.getMonth();
+              const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+              const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; // Monday = 0
+              const todayDateNum = now.getDate();
+
+              return (
+                <div className="grid grid-cols-7 gap-1 text-center mb-4">
+                  {/* Empty cells before day 1 */}
+                  {Array.from({ length: firstDayIndex }).map((_, i) => (
+                    <div key={`empty-${i}`} className="p-1" />
+                  ))}
+
+                  {Array.from({ length: totalDaysInMonth }, (_, i) => i + 1).map((dayNum) => {
+                    const padMonth = String(month + 1).padStart(2, '0');
+                    const padDay = String(dayNum).padStart(2, '0');
+                    const cellDateStr = `${year}-${padMonth}-${padDay}`;
+                    const isSelected = cellDateStr === selectedDateStr;
+                    const isToday = dayNum === todayDateNum;
+                    const isPast = dayNum < todayDateNum;
+
+                    return (
+                      <button
+                        key={dayNum}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDateStr(cellDateStr);
+                          const dayDiff = Math.round(
+                            (new Date(year, month, dayNum).getTime() - new Date(year, month, todayDateNum).getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          );
+                          setStripOffset(dayDiff);
+                          setIsCalendarModalOpen(false);
+                        }}
+                        className={`h-9 rounded-xl flex flex-col items-center justify-center transition-all text-xs font-semibold relative ${
+                          isSelected
+                            ? 'bg-[#1E3A8A] text-white shadow-sm font-bold scale-105'
+                            : isToday
+                            ? 'bg-blue-50 text-blue-900 border border-blue-300 font-bold'
+                            : 'text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>{dayNum}</span>
+                        <span
+                          className={`w-1 h-1 rounded-full -mt-0.5 ${
+                            isSelected
+                              ? 'bg-sky-300'
+                              : isPast
+                              ? 'bg-emerald-500'
+                              : isToday
+                              ? 'bg-blue-600'
+                              : 'bg-slate-200'
+                          }`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* Legend & Action */}
+            <div className="pt-3 border-t border-slate-100 flex flex-col gap-2.5">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Past (100% Taken)
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600" /> Today (Active)
+                </span>
+              </div>
+
+              {onSwitchToHistory && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCalendarModalOpen(false);
+                    onSwitchToHistory();
+                  }}
+                  className="w-full bg-[#1E3A8A] hover:bg-[#1E40AF] text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
+                >
+                  <FontAwesomeIcon icon={faTableCells} className="text-xs" />
+                  <span>Open Full 30-Day History Matrix</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

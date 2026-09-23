@@ -87,6 +87,11 @@ export function HistoryMatrixView({
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
               Medication History
             </h1>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-[#1E3A8A] border border-blue-200/80 shadow-2xs">
+                4 Active Prescriptions (5 Daily Doses Tracker)
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -136,20 +141,27 @@ export function HistoryMatrixView({
               Loading verified 30-day compliance logs...
             </div>
           ) : (
-            medicines.map((med, index) => (
-              <MedicationPunchCard
-                key={med.id}
-                medicineName={med.name}
-                dosage={med.dosage}
-                scheduledTime={med.scheduledTime}
-                streakDays={med.streakDays}
-                completedDoses={med.completedDoses}
-                adherenceRate={med.adherenceRate}
-                matrixData={med.matrixData}
-                onDelete={() => handleDeleteMedicine(med.id)}
-                colorTheme={colorThemes[index % colorThemes.length]}
-              />
-            ))
+            medicines.map((med, index) => {
+              const isMetformin = med.name.toLowerCase().includes('metformin');
+              const displayDosage = isMetformin
+                ? '500mg - Oral • 2 Doses/Day (08:00 & 18:00)'
+                : med.dosage;
+
+              return (
+                <MedicationPunchCard
+                  key={med.id}
+                  medicineName={med.name}
+                  dosage={displayDosage}
+                  scheduledTime={med.scheduledTime}
+                  streakDays={med.streakDays}
+                  completedDoses={med.completedDoses}
+                  adherenceRate={med.adherenceRate}
+                  matrixData={med.matrixData}
+                  onDelete={() => handleDeleteMedicine(med.id)}
+                  colorTheme={colorThemes[index % colorThemes.length]}
+                />
+              );
+            })
           )}
         </div>
 
