@@ -2,8 +2,19 @@
 
 export type LogStatus = 'pending' | 'taken' | 'skipped';
 
+export interface UserRecord {
+  id: string;
+  email: string;
+  pin?: string | null;
+  role: 'caregiver' | 'senior';
+  is_pro: number;
+  is_demo: number;
+  created_at: string;
+}
+
 export interface MedicineRecord {
   id: string;
+  userId?: string;
   name: string;
   dosage: string;
   reminderTimes: string[];
@@ -16,6 +27,7 @@ export interface MedicineRecord {
 
 export interface DailyLogItem {
   logId: string;
+  userId?: string;
   medicineId: string;
   name: string;
   dosage: string;
@@ -31,6 +43,7 @@ export interface DailyLogItem {
 }
 
 export interface VitalsRecord {
+  userId?: string;
   date: string;
   systolic?: number | null;
   diastolic?: number | null;

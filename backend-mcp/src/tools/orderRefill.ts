@@ -48,16 +48,16 @@ export const orderRefillTool = {
     },
   },
 
-  async handler(args: { medicineName: string; quantity?: number }): Promise<AmazonRefillOrderResult | any> {
+  async handler(args: { medicineName: string; quantity?: number; userId?: string }): Promise<AmazonRefillOrderResult | any> {
     const quantity = args.quantity && args.quantity > 0 ? Number(args.quantity) : 30;
     const query = args.medicineName ? args.medicineName.trim() : '';
 
     // 1. Locate medication in database records
-    let matchedMed = await MedicineRepo.findByName(query);
+    let matchedMed = await MedicineRepo.findByName(query, args.userId);
 
     // Fallback: if not found by exact name, locate first low-stock medicine
     if (!matchedMed) {
-      const allMeds = await MedicineRepo.getAllMedicines();
+      const allMeds = await MedicineRepo.getAllMedicines(args.userId);
       matchedMed = allMeds.find((m) => m.stockCount <= 5) || allMeds[0] || null;
     }
 

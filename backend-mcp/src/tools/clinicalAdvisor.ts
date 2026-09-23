@@ -3,6 +3,7 @@ import { MedicineRepo } from '../database/medicineRepo.js';
 import { VitalsRepo } from '../database/vitalsRepo.js';
 import { CaregiverRepo } from '../database/caregiverRepo.js';
 import { sendEmergencySMS, SendSMSResult } from '../aws/snsClient.js';
+import { getLocalDateString } from '../utils/dateUtils.js';
 
 export const clinicalAdvisorTool = {
   definition: {
@@ -21,7 +22,7 @@ export const clinicalAdvisorTool = {
   },
 
   async handler(args: { query: string }) {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateString();
 
     // Collect patient's real clinical context from database
     const [medicines, vitals] = await Promise.all([

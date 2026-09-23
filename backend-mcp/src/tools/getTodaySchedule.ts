@@ -1,4 +1,5 @@
 import { LogRepo, DailyLogItem } from '../database/logRepo.js';
+import { getLocalDateString } from '../utils/dateUtils.js';
 
 export const getTodayScheduleTool = {
   definition: {
@@ -16,9 +17,9 @@ export const getTodayScheduleTool = {
     },
   },
 
-  async handler(args: { date?: string }) {
-    const targetDate = args.date || new Date().toISOString().split('T')[0];
-    const logs: DailyLogItem[] = await LogRepo.getLogsByDate(targetDate);
+  async handler(args: { date?: string; userId?: string }) {
+    const targetDate = args.date || getLocalDateString();
+    const logs: DailyLogItem[] = await LogRepo.getLogsByDate(targetDate, args.userId);
 
     const total = logs.length;
     const taken = logs.filter((l) => l.status === 'taken').length;

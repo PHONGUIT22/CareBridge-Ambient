@@ -8,6 +8,7 @@ import { orderRefillTool } from '../src/tools/orderRefill.js';
 import { ringDeviceHubTool } from '../src/tools/ringDeviceHub.js';
 import { checkDrugInteractions } from '../src/services/drugInteractionService.js';
 import { negotiateAdherenceTool, GUARDIAN_PERSONAS } from '../src/tools/negotiateAdherence.js';
+import { getLocalDateString } from '../src/utils/dateUtils.js';
 
 describe('CareBridge Ambient Core MCP Tools Suite', () => {
   beforeAll(async () => {
@@ -18,7 +19,7 @@ describe('CareBridge Ambient Core MCP Tools Suite', () => {
   // TEST 1: getTodaySchedule calculates accurate adherence rate & next dose
   describe('Tool: getTodaySchedule', () => {
     it('calculates accurate adherence rate and returns daily schedule array', async () => {
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = getLocalDateString();
       const result = await getTodayScheduleTool.handler({ date: todayStr });
 
       expect(result).toBeDefined();

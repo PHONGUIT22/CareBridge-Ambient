@@ -1,6 +1,7 @@
 import { LogRepo } from '../database/logRepo.js';
 import { MedicineRepo } from '../database/medicineRepo.js';
 import { getDatabase } from '../database/db.js';
+import { getLocalDateString } from '../utils/dateUtils.js';
 
 export const logDoseStatusTool = {
   definition: {
@@ -31,15 +32,15 @@ export const logDoseStatusTool = {
     },
   },
 
-  async handler(args: { logId?: string; medicineName?: string; status?: 'taken' | 'skipped' | 'pending'; notes?: string }) {
-    const todayStr = new Date().toISOString().split('T')[0];
+  async handler(args: { userId?: string; logId?: string; medicineName?: string; status?: 'taken' | 'skipped' | 'pending'; notes?: string }) {
+    const todayStr = getLocalDateString();
     const status = args.status || 'taken';
     let targetLogId = args.logId;
     let matchedMedName = args.medicineName || 'Medication';
 
     // If logId is not explicitly provided, find the most relevant pending dose today
     if (!targetLogId) {
-      const todayLogs = await LogRepo.getLogsByDate(todayStr);
+      const todayLogs = await LogRepo.getLogsByDate(todayStr, args.userId);
 
       if (args.medicineName) {
         const found = todayLogs.find(

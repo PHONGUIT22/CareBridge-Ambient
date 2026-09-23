@@ -1,4 +1,5 @@
 import { VitalsRepo } from '../database/vitalsRepo.js';
+import { getLocalDateString } from '../utils/dateUtils.js';
 
 export const recordVitalsTool = {
   definition: {
@@ -17,18 +18,20 @@ export const recordVitalsTool = {
   },
 
   async handler(args: {
+    userId?: string;
     systolic?: number;
     diastolic?: number;
     bloodSugar?: number;
     heartRate?: number;
     date?: string;
   }) {
-    const targetDate = args.date || new Date().toISOString().split('T')[0];
+    const targetDate = args.date || getLocalDateString();
 
     // Merge with existing vitals for the date to preserve previously entered metrics
-    const existing = await VitalsRepo.getVitalsByDate(targetDate);
+    const existing = await VitalsRepo.getVitalsByDate(targetDate, args.userId);
 
     const mergedRecord = {
+      userId: args.userId,
       date: targetDate,
       systolic: args.systolic !== undefined ? args.systolic : existing?.systolic,
       diastolic: args.diastolic !== undefined ? args.diastolic : existing?.diastolic,
