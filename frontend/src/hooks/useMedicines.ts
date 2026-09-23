@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { mcpClient } from '../services/mcpClient';
 import { DailyLogItem, VitalsRecord, LogStatus } from '../types';
+import { getLocalDateString } from '../utils/dateUtils';
 
-export function useMedicines() {
+export function useMedicines(dateStr?: string) {
   const [schedule, setSchedule] = useState<DailyLogItem[]>([]);
   const [vitals, setVitals] = useState<VitalsRecord | null>(null);
   const [caregiverName, setCaregiverName] = useState<string>('Sarah Connor (Daughter)');
@@ -15,7 +16,7 @@ export function useMedicines() {
   const fetchSchedule = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await mcpClient.getTodayData();
+      const data = await mcpClient.getSchedule(dateStr);
       if (data.schedule) {
         setSchedule(data.schedule);
       }
@@ -37,7 +38,7 @@ export function useMedicines() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [dateStr]);
 
   useEffect(() => {
     fetchSchedule();
@@ -121,21 +122,22 @@ export function useMedicines() {
   }, []);
 
   const recordVitals = useCallback(async (newVitals: Partial<VitalsRecord>) => {
+    const targetDate = dateStr || getLocalDateString();
     setVitals((prev) => ({
-      date: new Date().toISOString().split('T')[0],
+      date: targetDate,
       updatedAt: new Date().toISOString(),
       ...prev,
       ...newVitals,
     }));
 
     try {
-      await mcpClient.recordVitals(newVitals);
-      const fresh = await mcpClient.getTodayData();
+      await mcpClient.recordVitals({ ...newVitals, date: newVitals.date || targetDate });
+      const fresh = await mcpClient.getSchedule(dateStr);
       if (fresh?.vitals) setVitals(fresh.vitals);
     } catch (err) {
       console.warn('Failed to persist vitals.');
     }
-  }, []);
+  }, [dateStr]);
 
   const mutate = useCallback(
     (updater: (prev: DailyLogItem[]) => DailyLogItem[]) => {

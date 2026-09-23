@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { mcpClient } from '../services/mcpClient';
 import { DailyLogItem, VitalsRecord, MedicineRecord } from '../types';
 import { PunchMatrixCell } from '../components/MedicationPunchCard';
+import { getLocalDateString } from '../utils/dateUtils';
 
 export interface MedicineHeatmapItem {
   id: string;
@@ -28,7 +29,6 @@ export function useHeatmap() {
     try {
       setLoading(true);
       setError(null);
-
       const [historyData, medicinesData] = await Promise.all([
         mcpClient.getHistory(),
         mcpClient.getMedicines(),
@@ -43,13 +43,13 @@ export function useHeatmap() {
 
       // Generate 56-day date list (7 days * 8 weeks) ending today
       const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
+      const todayStr = getLocalDateString(today);
       const dateList: string[] = [];
 
       for (let i = 56 - 1; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(today.getDate() - i);
-        dateList.push(d.toISOString().split('T')[0]);
+        dateList.push(getLocalDateString(d));
       }
 
       // Compute 8-week matrix and stats for every medicine
@@ -62,22 +62,31 @@ export function useHeatmap() {
         );
 
         // 1. Calculate streak days backwards from today
+        // A day is ONLY completed if all scheduled doses for that day are taken
         let streak = 0;
         let streakBroken = false;
 
         for (let i = dateList.length - 1; i >= 0; i--) {
-          const date = dateList[i];
-          const logsForDay = medLogs.filter((l) => l.date === date);
+          const dateStr = dateList[i];
+          const dayLogs = medLogs.filter((l) => l.date === dateStr);
+          const isFullyTaken = dayLogs.length > 0 && dayLogs.every((l) => l.status === 'taken');
+          const isPartiallyMissed =
+            dayLogs.some((l) => l.status === 'skipped') ||
+            (dateStr < todayStr && dayLogs.some((l) => l.status === 'pending'));
 
-          if (logsForDay.length > 0) {
-            const hasTaken = logsForDay.some((l) => l.status === 'taken');
-            if (hasTaken) {
+          if (dayLogs.length > 0) {
+            if (isFullyTaken) {
               if (!streakBroken) streak++;
-            } else if (date < todayStr) {
+            } else if (dateStr < todayStr || isPartiallyMissed) {
               streakBroken = true;
             }
-          } else if (date < todayStr && medLogs.some((l) => l.date < date)) {
-            streakBroken = true;
+          } else if (dateStr < todayStr && medLogs.some((l) => l.date < dateStr)) {
+            const [y, m, dNum] = dateStr.split('-').map(Number);
+            const dayCode = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][new Date(y, m - 1, dNum).getDay()];
+            const isScheduledDay = med.daysOfWeek?.includes('ALL') || med.daysOfWeek?.includes(dayCode);
+            if (isScheduledDay) {
+              streakBroken = true;
+            }
           }
         }
 
@@ -95,15 +104,14 @@ export function useHeatmap() {
           const weekIdx = Math.floor(idx / 7);
           const isToday = dateStr === todayStr;
           const dayLogs = medLogs.filter((l) => l.date === dateStr);
+          const isFullyTaken = dayLogs.length > 0 && dayLogs.every((l) => l.status === 'taken');
 
           let status: 'taken' | 'missed' | 'empty' | 'today' = 'empty';
 
           if (isToday) {
-            const isTakenToday = dayLogs.some((l) => l.status === 'taken');
-            status = isTakenToday ? 'taken' : 'today';
+            status = isFullyTaken ? 'taken' : 'today';
           } else if (dayLogs.length > 0) {
-            const isTaken = dayLogs.some((l) => l.status === 'taken');
-            status = isTaken ? 'taken' : 'missed';
+            status = isFullyTaken ? 'taken' : 'missed';
           } else if (
             dateStr < todayStr &&
             medLogs.some((l) => l.date <= dateStr)
@@ -126,7 +134,7 @@ export function useHeatmap() {
           name: med.name,
           dosage: med.dosage,
           scheduledTime: med.reminderTimes?.[0] || '08:00',
-          streakDays: Math.max(streak, completedDoses > 0 ? 1 : 0),
+          streakDays: streak,
           completedDoses,
           totalScheduled,
           adherenceRate,
