@@ -6,7 +6,12 @@ import { useHeatmap } from '../hooks/useHeatmap';
 import { pdfService } from '../services/pdfService';
 import { mcpClient } from '../services/mcpClient';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileArrowDown, faCircleCheck, faArrowsRotate, faLock, faCrown } from '@fortawesome/free-solid-svg-icons';
+import {
+  faFileArrowDown,
+  faCircleCheck,
+  faArrowsRotate,
+  faCrown,
+} from '@fortawesome/free-solid-svg-icons';
 
 interface HistoryMatrixViewProps {
   refreshTrigger?: number;
@@ -63,16 +68,23 @@ export function HistoryMatrixView({
     }
   };
 
+  const colorThemes: Array<'navy' | 'teal' | 'indigo' | 'slate'> = [
+    'navy',
+    'teal',
+    'indigo',
+    'slate',
+  ];
+
   return (
-    <div className="min-h-full text-white p-4 font-sans select-none pb-28">
-      <div className="max-w-2xl mx-auto flex flex-col gap-4">
-        {/* HEADER SECTION */}
+    <div className="min-h-full bg-[#F8FAFC] text-slate-900 p-4 sm:p-5 font-sans select-none pb-28">
+      <div className="max-w-xl mx-auto flex flex-col gap-4">
+        {/* 1. HEADER SECTION (MATCHES image/4.png) */}
         <div className="flex items-start justify-between pt-1">
           <div>
-            <span className="text-xs font-mono font-medium text-slate-400">
-              Compliance Telemetry Matrix
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-600 font-mono">
+              CAREBRIDGE COMPLIANCE MATRIX
             </span>
-            <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight mt-0.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
               Medication History
             </h1>
           </div>
@@ -80,55 +92,51 @@ export function HistoryMatrixView({
           <div className="flex items-center gap-2">
             <button
               onClick={() => refetch()}
-              className="p-2.5 rounded-xl bg-[#1E2330] hover:bg-[#252B3B] border border-white/[0.08] text-slate-400 hover:text-white transition-all"
+              className="p-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-800 transition-all shadow-2xs"
               title="Sync latest records"
             >
               <FontAwesomeIcon icon={faArrowsRotate} className="text-xs" />
             </button>
 
-            {/* PDF EXPORT BUTTON USING JSPDF */}
+            {/* Export PDF Button (image/4.png) */}
             <button
               onClick={handleExportPDF}
               disabled={isExporting}
-              className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold active:scale-95 transition-all shadow-md ${
-                isPro
-                  ? 'bg-[#FF5733] hover:bg-[#E64D2E] text-white'
-                  : 'bg-[#1E2330] hover:bg-[#252B3B] border border-amber-500/40 text-amber-300'
-              }`}
-              title={isPro ? 'Export PDF Report for Doctor' : 'Doctor PDF Export requires Clinical Pro'}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#1E3A8A] hover:bg-[#1E40AF] text-white shadow-sm active:scale-95 transition-all"
+              title={isPro ? 'Export PDF Report for Doctor' : 'Doctor PDF Export'}
             >
-              <FontAwesomeIcon icon={isPro ? faFileArrowDown : faLock} className="text-xs" />
-              <span>{isExporting ? 'Generating PDF...' : isPro ? 'Export Doctor PDF' : 'Doctor PDF (Pro)'}</span>
+              <FontAwesomeIcon icon={faFileArrowDown} className="text-xs" />
+              <span>{isExporting ? 'Generating...' : 'Export'}</span>
             </button>
           </div>
         </div>
 
-        {/* FREE TIER NOTICE FOR MATRIX */}
+        {/* FREE TIER NOTICE */}
         {!isPro && (
-          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between text-xs animate-fadeIn">
-            <div className="flex items-center gap-2.5 text-amber-300">
-              <FontAwesomeIcon icon={faCrown} className="text-amber-400" />
+          <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between text-xs text-amber-900">
+            <div className="flex items-center gap-2">
+              <FontAwesomeIcon icon={faCrown} className="text-amber-600 text-sm" />
               <span>
                 <strong>Free Tier Active:</strong> 7-day adherence visible. Clinical Doctor PDF export is locked.
               </span>
             </div>
             <button
               onClick={onOpenPaywall}
-              className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold text-xs transition-colors shrink-0 shadow-sm active:scale-95"
+              className="px-2.5 py-1 rounded-lg bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-xs shrink-0 transition-colors shadow-2xs"
             >
               Unlock Pro
             </button>
           </div>
         )}
 
-        {/* PUNCH-CARD LIST POPULATED BY useHeatmap */}
-        <div className="flex flex-col gap-4 mt-2">
+        {/* 2. PUNCH-CARD LIST (MATCHES image/4.png - Navy Card 1, Teal Card 2) */}
+        <div className="flex flex-col gap-4 mt-1">
           {loading && medicines.length === 0 ? (
-            <div className="bg-[#1E2330] border border-white/[0.08] rounded-2xl p-8 text-center text-slate-400 text-xs">
+            <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-8 text-center text-slate-400 text-xs">
               Loading verified 30-day compliance logs...
             </div>
           ) : (
-            medicines.map((med) => (
+            medicines.map((med, index) => (
               <MedicationPunchCard
                 key={med.id}
                 medicineName={med.name}
@@ -139,18 +147,19 @@ export function HistoryMatrixView({
                 adherenceRate={med.adherenceRate}
                 matrixData={med.matrixData}
                 onDelete={() => handleDeleteMedicine(med.id)}
+                colorTheme={colorThemes[index % colorThemes.length]}
               />
             ))
           )}
         </div>
 
-        {/* SECURE CLINICAL AUDIT TRAIL BANNER */}
-        <div className="bg-[#1E2330] rounded-2xl p-4 border border-white/[0.08] flex items-center gap-3 mt-1">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+        {/* 3. SECURE CLINICAL AUDIT TRAIL BANNER */}
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex items-center gap-3 mt-1">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200/60">
             <FontAwesomeIcon icon={faCircleCheck} className="text-base" />
           </div>
-          <div className="text-xs text-slate-300 leading-relaxed font-normal">
-            <strong className="text-white font-medium">Clinical Audit Trail:</strong> 30-day medication adherence and biometric trends are continuously verified and formatted for physician consultation.
+          <div className="text-xs text-slate-600 leading-relaxed font-normal">
+            <strong className="text-slate-900 font-semibold">Clinical Audit Trail:</strong> 30-day medication adherence and biometric trends are continuously verified and formatted for physician consultation.
           </div>
         </div>
       </div>
