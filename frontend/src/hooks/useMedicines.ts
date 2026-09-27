@@ -8,7 +8,45 @@ import { getLocalDateString } from '../utils/dateUtils';
 export function useMedicines(dateStr?: string) {
   const [schedule, setSchedule] = useState<DailyLogItem[]>([]);
   const [vitals, setVitals] = useState<VitalsRecord | null>(null);
-  const [caregiverName, setCaregiverName] = useState<string>('Sarah Connor (Daughter)');
+  const [caregiverName, setCaregiverName] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const s = localStorage.getItem('carebridge_auth_session');
+        if (s) {
+          const parsed = JSON.parse(s);
+          if (parsed.caregiverName) return parsed.caregiverName;
+          if (parsed.isDemo) return 'Sarah Connor';
+        }
+      } catch (_) {}
+    }
+    return 'Sarah Connor';
+  });
+  const [patientName, setPatientName] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const s = localStorage.getItem('carebridge_auth_session');
+        if (s) {
+          const parsed = JSON.parse(s);
+          if (parsed.patientName) return parsed.patientName;
+          if (parsed.isDemo) return 'Eleanor Vance';
+        }
+      } catch (_) {}
+    }
+    return 'Eleanor Vance';
+  });
+  const [patientAge, setPatientAge] = useState<number | undefined>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const s = localStorage.getItem('carebridge_auth_session');
+        if (s) {
+          const parsed = JSON.parse(s);
+          if (parsed.patientAge) return parsed.patientAge;
+          if (parsed.isDemo) return 78;
+        }
+      } catch (_) {}
+    }
+    return 78;
+  });
   const [adherenceRate, setAdherenceRate] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [isOnline, setIsOnline] = useState<boolean>(true);
@@ -20,11 +58,15 @@ export function useMedicines(dateStr?: string) {
       if (data.schedule) {
         setSchedule(data.schedule);
       }
-      if (data.vitals) {
-        setVitals(data.vitals);
+      setVitals(data.vitals || null);
+      if (data.caregiverName || data.caregiver?.name) {
+        setCaregiverName(data.caregiverName || data.caregiver?.name || '');
       }
-      if (data.caregiver?.name) {
-        setCaregiverName(data.caregiver.name);
+      if (data.patientName) {
+        setPatientName(data.patientName);
+      }
+      if (data.patientAge !== undefined) {
+        setPatientAge(data.patientAge);
       }
       if (data.adherenceRate !== undefined) {
         setAdherenceRate(data.adherenceRate);
@@ -157,6 +199,8 @@ export function useMedicines(dateStr?: string) {
     schedule,
     vitals,
     caregiverName,
+    patientName,
+    patientAge,
     adherenceRate,
     loading,
     isOnline,

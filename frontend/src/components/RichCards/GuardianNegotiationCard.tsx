@@ -21,6 +21,8 @@ interface GuardianNegotiationCardProps {
   data?: GuardianNegotiationCardData | null;
   onTakeDose: (medicineName?: string) => void;
   onCallSarah?: () => void;
+  patientName?: string;
+  caregiverName?: string;
 }
 
 export function GuardianNegotiationCard({
@@ -29,6 +31,8 @@ export function GuardianNegotiationCard({
   data,
   onTakeDose,
   onCallSarah,
+  patientName = 'Eleanor',
+  caregiverName = 'Sarah Connor',
 }: GuardianNegotiationCardProps) {
   const [sarahCalling, setSarahCalling] = useState(false);
 
@@ -204,8 +208,8 @@ export function GuardianNegotiationCard({
             </div>
 
             <p className="text-xs text-slate-200 leading-snug">
-              Eleanor has refused critical medication. Primary caregiver{' '}
-              <strong className="text-white">Sarah Connor</strong> has been dispatched an urgent
+              {patientName} has refused critical medication. Primary caregiver{' '}
+              <strong className="text-white">{caregiverName}</strong> has been dispatched an urgent
               AWS SNS SMS alert for clinical skip approval.
             </p>
 
@@ -224,7 +228,7 @@ export function GuardianNegotiationCard({
             <div className="flex items-center gap-2.5 text-[#00CAFF]">
               <span className="w-2.5 h-2.5 rounded-full bg-[#00CAFF] animate-ping" />
               <span className="font-medium text-white">
-                Connecting audio call to Sarah at work (+1 555-0199)...
+                Connecting audio call to {caregiverName} at work (+1 555-0199)...
               </span>
             </div>
             <span className="text-[10px] font-mono text-[#00CAFF]">Ringing</span>

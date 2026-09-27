@@ -40,6 +40,9 @@ interface TodayScheduleViewProps {
   onTriggerGuardianRefusal?: (medicineName: string) => void;
   refreshTrigger?: number;
   isPro?: boolean;
+  caregiverName?: string;
+  patientName?: string;
+  patientAge?: number;
 }
 
 export function TodayScheduleView({
@@ -51,6 +54,9 @@ export function TodayScheduleView({
   onTriggerGuardianRefusal,
   refreshTrigger = 0,
   isPro = false,
+  caregiverName,
+  patientName,
+  patientAge,
 }: TodayScheduleViewProps) {
   const [selectedDateStr, setSelectedDateStr] = useState<string>(() => {
     return getLocalDateString();
@@ -59,12 +65,18 @@ export function TodayScheduleView({
   const {
     schedule,
     vitals,
-    caregiverName,
+    caregiverName: hookCaregiverName,
+    patientName: hookPatientName,
+    patientAge: hookPatientAge,
     toggleDoseStatus,
     saveNote,
     recordVitals,
     refetch,
   } = useMedicines(selectedDateStr);
+
+  const displayCaregiverName = caregiverName || hookCaregiverName || 'Caregiver';
+  const displayPatientName = patientName || hookPatientName || 'Patient';
+  const displayPatientAge = patientAge || hookPatientAge;
 
   const [activeNoteItem, setActiveNoteItem] = useState<MedicineCardItem | null>(null);
   const [editingMedicine, setEditingMedicine] = useState<MedicineCardItem | null>(null);
@@ -183,7 +195,7 @@ export function TodayScheduleView({
       <div className="max-w-xl mx-auto flex flex-col gap-4">
         {/* 1. TOP HEADER BAR (MATCHES image/3.png & image/6.png) */}
         <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
-          {/* Left: CAREGIVER VIEW & Sarah Connor Pills */}
+          {/* Left: CAREGIVER VIEW & Caregiver Name Pills */}
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold shadow-2xs">
               <FontAwesomeIcon icon={faShieldHalved} className="text-[10px]" />
@@ -191,7 +203,7 @@ export function TodayScheduleView({
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-800 text-xs font-bold shadow-2xs">
               <FontAwesomeIcon icon={faUser} className="text-[10px] text-blue-600" />
-              <span>Sarah Connor (Caregiver)</span>
+              <span>{displayCaregiverName} (Caregiver)</span>
             </span>
           </div>
 
@@ -259,11 +271,11 @@ export function TodayScheduleView({
                 </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-white mt-1">
-                Good Morning, Sarah
+                Good Morning, {displayCaregiverName}
               </h2>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white font-bold text-xs backdrop-blur-sm border border-white/20">
-                  Patient: Eleanor Vance (Age 78)
+                  Patient: {displayPatientName} {displayPatientAge ? `(Age ${displayPatientAge})` : ''}
                 </span>
                 <span className="text-xs text-sky-100 font-semibold">
                   • {takenCount} of {totalCount} doses completed today
@@ -316,7 +328,7 @@ export function TodayScheduleView({
               className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <FontAwesomeIcon icon={faHeartPulse} className="text-rose-200 text-xs" />
-              <span>{vitals?.systolic ? `${vitals.systolic}/${vitals.diastolic}` : '124/83'} BP</span>
+              <span>{vitals?.systolic && vitals?.diastolic ? `${vitals.systolic}/${vitals.diastolic}` : '--/--'} BP</span>
             </button>
 
             <button
@@ -325,7 +337,7 @@ export function TodayScheduleView({
               className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <FontAwesomeIcon icon={faDroplet} className="text-sky-200 text-xs" />
-              <span>{vitals?.bloodSugar ?? '107.4'} Sugar</span>
+              <span>{vitals?.bloodSugar !== undefined && vitals?.bloodSugar !== null ? vitals.bloodSugar : '--'} Sugar</span>
             </button>
 
             <button
@@ -334,7 +346,7 @@ export function TodayScheduleView({
               className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <FontAwesomeIcon icon={faBolt} className="text-emerald-200 text-xs" />
-              <span>{vitals?.heartRate ?? '73'} BPM</span>
+              <span>{vitals?.heartRate !== undefined && vitals?.heartRate !== null ? vitals.heartRate : '--'} BPM</span>
             </button>
 
             <button
@@ -455,9 +467,15 @@ export function TodayScheduleView({
               <h2 className="text-sm font-bold text-slate-900 tracking-tight">
                 Medication Schedule
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[#1E3A8A] text-xs font-bold shadow-2xs">
-                4 Prescriptions • 5 Daily Doses
-              </span>
+              {(() => {
+                const uniqueMedsCount = new Set(schedule.map((s) => s.medicineId)).size;
+                const dailyDosesCount = schedule.length;
+                return (
+                  <span className="px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[#1E3A8A] text-xs font-bold shadow-2xs">
+                    {uniqueMedsCount} Prescription{uniqueMedsCount === 1 ? '' : 's'} • {dailyDosesCount} Daily Dose{dailyDosesCount === 1 ? '' : 's'}
+                  </span>
+                );
+              })()}
             </div>
             <span className="text-xs text-slate-500 font-medium">
               {takenCount} of {totalCount} completed

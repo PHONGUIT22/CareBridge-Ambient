@@ -40,6 +40,7 @@ export interface UseAlexaAgentOptions {
   onOrderRefillTriggered?: (order: AmazonRefillOrder) => void;
   onRingDeviceTriggered?: (ringResult: any) => void;
   onGuardianNegotiationTriggered?: (guardianData: any) => void;
+  patientName?: string;
 }
 
 export function useAlexaAgent(options?: UseAlexaAgentOptions) {
@@ -57,19 +58,20 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
       latencyMs: 142,
     },
   ]);
+  const initialPatientName = options?.patientName || 'Eleanor';
   const [conversation, setConversation] = useState<
     Array<{ sender: 'user' | 'alexa'; text: string }>
   >([
     {
       sender: 'alexa',
-      text: 'Good morning Eleanor! I am your CareBridge Ambient Copilot. How can I help you today?',
+      text: `Good morning ${initialPatientName}! I am your CareBridge Ambient Copilot. How can I help you today?`,
     },
   ]);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'msg_welcome',
       sender: 'alexa',
-      text: 'Good morning Eleanor! I am your CareBridge Ambient Copilot. How can I assist you today?',
+      text: `Good morning ${initialPatientName}! I am your CareBridge Ambient Copilot. How can I assist you today?`,
       timestamp: '08:00:00',
       toolCall: {
         toolName: 'getTodaySchedule',
@@ -84,6 +86,33 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
       },
     },
   ]);
+
+  useEffect(() => {
+    if (options?.patientName) {
+      setMessages((prev) => {
+        if (prev.length === 1 && prev[0].id === 'msg_welcome') {
+          return [
+            {
+              ...prev[0],
+              text: `Good morning ${options.patientName}! I am your CareBridge Ambient Copilot. How can I assist you today?`,
+            },
+          ];
+        }
+        return prev;
+      });
+      setConversation((prev) => {
+        if (prev.length === 1 && prev[0].sender === 'alexa') {
+          return [
+            {
+              sender: 'alexa',
+              text: `Good morning ${options.patientName}! I am your CareBridge Ambient Copilot. How can I help you today?`,
+            },
+          ];
+        }
+        return prev;
+      });
+    }
+  }, [options?.patientName]);
 
   const isBusyRef = useRef<boolean>(false);
   const recognitionRef = useRef<any>(null);

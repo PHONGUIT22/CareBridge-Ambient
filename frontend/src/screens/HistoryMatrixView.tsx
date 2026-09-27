@@ -17,12 +17,18 @@ interface HistoryMatrixViewProps {
   refreshTrigger?: number;
   isPro?: boolean;
   onOpenPaywall?: () => void;
+  patientName?: string;
+  caregiverName?: string;
+  patientAge?: number;
 }
 
 export function HistoryMatrixView({
   refreshTrigger = 0,
   isPro = false,
   onOpenPaywall,
+  patientName,
+  caregiverName,
+  patientAge,
 }: HistoryMatrixViewProps) {
   const [isExporting, setIsExporting] = useState(false);
   const { medicines, rawLogs, rawVitals, loading, refetch } = useHeatmap();
@@ -54,9 +60,16 @@ export function HistoryMatrixView({
             )
           : 94;
 
+      const pName = patientName
+        ? `${patientName}${patientAge ? ` (Age ${patientAge})` : ''}`
+        : 'Eleanor Vance (Age 78)';
+      const cName = caregiverName
+        ? `${caregiverName} (Caregiver)`
+        : 'Sarah Connor (Daughter)';
+
       pdfService.generateDoctorReport({
-        patientName: 'Eleanor Vance (Age 78)',
-        caregiverName: 'Sarah Connor (Daughter)',
+        patientName: pName,
+        caregiverName: cName,
         adherenceRate: avgAdherence,
         logs: rawLogs,
         vitals: rawVitals,

@@ -83,6 +83,10 @@ export const mcpClient = {
       isPro: boolean;
       isDemo: boolean;
       name?: string;
+      isOnboarded?: boolean;
+      caregiverName?: string;
+      patientName?: string;
+      patientAge?: number;
     };
   }> {
     const res = await fetchWithTimeout(`${API_BASE_URL}/api/auth/login`, {
@@ -403,6 +407,27 @@ export const mcpClient = {
     });
     if (!res.ok) {
       throw new Error(`Failed to negotiate adherence: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
+  /**
+   * POST /api/user/profile
+   * Save Caregiver and Patient profile for onboarding
+   */
+  async saveUserProfile(profile: {
+    caregiverName: string;
+    patientName: string;
+    patientAge: number;
+    userId?: string;
+  }): Promise<{ success: boolean; user?: any }> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/api/user/profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to save user profile: ${res.statusText}`);
     }
     return res.json();
   },

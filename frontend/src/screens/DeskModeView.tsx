@@ -26,6 +26,7 @@ interface DeskModeViewProps {
   onTakeDose?: (logId: string) => void;
   onTriggerGuardianRefusal?: (medicineName: string) => void;
   refreshTrigger?: number;
+  patientName?: string;
 }
 
 export function DeskModeView({
@@ -33,6 +34,7 @@ export function DeskModeView({
   onTakeDose,
   onTriggerGuardianRefusal,
   refreshTrigger = 0,
+  patientName,
 }: DeskModeViewProps) {
   const [schedule, setSchedule] = useState<DailyLogItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -129,7 +131,7 @@ export function DeskModeView({
         {/* Senior Nightstand Mode Chip */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-teal-400 text-xs font-semibold shadow-sm">
           <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-          <span>SENIOR NIGHTSTAND MODE</span>
+          <span>SENIOR NIGHTSTAND • {patientName ? patientName.toUpperCase() : 'PATIENT'}</span>
         </div>
 
         {/* Caregiver Hub Button */}

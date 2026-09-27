@@ -43,6 +43,10 @@ export function initDB(): DatabaseType {
       role TEXT DEFAULT 'caregiver',
       is_pro INTEGER DEFAULT 0,
       is_demo INTEGER DEFAULT 0,
+      caregiver_name TEXT,
+      patient_name TEXT,
+      patient_age INTEGER,
+      is_onboarded INTEGER DEFAULT 0,
       created_at TEXT NOT NULL
     );
 
@@ -94,13 +98,32 @@ export function initDB(): DatabaseType {
     );
   `);
 
+  // Defensive migration: ensure newer columns exist safely
+  migrateTableSafely('users', 'caregiver_name', 'TEXT');
+  migrateTableSafely('users', 'patient_name', 'TEXT');
+  migrateTableSafely('users', 'patient_age', 'INTEGER');
+  migrateTableSafely('users', 'is_onboarded', 'INTEGER DEFAULT 0');
+
   // Ensure default demo user exists in users table for existing records
   dbInstance.prepare(`
-    INSERT OR IGNORE INTO users (id, email, pin, role, is_pro, is_demo, created_at)
-    VALUES ('usr_demo', 'demo@gmail.com', '1234', 'caregiver', 1, 1, ?)
+    INSERT OR IGNORE INTO users (id, email, pin, role, is_pro, is_demo, caregiver_name, patient_name, patient_age, is_onboarded, created_at)
+    VALUES ('usr_demo', 'demo@gmail.com', '1234', 'caregiver', 1, 1, 'Sarah Connor', 'Eleanor Vance', 78, 1, ?)
   `).run(new Date().toISOString());
 
-  // Defensive migration: ensure newer columns exist safely
+  // Ensure demo user has predefined profile populated
+  try {
+    dbInstance.exec(`
+      UPDATE users 
+      SET caregiver_name = 'Sarah Connor', 
+          patient_name = 'Eleanor Vance', 
+          patient_age = 78, 
+          is_onboarded = 1 
+      WHERE id = 'usr_demo' OR email = 'demo@gmail.com';
+    `);
+  } catch (err) {
+    // Ignore update error if table is still migrating
+  }
+
   migrateTableSafely('medicines', 'user_id', 'TEXT REFERENCES users(id) ON DELETE CASCADE');
   migrateTableSafely('medicines', 'image_uri', 'TEXT');
   migrateTableSafely('medicines', 'stock_count', 'INTEGER DEFAULT 30');

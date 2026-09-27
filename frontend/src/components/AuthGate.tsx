@@ -23,6 +23,10 @@ export interface AuthSession {
   role: 'senior' | 'caregiver';
   isPro: boolean;
   isDemo?: boolean;
+  isOnboarded?: boolean;
+  caregiverName?: string;
+  patientName?: string;
+  patientAge?: number;
 }
 
 interface AuthGateProps {
@@ -63,6 +67,7 @@ export function AuthGate({ onLogin }: AuthGateProps) {
       });
 
       if (res.success && res.user) {
+        const isDemo = Boolean(res.user.isDemo);
         const session: AuthSession = {
           userId: res.user.id,
           isAuthenticated: true,
@@ -70,7 +75,11 @@ export function AuthGate({ onLogin }: AuthGateProps) {
           email: res.user.email,
           role,
           isPro: res.user.isPro,
-          isDemo: res.user.isDemo,
+          isDemo: isDemo,
+          isOnboarded: isDemo ? true : Boolean(res.user.isOnboarded),
+          caregiverName: res.user.caregiverName || (isDemo ? 'Sarah Connor' : undefined),
+          patientName: res.user.patientName || (isDemo ? 'Eleanor Vance' : undefined),
+          patientAge: res.user.patientAge || (isDemo ? 78 : undefined),
         };
         saveAndCompleteSession(session);
       } else {
@@ -91,6 +100,10 @@ export function AuthGate({ onLogin }: AuthGateProps) {
         role,
         isPro: isDemo,
         isDemo,
+        isOnboarded: isDemo,
+        caregiverName: isDemo ? 'Sarah Connor' : undefined,
+        patientName: isDemo ? 'Eleanor Vance' : undefined,
+        patientAge: isDemo ? 78 : undefined,
       };
       saveAndCompleteSession(session);
     } finally {

@@ -221,14 +221,29 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
         role: userRole,
         is_pro: isPro,
         is_demo: isDemo,
+        is_onboarded: isDemoAccount ? 1 : 0,
+        caregiver_name: isDemoAccount ? 'Sarah Connor' : null,
+        patient_name: isDemoAccount ? 'Eleanor Vance' : null,
+        patient_age: isDemoAccount ? 78 : null,
         created_at: createdAt,
       };
     } else {
-      // If demo account logging in, make sure is_demo and is_pro are 1
-      if (isDemoAccount && (!user.is_demo || !user.is_pro)) {
-        db.prepare('UPDATE users SET is_demo = 1, is_pro = 1 WHERE id = ?').run(user.id);
+      // If demo account logging in, make sure is_demo, is_pro, and demo profile are set
+      if (isDemoAccount) {
+        db.prepare(`
+          UPDATE users 
+          SET is_demo = 1, is_pro = 1, is_onboarded = 1,
+              caregiver_name = 'Sarah Connor',
+              patient_name = 'Eleanor Vance',
+              patient_age = 78
+          WHERE id = ?
+        `).run(user.id);
         user.is_demo = 1;
         user.is_pro = 1;
+        user.is_onboarded = 1;
+        user.caregiver_name = 'Sarah Connor';
+        user.patient_name = 'Eleanor Vance';
+        user.patient_age = 78;
       }
     }
 
@@ -236,6 +251,11 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     if (isDemoAccount) {
       await seedDemoData(user.id, false);
     }
+
+    const isOnboarded = isDemoAccount ? true : Boolean(user.is_onboarded);
+    const caregiverName = user.caregiver_name || (isDemoAccount ? 'Sarah Connor' : null);
+    const patientName = user.patient_name || (isDemoAccount ? 'Eleanor Vance' : null);
+    const patientAge = user.patient_age || (isDemoAccount ? 78 : null);
 
     res.json({
       success: true,
@@ -245,13 +265,78 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
         role: userRole,
         isPro: Boolean(user.is_pro),
         isDemo: Boolean(user.is_demo),
+        isOnboarded,
+        caregiverName,
+        patientName,
+        patientAge,
         name: userRole === 'senior'
-          ? (isDemoAccount ? 'Eleanor Vance (Senior)' : `${user.email} (Senior)`)
-          : (isDemoAccount ? 'Sarah Connor (Caregiver)' : `${user.email} (Caregiver)`),
+          ? (patientName || (isDemoAccount ? 'Eleanor Vance (Senior)' : `${user.email} (Senior)`))
+          : (caregiverName || (isDemoAccount ? 'Sarah Connor (Caregiver)' : `${user.email} (Caregiver)`)),
       },
     });
   } catch (error: any) {
     console.error('[Auth Login Error]:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/user/profile - Save/Update Caregiver & Patient profile during Onboarding
+app.post('/api/user/profile', async (req: Request, res: Response) => {
+  try {
+    const userId = req.body.userId || extractUserId(req);
+    if (!userId) {
+      res.status(401).json({ success: false, error: 'Unauthorized: missing user identifier.' });
+      return;
+    }
+
+    const { caregiverName, patientName, patientAge } = req.body || {};
+    if (!caregiverName || !patientName) {
+      res.status(400).json({ success: false, error: 'caregiverName and patientName are required fields.' });
+      return;
+    }
+
+    const ageNum = parseInt(String(patientAge), 10) || 75;
+    const trimmedCaregiver = String(caregiverName).trim();
+    const trimmedPatient = String(patientName).trim();
+    const db = getDatabase();
+
+    db.prepare(`
+      UPDATE users 
+      SET caregiver_name = ?,
+          patient_name = ?,
+          patient_age = ?,
+          is_onboarded = 1
+      WHERE id = ?
+    `).run(trimmedCaregiver, trimmedPatient, ageNum, userId);
+
+    // Also update caregiver_profile table
+    try {
+      db.prepare(`
+        INSERT INTO caregiver_profile (id, name, email, updated_at)
+        VALUES ('caregiver_active', ?, 'caregiver@carebridge.internal', ?)
+        ON CONFLICT(id) DO UPDATE SET name = excluded.name, updated_at = excluded.updated_at
+      `).run(trimmedCaregiver, new Date().toISOString());
+    } catch (_) {}
+
+    const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as any;
+
+    res.json({
+      success: true,
+      user: {
+        id: updatedUser?.id || userId,
+        email: updatedUser?.email,
+        role: updatedUser?.role || 'caregiver',
+        isPro: Boolean(updatedUser?.is_pro),
+        isDemo: Boolean(updatedUser?.is_demo),
+        isOnboarded: true,
+        caregiverName: updatedUser?.caregiver_name || trimmedCaregiver,
+        patientName: updatedUser?.patient_name || trimmedPatient,
+        patientAge: updatedUser?.patient_age || ageNum,
+        name: trimmedCaregiver,
+      },
+    });
+  } catch (error: any) {
+    console.error('[User Profile Error]:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -262,11 +347,19 @@ app.get('/api/schedule', async (req: Request, res: Response) => {
     const today = getLocalDateString();
     const targetDate = (req.query.date as string) || today;
     const userId = extractUserId(req);
-    const [schedule, vitals, caregiver] = await Promise.all([
+    const db = getDatabase();
+
+    const [schedule, vitals, caregiver, userRow] = await Promise.all([
       LogRepo.getLogsByDate(targetDate, userId),
       VitalsRepo.getVitalsByDate(targetDate, userId),
       CaregiverRepo.getCaregiver(),
+      userId ? (db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as any) : null,
     ]);
+
+    const isDemo = userRow?.is_demo === 1 || userId === 'usr_demo';
+    const caregiverName = userRow?.caregiver_name || (isDemo ? 'Sarah Connor' : (caregiver?.name || 'Caregiver'));
+    const patientName = userRow?.patient_name || (isDemo ? 'Eleanor Vance' : 'Patient');
+    const patientAge = userRow?.patient_age || (isDemo ? 78 : undefined);
 
     const total = schedule.length;
     const taken = schedule.filter((s) => s.status === 'taken').length;
@@ -277,8 +370,14 @@ app.get('/api/schedule', async (req: Request, res: Response) => {
       date: targetDate,
       adherenceRate,
       schedule,
-      vitals,
-      caregiver,
+      vitals: vitals || null,
+      caregiver: {
+        ...caregiver,
+        name: caregiverName,
+      },
+      caregiverName,
+      patientName,
+      patientAge,
     });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -291,11 +390,19 @@ app.get('/api/today', async (req: Request, res: Response) => {
     const today = getLocalDateString();
     const targetDate = (req.query.date as string) || today;
     const userId = extractUserId(req);
-    const [schedule, vitals, caregiver] = await Promise.all([
+    const db = getDatabase();
+
+    const [schedule, vitals, caregiver, userRow] = await Promise.all([
       LogRepo.getLogsByDate(targetDate, userId),
       VitalsRepo.getVitalsByDate(targetDate, userId),
       CaregiverRepo.getCaregiver(),
+      userId ? (db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as any) : null,
     ]);
+
+    const isDemo = userRow?.is_demo === 1 || userId === 'usr_demo';
+    const caregiverName = userRow?.caregiver_name || (isDemo ? 'Sarah Connor' : (caregiver?.name || 'Caregiver'));
+    const patientName = userRow?.patient_name || (isDemo ? 'Eleanor Vance' : 'Patient');
+    const patientAge = userRow?.patient_age || (isDemo ? 78 : undefined);
 
     const total = schedule.length;
     const taken = schedule.filter((s) => s.status === 'taken').length;
@@ -306,8 +413,14 @@ app.get('/api/today', async (req: Request, res: Response) => {
       date: targetDate,
       adherenceRate,
       schedule,
-      vitals,
-      caregiver,
+      vitals: vitals || null,
+      caregiver: {
+        ...caregiver,
+        name: caregiverName,
+      },
+      caregiverName,
+      patientName,
+      patientAge,
     });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });

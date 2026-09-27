@@ -14,6 +14,7 @@ import { GuardianNegotiationCard } from '../components/RichCards/GuardianNegotia
 import { ToastContainer, ToastMessage } from '../components/Toast';
 import { AuthGate, AuthSession } from '../components/AuthGate';
 import { PaywallModal } from '../components/PaywallModal';
+import { OnboardingModal } from '../components/OnboardingModal';
 import { AlexaAmbientGlow } from '../components/AlexaAmbientGlow';
 import { AmazonRefillOrder } from '../types';
 import { mcpClient } from '../services/mcpClient';
@@ -136,6 +137,30 @@ export default function Home() {
     });
   };
 
+  const handleOnboardingComplete = (profile: {
+    caregiverName: string;
+    patientName: string;
+    patientAge: number;
+  }) => {
+    if (!authSession) return;
+    const updated: AuthSession = {
+      ...authSession,
+      isOnboarded: true,
+      caregiverName: profile.caregiverName,
+      patientName: profile.patientName,
+      patientAge: profile.patientAge,
+      user: `${profile.patientName} (Age ${profile.patientAge})`,
+    };
+    setAuthSession(updated);
+    localStorage.setItem('carebridge_auth_session', JSON.stringify(updated));
+    triggerGlobalRefresh();
+    addToast({
+      type: 'success',
+      title: 'Profile Setup Completed',
+      message: `Caring for ${profile.patientName} (${profile.patientAge} y/o). Dashboard initialized.`,
+    });
+  };
+
   const addToast = (toast: Omit<ToastMessage, 'id'>) => {
     const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     setToasts((prev) => [...prev, { ...toast, id }]);
@@ -222,6 +247,7 @@ export default function Home() {
 
   // Single Source of Truth: Voice Agent & Bedrock Multi-Turn Orchestration
   const alexaAgent = useAlexaAgent({
+    patientName: authSession?.patientName,
     onDoseLogged: () => {
       triggerGlobalRefresh();
     },
@@ -252,11 +278,12 @@ export default function Home() {
         payload?.escalationLevel === 'SARAH_CIRCUIT_BREAKER' ||
         guardianData?.sarahNotified
       ) {
+        const cName = authSession?.caregiverName || 'Sarah Connor';
         addToast({
           type: 'warning',
-          title: 'Sarah Connor Circuit-Breaker Triggered',
+          title: `${cName} Circuit-Breaker Triggered`,
           message:
-            'Persistent refusal detected. Urgent AWS SNS alert dispatched to Sarah (+1 555-0199).',
+            `Persistent refusal detected. Urgent AWS SNS alert dispatched to ${cName} (+1 555-0199).`,
         });
       }
     },
@@ -281,10 +308,11 @@ export default function Home() {
   };
 
   const handleGuardianCallSarah = () => {
+    const cName = authSession?.caregiverName || 'Sarah Connor';
     addToast({
       type: 'info',
-      title: 'Connecting Sarah Connor (+1 555-0199)',
-      message: 'Calling Sarah at work for clinical skip authorization.',
+      title: `Connecting ${cName} (+1 555-0199)`,
+      message: `Calling ${cName} at work for clinical skip authorization.`,
     });
   };
 
@@ -380,7 +408,9 @@ export default function Home() {
           >
             <div className="leading-tight flex items-center gap-2">
               <span className="whitespace-nowrap">
-                {authSession.role === 'senior' ? 'Eleanor Vance (Senior Mode)' : 'Sarah Connor (Caregiver)'}
+                {authSession.role === 'senior'
+                  ? `${authSession.patientName || 'Patient'} (Senior Mode)`
+                  : `${authSession.caregiverName || 'Caregiver'} (Caregiver)`}
               </span>
               {authSession.isPro && (
                 <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -519,6 +549,9 @@ export default function Home() {
                     onOpenPaywall={() => setIsPaywallOpen(true)}
                     onTriggerGuardianRefusal={handleTriggerGuardianRefusal}
                     isPro={Boolean(authSession?.isPro)}
+                    caregiverName={authSession?.caregiverName}
+                    patientName={authSession?.patientName}
+                    patientAge={authSession?.patientAge}
                   />
                 )}
 
@@ -528,6 +561,9 @@ export default function Home() {
                     refreshTrigger={refreshTrigger}
                     isPro={Boolean(authSession?.isPro)}
                     onOpenPaywall={() => setIsPaywallOpen(true)}
+                    patientName={authSession?.patientName}
+                    caregiverName={authSession?.caregiverName}
+                    patientAge={authSession?.patientAge}
                   />
                 )}
 
@@ -541,6 +577,7 @@ export default function Home() {
                     onSwitchToCaregiver={() => setActiveTab('caregiver')}
                     onTakeDose={triggerGlobalRefresh}
                     onTriggerGuardianRefusal={handleTriggerGuardianRefusal}
+                    patientName={authSession?.patientName}
                   />
                 )}
               </div>
@@ -690,6 +727,8 @@ export default function Home() {
                     triggerGlobalRefresh();
                     setActiveTab('caregiver');
                   }}
+                  patientName={authSession?.patientName}
+                  patientAge={authSession?.patientAge}
                 />
               </div>
             </div>
@@ -810,6 +849,8 @@ export default function Home() {
         data={guardianCardData}
         onTakeDose={handleGuardianTakeDose}
         onCallSarah={handleGuardianCallSarah}
+        patientName={authSession?.patientName}
+        caregiverName={authSession?.caregiverName}
       />
 
       {/* PRO PAYWALL MODAL */}
@@ -819,6 +860,17 @@ export default function Home() {
         onActivatePro={handleActivatePro}
         onResetFreePlan={handleResetFreePlan}
         isPro={Boolean(authSession?.isPro)}
+      />
+
+      {/* MANDATORY USER ONBOARDING MODAL */}
+      <OnboardingModal
+        isOpen={Boolean(
+          authSession?.isAuthenticated &&
+          !authSession?.isOnboarded &&
+          !authSession?.isDemo
+        )}
+        initialEmail={authSession?.email}
+        onComplete={handleOnboardingComplete}
       />
 
       {/* TOAST NOTIFICATION CONTAINER (NON-BLOCKING RESILIENT WARNINGS) */}

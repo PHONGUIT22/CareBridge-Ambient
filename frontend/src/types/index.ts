@@ -8,6 +8,10 @@ export interface AuthSession {
   role: 'senior' | 'caregiver';
   isPro: boolean;
   isDemo?: boolean;
+  isOnboarded?: boolean;
+  caregiverName?: string;
+  patientName?: string;
+  patientAge?: number;
 }
 
 export interface UserProfile {
@@ -68,6 +72,9 @@ export interface TodayDataResponse {
   schedule: DailyLogItem[];
   vitals: VitalRecord | null;
   caregiver: CaregiverProfile | null;
+  caregiverName?: string;
+  patientName?: string;
+  patientAge?: number;
   error?: string;
 }
 
