@@ -102,7 +102,7 @@ export function MedicineCard({
       {/* 2. CENTER MEDICATION DETAILS (MATCHES image/3.png & image/6.png) */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <h4 className="font-bold text-slate-900 text-sm sm:text-base leading-snug truncate">
+          <h4 className="font-extrabold text-slate-900 text-sm sm:text-base leading-snug truncate">
             {item.name}
           </h4>
           <div className="flex items-center gap-1 shrink-0">
@@ -148,14 +148,14 @@ export function MedicineCard({
         </div>
 
         {/* Dosage Info */}
-        <p className="text-slate-500 text-xs font-medium mt-1">
+        <p className="text-slate-700 text-xs font-semibold mt-1">
           {item.dosage} • Take 1 pill
         </p>
 
         {/* Taken / Scheduled Status Text */}
         <p
           className={`text-xs font-medium mt-0.5 ${
-            isTaken ? 'text-emerald-600' : 'text-slate-400'
+            isTaken ? 'text-emerald-600' : 'text-slate-600'
           }`}
         >
           {isTaken
@@ -169,14 +169,14 @@ export function MedicineCard({
         <button
           type="button"
           onClick={() => onOpenNoteModal?.(item)}
-          className="bg-blue-50/60 hover:bg-blue-100/70 border border-blue-100 text-blue-700 text-[11px] font-medium rounded-lg px-2.5 py-1 mt-2 inline-flex items-center gap-1.5 transition-colors cursor-pointer text-left"
+          className="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-900 text-[11px] font-semibold rounded-lg px-2.5 py-1 mt-2 inline-flex items-center gap-1.5 transition-colors cursor-pointer text-left"
           title="Edit intake instruction or clinical observation note"
         >
-          <FontAwesomeIcon icon={faUtensils} className="text-[10px] text-blue-600" />
+          <FontAwesomeIcon icon={faUtensils} className="text-[10px] text-blue-700" />
           <span className="truncate max-w-[200px]">
             {item.notes || 'Taken with breakfast'}
           </span>
-          <FontAwesomeIcon icon={faPencil} className="text-[9px] text-blue-500" />
+          <FontAwesomeIcon icon={faPencil} className="text-[9px] text-blue-600" />
         </button>
       </div>
 

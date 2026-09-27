@@ -183,15 +183,15 @@ export function TodayScheduleView({
       <div className="max-w-xl mx-auto flex flex-col gap-4">
         {/* 1. TOP HEADER BAR (MATCHES image/3.png & image/6.png) */}
         <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
-          {/* Left: CAREGIVER VIEW & Sarah Jenkins Pills */}
+          {/* Left: CAREGIVER VIEW & Sarah Connor Pills */}
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold shadow-2xs">
               <FontAwesomeIcon icon={faShieldHalved} className="text-[10px]" />
               <span>CAREGIVER VIEW</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold shadow-2xs">
-              <FontAwesomeIcon icon={faUser} className="text-[10px]" />
-              <span>Sarah Jenkins</span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-800 text-xs font-bold shadow-2xs">
+              <FontAwesomeIcon icon={faUser} className="text-[10px] text-blue-600" />
+              <span>Sarah Connor (Caregiver)</span>
             </span>
           </div>
 
@@ -261,9 +261,14 @@ export function TodayScheduleView({
               <h2 className="text-xl sm:text-2xl font-bold text-white mt-1">
                 Good Morning, Sarah
               </h2>
-              <p className="text-xs sm:text-sm text-sky-100 mt-0.5 font-medium">
-                {takenCount} of {totalCount} doses completed
-              </p>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white font-bold text-xs backdrop-blur-sm border border-white/20">
+                  Patient: Eleanor Vance (Age 78)
+                </span>
+                <span className="text-xs text-sky-100 font-semibold">
+                  • {takenCount} of {totalCount} doses completed today
+                </span>
+              </div>
             </div>
 
             {/* Circular Progress Ring Gauge */}
@@ -304,38 +309,38 @@ export function TodayScheduleView({
           </div>
 
           {/* Bottom Vitals Row inside Hero Card */}
-          <div className="flex items-center gap-2 mt-5 pt-3 border-t border-white/15 flex-wrap">
+          <div className="flex items-center gap-2 mt-5 pt-3 border-t border-white/20 flex-wrap">
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white rounded-xl px-2.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
-              <FontAwesomeIcon icon={faHeartPulse} className="text-rose-300 text-xs" />
-              <span>{vitals?.systolic ? `${vitals.systolic}/${vitals.diastolic}` : '123/82'} BP</span>
+              <FontAwesomeIcon icon={faHeartPulse} className="text-rose-200 text-xs" />
+              <span>{vitals?.systolic ? `${vitals.systolic}/${vitals.diastolic}` : '124/83'} BP</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white rounded-xl px-2.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
-              <FontAwesomeIcon icon={faDroplet} className="text-sky-300 text-xs" />
-              <span>{vitals?.bloodSugar ?? '94.1'} Sugar</span>
+              <FontAwesomeIcon icon={faDroplet} className="text-sky-200 text-xs" />
+              <span>{vitals?.bloodSugar ?? '107.4'} Sugar</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white rounded-xl px-2.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
-              <FontAwesomeIcon icon={faBolt} className="text-emerald-300 text-xs" />
-              <span>{vitals?.heartRate ?? '75'} BPM</span>
+              <FontAwesomeIcon icon={faBolt} className="text-emerald-200 text-xs" />
+              <span>{vitals?.heartRate ?? '73'} BPM</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-semibold flex items-center gap-1 transition-colors ml-auto cursor-pointer"
+              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 transition-colors ml-auto cursor-pointer shadow-2xs"
             >
               <FontAwesomeIcon icon={faPencil} className="text-[10px]" />
               <span>+ Log</span>

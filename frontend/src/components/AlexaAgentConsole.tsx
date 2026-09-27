@@ -168,8 +168,8 @@ export function AlexaAgentConsole({
                 <span>Alexa Ambient Agent</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00CAFF] animate-pulse" />
               </h2>
-              <p className="text-xs text-slate-500 font-mono mt-0.5">
-                MCP Streamable HTTP - Claude Haiku 4.5
+              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                Bedside Echo Show 10 • Patient: <strong className="text-slate-700">Eleanor Vance (78)</strong>
               </p>
             </div>
           </div>

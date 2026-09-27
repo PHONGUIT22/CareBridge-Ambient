@@ -120,59 +120,45 @@ export function GuardianSelector({
               key={persona.id}
               type="button"
               onClick={() => handleSelect(persona)}
-              className={`relative text-left p-2.5 sm:p-3 rounded-2xl transition-all duration-200 border select-none ${
+              className={`relative flex flex-col items-center text-center p-2.5 rounded-2xl transition-all duration-200 border select-none ${
                 compact
                   ? isSelected
                     ? 'bg-[#0B1528] ring-2 ring-blue-500 shadow-md translate-y-[-1px]'
                     : 'bg-slate-900/80 hover:bg-slate-800 border-slate-800'
                   : isSelected
-                  ? 'bg-blue-50/70 border-2 border-[#1E3A8A] shadow-sm translate-y-[-1px]'
-                  : 'bg-white hover:bg-slate-50 border-slate-200/80'
+                  ? 'bg-blue-50/80 border-2 border-[#1E3A8A] shadow-sm translate-y-[-1px]'
+                  : 'bg-white hover:bg-slate-50 border-slate-200/90 shadow-2xs'
               }`}
-              style={{
-                borderColor: !compact && isSelected ? '#1E3A8A' : undefined,
-              }}
             >
               {isRecommended && (
-                <span className="absolute -top-2 right-2 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300 font-mono shadow-2xs">
-                  Recommended
+                <span className="absolute -top-2 right-1.5 px-1.5 py-0.2 rounded-full text-[8.5px] font-bold bg-amber-200 text-amber-950 border border-amber-400 font-mono shadow-2xs">
+                  Rec
                 </span>
               )}
-
-              <div className="flex items-center gap-2.5">
-                <span
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center text-base shrink-0 ${
-                    compact ? 'bg-white/10' : 'bg-slate-100'
-                  }`}
-                >
-                  {persona.avatarIcon}
-                </span>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <h4
-                      className={`text-xs font-bold truncate ${
-                        compact ? 'text-white' : 'text-slate-900'
-                      }`}
-                    >
-                      {persona.displayName}
-                    </h4>
-                  </div>
-                  <p
-                    className={`text-[11px] truncate mt-0.5 font-medium ${
-                      compact ? 'text-slate-400' : 'text-slate-500'
-                    }`}
-                  >
-                    {persona.roleTitle}
-                  </p>
-                </div>
-              </div>
-
-              {!compact && (
-                <p className="text-[10px] text-slate-600 mt-2 leading-relaxed line-clamp-2">
-                  {persona.description}
-                </p>
-              )}
+              {/* Centered Avatar Icon */}
+              <span
+                className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 mb-1.5 ${
+                  compact ? 'bg-white/10' : isSelected ? 'bg-blue-100/80' : 'bg-slate-100'
+                }`}
+              >
+                {persona.avatarIcon}
+              </span>
+              {/* Display Name - Full Width Without Ugly Truncation */}
+              <h4
+                className={`text-xs font-bold leading-tight w-full ${
+                  compact ? 'text-white' : 'text-slate-900'
+                }`}
+              >
+                {persona.displayName}
+              </h4>
+              {/* Role Subtitle */}
+              <p
+                className={`text-[10px] leading-tight mt-0.5 font-medium truncate w-full ${
+                  compact ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                {persona.roleTitle}
+              </p>
             </button>
           );
         })}
