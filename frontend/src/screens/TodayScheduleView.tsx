@@ -30,8 +30,10 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { GuardianSelector } from '../components/GuardianSelector';
 import { getLocalDateString } from '../utils/dateUtils';
+import { AuthSession } from '../components/AuthGate';
 
 interface TodayScheduleViewProps {
+  authSession?: AuthSession | null;
   onSwitchToDeskMode?: () => void;
   onSwitchToHistory?: () => void;
   onOpenAddModal?: () => void;
@@ -46,6 +48,7 @@ interface TodayScheduleViewProps {
 }
 
 export function TodayScheduleView({
+  authSession,
   onSwitchToDeskMode,
   onSwitchToHistory,
   onOpenAddModal,
@@ -74,6 +77,7 @@ export function TodayScheduleView({
     refetch,
   } = useMedicines(selectedDateStr);
 
+  const isDemo = Boolean(authSession?.isDemo);
   const displayCaregiverName = caregiverName || hookCaregiverName || 'Caregiver';
   const displayPatientName = patientName || hookPatientName || 'Patient';
   const displayPatientAge = patientAge || hookPatientAge;
@@ -203,7 +207,7 @@ export function TodayScheduleView({
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-800 text-xs font-bold shadow-2xs">
               <FontAwesomeIcon icon={faUser} className="text-[10px] text-blue-600" />
-              <span>{displayCaregiverName} (Caregiver)</span>
+              <span>{authSession?.caregiverName || 'Sarah Connor'} (Caregiver)</span>
             </span>
           </div>
 
@@ -271,11 +275,11 @@ export function TodayScheduleView({
                 </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-white mt-1">
-                Good Morning, {displayCaregiverName}
+                Good Morning, {authSession?.caregiverName ? authSession.caregiverName.split(' ')[0] : 'Sarah'}
               </h2>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white font-bold text-xs backdrop-blur-sm border border-white/20">
-                  Patient: {displayPatientName} {displayPatientAge ? `(Age ${displayPatientAge})` : ''}
+                  Patient: {authSession?.patientName || 'Eleanor Vance'} (Age {authSession?.patientAge || 78})
                 </span>
                 <span className="text-xs text-sky-100 font-semibold">
                   • {takenCount} of {totalCount} doses completed today
@@ -328,7 +332,7 @@ export function TodayScheduleView({
               className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <FontAwesomeIcon icon={faHeartPulse} className="text-rose-200 text-xs" />
-              <span>{vitals?.systolic && vitals?.diastolic ? `${vitals.systolic}/${vitals.diastolic}` : '--/--'} BP</span>
+              <span>{vitals?.systolic && vitals?.diastolic ? `${vitals.systolic}/${vitals.diastolic} BP` : (isDemo ? '124/83 BP' : '--/-- BP')}</span>
             </button>
 
             <button
@@ -337,7 +341,7 @@ export function TodayScheduleView({
               className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <FontAwesomeIcon icon={faDroplet} className="text-sky-200 text-xs" />
-              <span>{vitals?.bloodSugar !== undefined && vitals?.bloodSugar !== null ? vitals.bloodSugar : '--'} Sugar</span>
+              <span>{vitals?.bloodSugar ? `${vitals.bloodSugar} Sugar` : (isDemo ? '107.4 Sugar' : '-- Sugar')}</span>
             </button>
 
             <button
@@ -346,7 +350,7 @@ export function TodayScheduleView({
               className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <FontAwesomeIcon icon={faBolt} className="text-emerald-200 text-xs" />
-              <span>{vitals?.heartRate !== undefined && vitals?.heartRate !== null ? vitals.heartRate : '--'} BPM</span>
+              <span>{vitals?.heartRate ? `${vitals.heartRate} BPM` : (isDemo ? '73 BPM' : '-- BPM')}</span>
             </button>
 
             <button
@@ -467,15 +471,9 @@ export function TodayScheduleView({
               <h2 className="text-sm font-bold text-slate-900 tracking-tight">
                 Medication Schedule
               </h2>
-              {(() => {
-                const uniqueMedsCount = new Set(schedule.map((s) => s.medicineId)).size;
-                const dailyDosesCount = schedule.length;
-                return (
-                  <span className="px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[#1E3A8A] text-xs font-bold shadow-2xs">
-                    {uniqueMedsCount} Prescription{uniqueMedsCount === 1 ? '' : 's'} • {dailyDosesCount} Daily Dose{dailyDosesCount === 1 ? '' : 's'}
-                  </span>
-                );
-              })()}
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[#1E3A8A] text-xs font-bold shadow-2xs">
+                {new Set(schedule.map((s) => s.name)).size} Prescriptions • {schedule.length} Daily Doses
+              </span>
             </div>
             <span className="text-xs text-slate-500 font-medium">
               {takenCount} of {totalCount} completed

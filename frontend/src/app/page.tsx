@@ -542,6 +542,7 @@ export default function Home() {
                 {/* TAB 1: CAREGIVER HUB (PRIMARY DASHBOARD) */}
                 {activeTab === 'caregiver' && (
                   <TodayScheduleView
+                    authSession={authSession}
                     refreshTrigger={refreshTrigger}
                     onDoseToggled={triggerGlobalRefresh}
                     onSwitchToDeskMode={() => setActiveTab('deskClock')}
@@ -558,6 +559,7 @@ export default function Home() {
                 {/* TAB 2: HISTORY MATRIX PUNCH-CARD */}
                 {activeTab === 'history' && (
                   <HistoryMatrixView
+                    authSession={authSession}
                     refreshTrigger={refreshTrigger}
                     isPro={Boolean(authSession?.isPro)}
                     onOpenPaywall={() => setIsPaywallOpen(true)}
@@ -573,6 +575,7 @@ export default function Home() {
                 {/* TAB 4: NIGHTTIME BEDSIDE CLOCK (DESK MODE) */}
                 {activeTab === 'deskClock' && (
                   <DeskModeView
+                    authSession={authSession}
                     refreshTrigger={refreshTrigger}
                     onSwitchToCaregiver={() => setActiveTab('caregiver')}
                     onTakeDose={triggerGlobalRefresh}

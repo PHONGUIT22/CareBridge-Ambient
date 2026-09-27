@@ -13,7 +13,10 @@ import {
   faCrown,
 } from '@fortawesome/free-solid-svg-icons';
 
+import { AuthSession } from '../components/AuthGate';
+
 interface HistoryMatrixViewProps {
+  authSession?: AuthSession | null;
   refreshTrigger?: number;
   isPro?: boolean;
   onOpenPaywall?: () => void;
@@ -23,6 +26,7 @@ interface HistoryMatrixViewProps {
 }
 
 export function HistoryMatrixView({
+  authSession,
   refreshTrigger = 0,
   isPro = false,
   onOpenPaywall,
@@ -60,11 +64,15 @@ export function HistoryMatrixView({
             )
           : 94;
 
-      const pName = patientName
-        ? `${patientName}${patientAge ? ` (Age ${patientAge})` : ''}`
+      const effectivePatientName = authSession?.patientName || patientName;
+      const effectivePatientAge = authSession?.patientAge || patientAge;
+      const effectiveCaregiverName = authSession?.caregiverName || caregiverName;
+
+      const pName = effectivePatientName
+        ? `${effectivePatientName}${effectivePatientAge ? ` (Age ${effectivePatientAge})` : ''}`
         : 'Eleanor Vance (Age 78)';
-      const cName = caregiverName
-        ? `${caregiverName} (Caregiver)`
+      const cName = effectiveCaregiverName
+        ? `${effectiveCaregiverName} (Caregiver)`
         : 'Sarah Connor (Daughter)';
 
       pdfService.generateDoctorReport({

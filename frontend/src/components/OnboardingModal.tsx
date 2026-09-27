@@ -120,6 +120,9 @@ export function OnboardingModal({ isOpen, initialEmail, onComplete }: Onboarding
         <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
           Welcome to CareBridge Ambient
         </h2>
+        <p className="text-xs sm:text-sm font-semibold text-blue-700 mt-0.5">
+          Setup Care Profile
+        </p>
         <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
           Configure your monitoring identities below. Alexa Ambient Hub and clinical adherence reports
           will be personalized specifically for your patient.
@@ -133,16 +136,16 @@ export function OnboardingModal({ isOpen, initialEmail, onComplete }: Onboarding
 
         {/* ONBOARDING FORM */}
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-          {/* CAREGIVER NAME FIELD */}
+          {/* CAREGIVER FULL NAME FIELD */}
           <div>
             <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 mb-1">
               <FontAwesomeIcon icon={faShieldHalved} className="text-[#1E3A8A] text-xs" />
-              <span>Primary Caregiver Name</span>
+              <span>Caregiver Full Name</span>
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. John Doe, Sarah Connor"
+              placeholder="e.g. John Doe"
               value={caregiverName}
               onChange={(e) => setCaregiverName(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:border-[#1E3A8A] focus:bg-white transition-colors"
@@ -156,12 +159,12 @@ export function OnboardingModal({ isOpen, initialEmail, onComplete }: Onboarding
           <div>
             <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 mb-1">
               <FontAwesomeIcon icon={faHospitalUser} className="text-emerald-600 text-xs" />
-              <span>Patient Full Name</span>
+              <span>Patient Name</span>
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. Eleanor Vance, Grandma Mary"
+              placeholder="e.g. Grandma Mary, Robert Vance"
               value={patientName}
               onChange={(e) => setPatientName(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition-colors"
@@ -182,7 +185,7 @@ export function OnboardingModal({ isOpen, initialEmail, onComplete }: Onboarding
               min="1"
               max="125"
               required
-              placeholder="e.g. 78"
+              placeholder="e.g. 75"
               value={patientAge}
               onChange={(e) => setPatientAge(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:bg-white transition-colors"
@@ -206,7 +209,7 @@ export function OnboardingModal({ isOpen, initialEmail, onComplete }: Onboarding
                 </>
               ) : (
                 <>
-                  <span>Complete Setup & Enter Dashboard</span>
+                  <span>Complete Setup & Start CareBridge</span>
                   <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
                 </>
               )}

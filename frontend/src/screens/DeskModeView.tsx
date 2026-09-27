@@ -20,8 +20,10 @@ import confetti from 'canvas-confetti';
 import { GuardianSelector } from '../components/GuardianSelector';
 import { soundFxService } from '../services/soundFxService';
 import { isFutureDose } from '../components/MedicineCard';
+import { AuthSession } from '../components/AuthGate';
 
 interface DeskModeViewProps {
+  authSession?: AuthSession | null;
   onSwitchToCaregiver?: () => void;
   onTakeDose?: (logId: string) => void;
   onTriggerGuardianRefusal?: (medicineName: string) => void;
@@ -30,12 +32,14 @@ interface DeskModeViewProps {
 }
 
 export function DeskModeView({
+  authSession,
   onSwitchToCaregiver,
   onTakeDose,
   onTriggerGuardianRefusal,
   refreshTrigger = 0,
   patientName,
 }: DeskModeViewProps) {
+  const effectivePatientName = authSession?.patientName || patientName;
   const [schedule, setSchedule] = useState<DailyLogItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -131,7 +135,7 @@ export function DeskModeView({
         {/* Senior Nightstand Mode Chip */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-teal-400 text-xs font-semibold shadow-sm">
           <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-          <span>SENIOR NIGHTSTAND • {patientName ? patientName.toUpperCase() : 'PATIENT'}</span>
+          <span>SENIOR NIGHTSTAND • {effectivePatientName ? effectivePatientName.toUpperCase() : 'PATIENT'}</span>
         </div>
 
         {/* Caregiver Hub Button */}

@@ -58,20 +58,20 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
       latencyMs: 142,
     },
   ]);
-  const initialPatientName = options?.patientName || 'Eleanor';
+  const patientFirstName = (options?.patientName || 'Eleanor').split(' ')[0];
   const [conversation, setConversation] = useState<
     Array<{ sender: 'user' | 'alexa'; text: string }>
   >([
     {
       sender: 'alexa',
-      text: `Good morning ${initialPatientName}! I am your CareBridge Ambient Copilot. How can I help you today?`,
+      text: `Good morning ${patientFirstName}! I am your CareBridge Ambient Copilot. How can I help you today?`,
     },
   ]);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'msg_welcome',
       sender: 'alexa',
-      text: `Good morning ${initialPatientName}! I am your CareBridge Ambient Copilot. How can I assist you today?`,
+      text: `Good morning ${patientFirstName}! I am your CareBridge Ambient Copilot. How can I help you today?`,
       timestamp: '08:00:00',
       toolCall: {
         toolName: 'getTodaySchedule',
@@ -89,12 +89,13 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
 
   useEffect(() => {
     if (options?.patientName) {
+      const pFirst = options.patientName.split(' ')[0];
       setMessages((prev) => {
         if (prev.length === 1 && prev[0].id === 'msg_welcome') {
           return [
             {
               ...prev[0],
-              text: `Good morning ${options.patientName}! I am your CareBridge Ambient Copilot. How can I assist you today?`,
+              text: `Good morning ${pFirst}! I am your CareBridge Ambient Copilot. How can I help you today?`,
             },
           ];
         }
@@ -105,7 +106,7 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
           return [
             {
               sender: 'alexa',
-              text: `Good morning ${options.patientName}! I am your CareBridge Ambient Copilot. How can I help you today?`,
+              text: `Good morning ${pFirst}! I am your CareBridge Ambient Copilot. How can I help you today?`,
             },
           ];
         }
