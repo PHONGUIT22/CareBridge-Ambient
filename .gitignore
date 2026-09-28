@@ -41,6 +41,9 @@ Thumbs.db
 .gemini/
 .impeccable/
 .agents/
+.VSCodeCounter/
+**/.VSCodeCounter/
+.vscode/
 skills-lock.json
 *.local.json
 repomix-output.xml
