@@ -24,6 +24,12 @@ class SpeechService {
   private activeAbortController: AbortController | null = null;
   private playbackId: number = 0;
   private isSpeakingInternal: boolean = false;
+  private audioContext: AudioContext | null = null;
+  private pollyAnalyser: AnalyserNode | null = null;
+
+  public getPollyAnalyser(): AnalyserNode | null {
+    return this.isSpeakingInternal ? this.pollyAnalyser : null;
+  }
 
   public isSupported(): boolean {
     return typeof window !== 'undefined';
@@ -190,6 +196,30 @@ class SpeechService {
           const audioUrl = `data:${data.mimeType || 'audio/mpeg'};base64,${data.audioBase64}`;
           const audio = new Audio(audioUrl);
           this.currentAudio = audio;
+
+          // Wire up Web Audio AnalyserNode for Echo Show 10 Reactive Ambient Glow
+          try {
+            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+            if (AudioCtx) {
+              if (!this.audioContext || this.audioContext.state === 'closed') {
+                this.audioContext = new AudioCtx();
+              }
+              if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+              }
+              if (!this.pollyAnalyser) {
+                this.pollyAnalyser = this.audioContext.createAnalyser();
+                this.pollyAnalyser.fftSize = 64;
+                this.pollyAnalyser.smoothingTimeConstant = 0.75;
+              }
+              const source = this.audioContext.createMediaElementSource(audio);
+              source.connect(this.pollyAnalyser);
+              this.pollyAnalyser.connect(this.audioContext.destination);
+            }
+          } catch (audioCtxErr) {
+            // Non-blocking: audio element can still play standalone if AudioContext restricted
+            console.debug('[SpeechService] Web Audio pipeline note:', audioCtxErr);
+          }
 
           audio.onended = () => {
             if (currentId === this.playbackId) {

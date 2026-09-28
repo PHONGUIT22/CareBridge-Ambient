@@ -32,6 +32,16 @@ export interface RingDoorbellCardProps {
   onUnlockDoor?: () => void;
 }
 
+/**
+ * RingDoorbellCard - Echo Show 10 Hardware Fidelity Porch Cam Simulation
+ * 
+ * Hardware Fidelity Features (Amazon Devices Track):
+ * 1. Night-Vision Simulation: Switchable 850nm IR Phosphor / Starlight Color Night Vision.
+ * 2. Radar Scan Sweep: Sweeping laser plane with trailing radar phosphor scanning the porch.
+ * 3. Amazon Pharmacy Computer Vision Tracking: Emerald green bounding box with HUD brackets
+ *    and exact [Amazon Prime Package - Verified] certification tag.
+ * 4. Real-time Telemetry: Live timecode with frame counter, bitrate, and Ring Smart Lock status.
+ */
 export function RingDoorbellCard({
   isOpen,
   onClose,
@@ -43,9 +53,14 @@ export function RingDoorbellCard({
   onUnlockDoor,
 }: RingDoorbellCardProps) {
   const [currentTime, setCurrentTime] = useState('');
+  const [frameTick, setFrameTick] = useState(0);
   const [isTalkActive, setIsTalkActive] = useState(false);
   const [isBroughtInside, setIsBroughtInside] = useState(false);
+  const [nightVisionMode, setNightVisionMode] = useState<'ir' | 'color'>('ir');
+  const [isSpotlightOn, setIsSpotlightOn] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState<'1x' | '1.5x'>('1x');
 
+  // Real-time camera clock & frame counter (simulates 30 FPS surveillance timecode)
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date();
@@ -53,7 +68,15 @@ export function RingDoorbellCard({
     };
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
+
+    const frameInterval = setInterval(() => {
+      setFrameTick((prev) => (prev + 1) % 30);
+    }, 100);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(frameInterval);
+    };
   }, []);
 
   if (!isOpen) return null;
@@ -72,54 +95,60 @@ export function RingDoorbellCard({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0a0e17]/85 backdrop-blur-md animate-fadeIn select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#050811]/90 backdrop-blur-md animate-fadeIn select-none">
       <div
-        className={`bg-[#151922] border-2 ${
-          isEmergency ? 'border-rose-500 shadow-[0_0_35px_rgba(244,63,94,0.35)]' : 'border-[#1399FF]/50 shadow-[0_0_30px_rgba(19,153,255,0.25)]'
-        } w-full max-w-xl rounded-3xl overflow-hidden text-white relative flex flex-col`}
+        className={`bg-[#0d131f] border-2 ${
+          isEmergency
+            ? 'border-rose-500 shadow-[0_0_40px_rgba(244,63,94,0.4)]'
+            : 'border-[#00CAFF]/50 shadow-[0_0_40px_rgba(0,202,255,0.3)]'
+        } w-full max-w-2xl rounded-3xl overflow-hidden text-white relative flex flex-col`}
       >
         {/* TOP ACCENT GLOW */}
         <div
-          className={`absolute -top-16 -right-16 w-48 h-48 ${
-            isEmergency ? 'bg-rose-500/20' : 'bg-[#1399FF]/20'
+          className={`absolute -top-20 -right-20 w-56 h-56 ${
+            isEmergency ? 'bg-rose-500/20' : 'bg-[#00CAFF]/20'
           } rounded-full blur-3xl pointer-events-none`}
         />
 
-        {/* 1. RING HEADER BAR */}
-        <div className="px-5 py-3.5 bg-[#10141d] border-b border-white/[0.08] flex items-center justify-between z-10">
-          <div className="flex items-center gap-2.5">
-            {/* Ring Brand Icon */}
-            <div className="w-8 h-8 rounded-xl bg-[#1399FF] flex items-center justify-center text-white text-xs shadow-md shadow-[#1399FF]/30">
+        {/* 1. RING HARDWARE HEADER BAR */}
+        <div className="px-5 py-3 bg-[#0a0e17] border-b border-white/[0.08] flex items-center justify-between z-10">
+          <div className="flex items-center gap-3">
+            {/* Ring Brand Hardware Icon */}
+            <div className="w-8 h-8 rounded-xl bg-[#1399FF] flex items-center justify-center text-white text-xs shadow-md shadow-[#1399FF]/40">
               <FontAwesomeIcon icon={faVideo} />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold font-mono tracking-wider text-white">
-                  RING DOORBELL PRO
+                  RING DOORBELL PRO 2
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-white/[0.08] text-slate-300 font-mono">
-                  FRONT PORCH
+                <span className="text-[10px] px-2 py-0.5 rounded bg-white/[0.08] text-slate-300 font-mono font-medium">
+                  FRONT PORCH • 1536p HD
                 </span>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[11px] text-emerald-400 font-mono font-medium">
-                  1080p HD LIVE • {currentTime || 'LIVE'}
+                <span className="text-[11px] text-emerald-400 font-mono font-semibold">
+                  LIVE FEED • {currentTime || 'LIVE'}:{(frameTick < 10 ? '0' : '') + frameTick}
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  (30 FPS • 4.6 Mbps H.265)
                 </span>
               </div>
             </div>
           </div>
 
+          {/* Top Status & Controls */}
           <div className="flex items-center gap-2">
             {isEmergency ? (
               <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-mono font-semibold flex items-center gap-1.5 animate-pulse">
                 <FontAwesomeIcon icon={faLockOpen} className="text-xs" />
-                <span>UNLOCKED FOR PARAMEDICS</span>
+                <span>UNLOCKED FOR FIRST RESPONDERS</span>
               </span>
             ) : (
-              <span className="px-2.5 py-1 rounded-full bg-[#1399FF]/15 border border-[#1399FF]/30 text-[#1399FF] text-xs font-mono font-medium flex items-center gap-1.5">
-                <FontAwesomeIcon icon={faTruckFast} className="text-xs" />
-                <span>Package Delivered</span>
+              <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-mono font-medium flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                <span>Package In Zone</span>
               </span>
             )}
 
@@ -133,143 +162,256 @@ export function RingDoorbellCard({
           </div>
         </div>
 
-        {/* 2. NIGHT-VISION CAMERA FEED CANVAS (INLINE SVG VECTOR SIMULATION) */}
-        <div className="relative w-full aspect-video bg-[#050811] overflow-hidden flex items-center justify-center border-b border-white/[0.08]">
-          {/* CRT Scanline Overlay */}
+        {/* 2. CAMERA TOOLBAR (NIGHT VISION & OPTICAL CONTROLS) */}
+        <div className="px-4 py-2 bg-[#101624] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono">
+          <div className="flex items-center gap-2">
+            {/* Night Vision Switcher */}
+            <button
+              onClick={() => setNightVisionMode(nightVisionMode === 'ir' ? 'color' : 'ir')}
+              className={`px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1.5 ${
+                nightVisionMode === 'ir'
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
+                  : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+              }`}
+              title="Toggle Infrared 850nm Night Vision"
+            >
+              <span className={`w-2 h-2 rounded-full ${nightVisionMode === 'ir' ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
+              <span>{nightVisionMode === 'ir' ? 'IR Night-Vision ON (850nm)' : 'Color Night Vision'}</span>
+            </button>
+
+            {/* Spotlight Toggle */}
+            <button
+              onClick={() => setIsSpotlightOn(!isSpotlightOn)}
+              className={`px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1.5 ${
+                isSpotlightOn
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                  : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+              }`}
+              title="Toggle Porch Spotlight"
+            >
+              <span>{isSpotlightOn ? '💡 Porch Spotlight ON' : '💡 Porch Spotlight OFF'}</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Zoom Toggle */}
+            <button
+              onClick={() => setZoomLevel(zoomLevel === '1x' ? '1.5x' : '1x')}
+              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-cyan-300 border border-cyan-500/30"
+              title="Toggle Digital Zoom"
+            >
+              FOV: {zoomLevel === '1x' ? '155° Ultrawide' : 'Zoom 1.5x'}
+            </button>
+          </div>
+        </div>
+
+        {/* 3. SIMULATED LIVE CAMERA FEED CANVAS */}
+        <div
+          className={`relative w-full aspect-video bg-[#03060c] overflow-hidden flex items-center justify-center border-b border-white/[0.08] transition-transform duration-300 ${
+            zoomLevel === '1.5x' ? 'scale-110' : 'scale-100'
+          }`}
+          style={{
+            filter: nightVisionMode === 'ir'
+              ? 'sepia(40%) hue-rotate(95deg) contrast(1.35) brightness(0.95)'
+              : 'none',
+          }}
+        >
+          {/* CRT Scanline & Grain Overlay */}
           <div
-            className="absolute inset-0 pointer-events-none z-10 opacity-30"
+            className="absolute inset-0 pointer-events-none z-20 opacity-25"
             style={{
               backgroundImage:
-                'repeating-linear-gradient(0deg, rgba(0, 202, 255, 0.05) 0px, transparent 1px, transparent 3px)',
+                'repeating-linear-gradient(0deg, rgba(0, 255, 170, 0.08) 0px, transparent 1px, transparent 3px)',
             }}
           />
 
-          {/* High-Resolution SVG Porch & Delivery Illustration */}
+          {/* RADAR SCAN SWEEP ANIMATION (Laser plane gliding continuously across porch) */}
+          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
+            <div
+              className="w-full h-24 bg-gradient-to-b from-transparent via-[#00FF88]/20 to-[#00FF88]/60 border-b-2 border-[#00FF88] shadow-[0_0_20px_#00FF88] animate-radarSweep"
+              style={{
+                animationDuration: '3.6s',
+                animationTimingFunction: 'linear',
+                animationIterationCount: 'infinite',
+              }}
+            />
+          </div>
+
+          {/* Porch Spotlight Cone Effect */}
+          {isSpotlightOn && (
+            <div
+              className="absolute inset-0 pointer-events-none z-10 opacity-40 bg-[radial-gradient(ellipse_60%_70%_at_50%_40%,rgba(255,245,220,0.85)_0%,transparent_75%)]"
+            />
+          )}
+
+          {/* High-Resolution Porch & Front Door Architecture */}
           <svg
             viewBox="0 0 800 450"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover select-none"
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
-              <linearGradient id="nightSky" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#04060d" />
-                <stop offset="60%" stopColor="#0b1220" />
-                <stop offset="100%" stopColor="#070c17" />
+              <linearGradient id="ringNightSky" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#020408" />
+                <stop offset="60%" stopColor="#080e1a" />
+                <stop offset="100%" stopColor="#050a14" />
               </linearGradient>
 
-              <linearGradient id="porchFloor" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#141c2b" />
-                <stop offset="100%" stopColor="#0a0f19" />
+              <linearGradient id="ringPorchFloor" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#0f1726" />
+                <stop offset="100%" stopColor="#070c14" />
               </linearGradient>
 
-              <linearGradient id="doorFrameGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#1e293b" />
-                <stop offset="50%" stopColor="#334155" />
-                <stop offset="100%" stopColor="#1e293b" />
+              <linearGradient id="ringDoorFrame" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#1a2333" />
+                <stop offset="50%" stopColor="#2c3b54" />
+                <stop offset="100%" stopColor="#1a2333" />
               </linearGradient>
 
-              <linearGradient id="parcelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id="ringParcelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#b4783c" />
                 <stop offset="100%" stopColor="#875324" />
               </linearGradient>
 
-              <filter id="nightVisionGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="4" result="blur" />
+              <filter id="greenTrackingGlow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
             </defs>
 
-            {/* Night Background & Suburban Porch Architecture */}
-            <rect width="800" height="450" fill="url(#nightSky)" />
-
-            {/* Patio siding panels */}
-            <line x1="0" y1="40" x2="800" y2="40" stroke="#162032" strokeWidth="1" />
-            <line x1="0" y1="80" x2="800" y2="80" stroke="#162032" strokeWidth="1" />
-            <line x1="0" y1="120" x2="800" y2="120" stroke="#162032" strokeWidth="1" />
-            <line x1="0" y1="160" x2="800" y2="160" stroke="#162032" strokeWidth="1" />
-            <line x1="0" y1="200" x2="800" y2="200" stroke="#162032" strokeWidth="1" />
+            {/* Night Background & Siding Panels */}
+            <rect width="800" height="450" fill="url(#ringNightSky)" />
+            <line x1="0" y1="40" x2="800" y2="40" stroke="#121a28" strokeWidth="1" />
+            <line x1="0" y1="80" x2="800" y2="80" stroke="#121a28" strokeWidth="1" />
+            <line x1="0" y1="120" x2="800" y2="120" stroke="#121a28" strokeWidth="1" />
+            <line x1="0" y1="160" x2="800" y2="160" stroke="#121a28" strokeWidth="1" />
+            <line x1="0" y1="200" x2="800" y2="200" stroke="#121a28" strokeWidth="1" />
 
             {/* Front Door Assembly */}
-            <rect x="250" y="30" width="300" height="340" fill="url(#doorFrameGrad)" rx="8" />
-            <rect x="265" y="45" width="270" height="325" fill="#0f172a" rx="4" />
+            <rect x="250" y="30" width="300" height="340" fill="url(#ringDoorFrame)" rx="8" />
+            <rect x="265" y="45" width="270" height="325" fill="#0b111f" rx="4" />
 
             {/* Door Panel Insets */}
-            <rect x="285" y="65" width="105" height="120" fill="#1e293b" rx="4" stroke="#334155" strokeWidth="1" />
-            <rect x="410" y="65" width="105" height="120" fill="#1e293b" rx="4" stroke="#334155" strokeWidth="1" />
-            <rect x="285" y="205" width="105" height="140" fill="#1e293b" rx="4" stroke="#334155" strokeWidth="1" />
-            <rect x="410" y="205" width="105" height="140" fill="#1e293b" rx="4" stroke="#334155" strokeWidth="1" />
+            <rect x="285" y="65" width="105" height="120" fill="#172233" rx="4" stroke="#25354e" strokeWidth="1" />
+            <rect x="410" y="65" width="105" height="120" fill="#172233" rx="4" stroke="#25354e" strokeWidth="1" />
+            <rect x="285" y="205" width="105" height="140" fill="#172233" rx="4" stroke="#25354e" strokeWidth="1" />
+            <rect x="410" y="205" width="105" height="140" fill="#172233" rx="4" stroke="#25354e" strokeWidth="1" />
 
-            {/* Door Handle & Ring Smart Access Keypad */}
-            <circle cx="280" cy="215" r="9" fill="#0284c7" filter="url(#nightVisionGlow)" opacity="0.8" />
+            {/* Door Deadbolt & Ring Smart Access Keypad */}
+            <circle cx="280" cy="215" r="9" fill="#0284c7" filter="url(#greenTrackingGlow)" opacity="0.8" />
             <rect x="274" y="190" width="12" height="35" rx="3" fill="#cbd5e1" />
 
-            {/* Front Porch Deck Floor (Perspective Trapeze) */}
-            <polygon points="0,450 800,450 680,320 120,320" fill="url(#porchFloor)" />
-            {/* Wooden Floor Planks */}
-            <line x1="200" y1="450" x2="260" y2="320" stroke="#1f2c42" strokeWidth="2" />
-            <line x1="400" y1="450" x2="400" y2="320" stroke="#1f2c42" strokeWidth="2" />
-            <line x1="600" y1="450" x2="540" y2="320" stroke="#1f2c42" strokeWidth="2" />
+            {/* Front Porch Floor Perspective */}
+            <polygon points="0,450 800,450 680,320 120,320" fill="url(#ringPorchFloor)" />
+            <line x1="200" y1="450" x2="260" y2="320" stroke="#1b2536" strokeWidth="2" />
+            <line x1="400" y1="450" x2="400" y2="320" stroke="#1b2536" strokeWidth="2" />
+            <line x1="600" y1="450" x2="540" y2="320" stroke="#1b2536" strokeWidth="2" />
 
-            {/* Welcome Doormat */}
-            <polygon points="280,390 520,390 490,340 310,340" fill="#1c2433" stroke="#2e3d54" strokeWidth="2" rx="4" />
-            <text x="400" y="370" fill="#64748b" fontSize="13" fontWeight="bold" fontFamily="monospace" textAnchor="middle">
+            {/* Welcome Porch Doormat */}
+            <polygon points="280,390 520,390 490,340 310,340" fill="#161e2b" stroke="#28364d" strokeWidth="2" rx="4" />
+            <text x="400" y="370" fill="#475569" fontSize="13" fontWeight="bold" fontFamily="monospace" textAnchor="middle">
               WELCOME
             </text>
 
-            {/* Outdoor Lantern Sconce Glow */}
-            <circle cx="170" cy="110" r="14" fill="#fbbf24" opacity={isEmergency ? '0.9' : '0.4'} filter="url(#nightVisionGlow)" />
+            {/* Outdoor Porch Light */}
+            <circle cx="170" cy="110" r="14" fill="#fbbf24" opacity={isSpotlightOn ? '0.95' : '0.4'} filter="url(#greenTrackingGlow)" />
             <rect x="162" y="98" width="16" height="24" rx="2" fill="#0f172a" stroke="#fbbf24" strokeWidth="1.5" />
 
-            {/* MODE A: Amazon Pharmacy Parcel */}
+            {/* ============================================================== */}
+            {/* AMAZON PHARMACY PARCEL + EMERALD GREEN COMPUTER VISION BOUNDING BOX */}
+            {/* ============================================================== */}
             {!isEmergency && (
-              <g transform="translate(330, 310)">
+              <g transform="translate(325, 305)">
                 {/* Parcel Drop Shadow */}
-                <ellipse cx="70" cy="65" rx="65" ry="12" fill="#000000" opacity="0.6" />
+                <ellipse cx="75" cy="70" rx="70" ry="14" fill="#000000" opacity="0.7" />
 
-                {/* Cardboard Box 3D Isometric View */}
-                <polygon points="20,25 120,25 150,5 50,5" fill="#d97706" opacity="0.8" />
-                <polygon points="120,25 150,5 150,45 120,65" fill="#92400e" />
-                <polygon points="20,25 120,25 120,65 20,65" fill="url(#parcelGrad)" />
+                {/* 3D Parcel Geometry */}
+                <polygon points="20,25 125,25 155,5 50,5" fill="#d97706" opacity="0.85" />
+                <polygon points="125,25 155,5 155,45 125,68" fill="#92400e" />
+                <polygon points="20,25 125,25 125,68 20,68" fill="url(#ringParcelGrad)" />
 
                 {/* Amazon Prime Blue Packing Tape */}
-                <polygon points="65,5 75,5 75,65 65,65" fill="#0284c7" />
+                <polygon points="70,5 82,5 82,68 70,68" fill="#0284c7" />
 
-                {/* Amazon Smile Logo Vector */}
-                <path d="M 45 48 Q 70 58 95 48" stroke="#ffffff" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                <polygon points="95,45 100,50 94,52" fill="#ffffff" />
+                {/* Amazon Smile Curve */}
+                <path d="M 48 50 Q 75 60 102 50" stroke="#ffffff" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                <polygon points="102,47 107,52 101,54" fill="#ffffff" />
 
-                {/* Prescription Label Pill Sticker */}
-                <rect x="35" y="30" width="24" height="14" rx="2" fill="#ffffff" opacity="0.9" />
-                <line x1="38" y1="35" x2="52" y2="35" stroke="#0284c7" strokeWidth="1.5" />
-                <line x1="38" y1="39" x2="48" y2="39" stroke="#64748b" strokeWidth="1" />
+                {/* Pharmacy Rx Capsule Label */}
+                <rect x="35" y="30" width="28" height="15" rx="3" fill="#ffffff" opacity="0.9" />
+                <line x1="40" y1="35" x2="56" y2="35" stroke="#0284c7" strokeWidth="1.5" />
+                <line x1="40" y1="40" x2="52" y2="40" stroke="#64748b" strokeWidth="1" />
 
-                {/* AI Object Detection Bounding Box */}
+                {/* EMERALD GREEN BOUNDING BOX CONTAINER (Amazon CV Tracking) */}
                 <rect
-                  x="10"
-                  y="-2"
-                  width="150"
-                  height="75"
-                  fill="none"
-                  stroke="#00CAFF"
+                  x="8"
+                  y="-4"
+                  width="160"
+                  height="82"
+                  fill="rgba(16, 185, 129, 0.08)"
+                  stroke="#10B981"
                   strokeWidth="2"
-                  strokeDasharray="6,4"
-                  filter="url(#nightVisionGlow)"
+                  strokeDasharray="8,5"
+                  filter="url(#greenTrackingGlow)"
+                  className="animate-pulse"
                 />
-                <rect x="10" y="-20" width="165" height="18" rx="4" fill="#00CAFF" />
-                <text x="16" y="-7" fill="#0f172a" fontSize="10" fontWeight="bold" fontFamily="monospace">
-                  📦 Amazon Pharmacy (99.4%)
-                </text>
+
+                {/* 4 HUD Targeting Brackets at Corners */}
+                {/* Top-Left Bracket */}
+                <path d="M 4 8 L 4 -8 L 20 -8" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" />
+                {/* Top-Right Bracket */}
+                <path d="M 156 -8 L 172 -8 L 172 8" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" />
+                {/* Bottom-Left Bracket */}
+                <path d="M 4 70 L 4 86 L 20 86" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" />
+                {/* Bottom-Right Bracket */}
+                <path d="M 156 86 L 172 86 L 172 70" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" />
+
+                {/* Center Target Reticle */}
+                <circle cx="88" cy="37" r="6" fill="none" stroke="#10B981" strokeWidth="1.5" />
+                <line x1="88" y1="27" x2="88" y2="47" stroke="#10B981" strokeWidth="1" />
+                <line x1="78" y1="37" x2="98" y2="37" stroke="#10B981" strokeWidth="1" />
+
+                {/* VERIFIED BADGE HEADER CHIP (Matches Requirement: [Amazon Prime Package - Verified]) */}
+                <g transform="translate(6, -26)">
+                  <rect
+                    x="0"
+                    y="0"
+                    width="216"
+                    height="22"
+                    rx="5"
+                    fill="#10B981"
+                    filter="url(#greenTrackingGlow)"
+                  />
+                  <text
+                    x="10"
+                    y="15"
+                    fill="#041a12"
+                    fontSize="11"
+                    fontWeight="bold"
+                    fontFamily="monospace"
+                    letterSpacing="0.2"
+                  >
+                    [Amazon Prime Package - Verified]
+                  </text>
+                </g>
+
+                {/* Telemetry Footnote */}
+                <g transform="translate(6, 88)">
+                  <rect x="0" y="2" width="180" height="15" rx="3" fill="#061f18" stroke="#10B981" strokeWidth="1" />
+                  <text x="6" y="13" fill="#6ee7b7" fontSize="8.5" fontFamily="monospace" fontWeight="bold">
+                    Rx Lock • Conf: 99.4% • ID: AMZN-RX
+                  </text>
+                </g>
               </g>
             )}
 
-            {/* MODE B: EMERGENCY OVERRIDE FLOODLIGHT & UNLOCKED BADGE */}
+            {/* EMERGENCY OVERRIDE FLOODLIGHT & UNLOCKED BADGE */}
             {isEmergency && (
               <g transform="translate(260, 110)">
-                {/* Red/Yellow Emergency Flashing Floodlight */}
-                <ellipse cx="140" cy="180" rx="220" ry="100" fill="#f43f5e" opacity="0.18" filter="url(#nightVisionGlow)" />
-                <polygon points="140,-40 380,320 -100,320" fill="#fef08a" opacity="0.12" />
+                <ellipse cx="140" cy="180" rx="220" ry="100" fill="#f43f5e" opacity="0.22" filter="url(#greenTrackingGlow)" />
+                <polygon points="140,-40 380,320 -100,320" fill="#fef08a" opacity="0.15" />
 
-                {/* Big Floating Smart Lock Badge */}
+                {/* Floating Smart Lock Badge */}
                 <rect
                   x="10"
                   y="40"
@@ -279,10 +421,9 @@ export function RingDoorbellCard({
                   fill="#0f172a"
                   stroke="#10b981"
                   strokeWidth="2.5"
-                  filter="url(#nightVisionGlow)"
+                  filter="url(#greenTrackingGlow)"
                 />
                 <circle cx="45" cy="70" r="18" fill="#10b981" />
-                {/* Open Padlock Vector */}
                 <path
                   d="M 40 68 L 50 68 L 50 78 L 40 78 Z M 42 68 L 42 63 C 42 59 48 59 48 63"
                   stroke="#ffffff"
@@ -300,20 +441,20 @@ export function RingDoorbellCard({
             )}
 
             {/* On-Screen Camera Telemetry HUD */}
-            <text x="25" y="35" fill="#00CAFF" fontSize="11" fontFamily="monospace" fontWeight="bold">
-              REC ● [1080P HD HDR]
+            <text x="25" y="35" fill="#00FF88" fontSize="11" fontFamily="monospace" fontWeight="bold">
+              ● LIVE REC [1080P HD HDR]
             </text>
             <text x="775" y="35" fill="#94a3b8" fontSize="11" fontFamily="monospace" textAnchor="end">
-              BATTERY 94% • WI-FI RSSI -52dBm
+              BATTERY 94% • WI-FI RSSI -48dBm
             </text>
             <text x="25" y="430" fill="#64748b" fontSize="10" fontFamily="monospace">
-              RING PIR MOTION SENSOR ACTIVE • ZONE 1 (PORCH)
+              RADAR MOTION SWEEP ACTIVE • ZONE 1 (PORCH MAT) • CV-ECHO-V4
             </text>
           </svg>
         </div>
 
-        {/* 3. CONTROL & INFORMATION FOOTER */}
-        <div className="p-5 bg-[#151922] flex flex-col gap-4">
+        {/* 4. ECHO SHOW 10 AMBIENT ACTIONS & CONTROLS FOOTER */}
+        <div className="p-4 sm:p-5 bg-[#0a0e17] flex flex-col gap-3.5">
           {isEmergency ? (
             /* Emergency Paramedic Access Mode */
             <div className="flex flex-col gap-3">
@@ -326,7 +467,7 @@ export function RingDoorbellCard({
                     Emergency Door Access Granted
                   </h4>
                   <p className="text-[11px] text-slate-300 leading-relaxed mt-0.5">
-                    {emergencyReason || 'Acute symptoms triggered triage alert. Ring Smart Lock disengaged the deadbolt to ensure immediate entry for first responders.'}
+                    {emergencyReason || 'Acute symptom triage alert triggered Ring Smart Lock. Deadbolt disengaged to ensure instant entry for paramedic first responders.'}
                   </p>
                 </div>
               </div>
@@ -337,14 +478,14 @@ export function RingDoorbellCard({
                     if (onUnlockDoor) onUnlockDoor();
                     onClose();
                   }}
-                  className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95"
+                  className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 active:scale-95"
                 >
                   <FontAwesomeIcon icon={faLockOpen} className="text-xs" />
                   <span>Door Unlocked • Paramedics En Route</span>
                 </button>
                 <button
                   onClick={onClose}
-                  className="py-3 px-4 rounded-xl bg-[#1E2330] hover:bg-white/10 text-slate-300 hover:text-white text-xs font-medium border border-white/[0.08]"
+                  className="py-3 px-4 rounded-xl bg-[#141b29] hover:bg-white/10 text-slate-300 hover:text-white text-xs font-medium border border-white/[0.08]"
                 >
                   Dismiss View
                 </button>
@@ -353,34 +494,39 @@ export function RingDoorbellCard({
           ) : (
             /* Package Delivery Mode */
             <div className="flex flex-col gap-3.5">
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#1E2330] border border-white/[0.08]">
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#101624] border border-white/[0.08]">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#1399FF]/15 text-[#1399FF] flex items-center justify-center text-sm border border-[#1399FF]/30">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm border border-emerald-500/40">
                     <FontAwesomeIcon icon={faBoxOpen} />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-white">{desc}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-bold text-white">{desc}</p>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40">
+                        VERIFIED 99.4%
+                      </span>
+                    </div>
                     <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                      Carrier: {carrier} • Front Porch Mat
+                      Carrier: {carrier} • Front Porch Mat • Amazon Logistics Tracking
                     </p>
                   </div>
                 </div>
 
-                <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[11px]">
-                  Delivered
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[11px] font-semibold">
+                  Delivered Just Now
                 </span>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons for Echo Show 10 Touch Target Ergonomics */}
               <div className="flex items-center gap-3">
                 {/* 1. Acknowledge / Bring Inside Button */}
                 <button
                   onClick={handleBringInside}
                   disabled={isBroughtInside}
-                  className="flex-1 py-3 px-4 rounded-xl bg-[#1399FF] hover:bg-[#0088EE] text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1399FF]/25 active:scale-95 disabled:opacity-50"
+                  className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 active:scale-95 disabled:opacity-50"
                 >
                   <FontAwesomeIcon icon={isBroughtInside ? faCircleCheck : faBoxOpen} className="text-sm" />
-                  <span>{isBroughtInside ? 'Package Brought Inside!' : 'Acknowledge / Bring Inside'}</span>
+                  <span>{isBroughtInside ? 'Parcel Brought Inside!' : 'Acknowledge / Bring Inside'}</span>
                 </button>
 
                 {/* 2. Echo Show Two-Way Audio Toggle */}
@@ -388,19 +534,19 @@ export function RingDoorbellCard({
                   onClick={() => setIsTalkActive(!isTalkActive)}
                   className={`py-3 px-4 rounded-xl font-medium text-xs border transition-all flex items-center gap-2 ${
                     isTalkActive
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                      : 'bg-[#1E2330] text-slate-300 hover:text-white border-white/[0.08]'
+                      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-[0_0_12px_rgba(0,202,255,0.3)]'
+                      : 'bg-[#101624] text-slate-300 hover:text-white border-white/[0.08]'
                   }`}
                   title="Two-Way Talk via Ring Doorbell"
                 >
                   <FontAwesomeIcon icon={isTalkActive ? faVolumeHigh : faMicrophone} className="text-xs" />
-                  <span>{isTalkActive ? 'Live Audio ON' : 'Two-Way Talk'}</span>
+                  <span>{isTalkActive ? 'Two-Way Audio ACTIVE' : 'Two-Way Talk'}</span>
                 </button>
 
                 {/* 3. Dismiss Button */}
                 <button
                   onClick={onClose}
-                  className="py-3 px-4 rounded-xl bg-[#1E2330] hover:bg-white/10 text-slate-400 hover:text-white text-xs font-medium border border-white/[0.08]"
+                  className="py-3 px-4 rounded-xl bg-[#101624] hover:bg-white/10 text-slate-400 hover:text-white text-xs font-medium border border-white/[0.08]"
                 >
                   Close
                 </button>

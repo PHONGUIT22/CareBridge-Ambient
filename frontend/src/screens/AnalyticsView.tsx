@@ -16,8 +16,10 @@ import {
   faDroplet,
   faShieldHalved,
   faBolt,
+  faEye,
 } from '@fortawesome/free-solid-svg-icons';
 import { mcpClient } from '../services/mcpClient';
+import { DoctorReportPreviewModal } from '../components/DoctorReportPreviewModal';
 
 type MetricTab = 'bloodPressure' | 'bloodSugar' | 'heartRate';
 
@@ -33,6 +35,7 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
   const [activeTab, setActiveTab] = useState<MetricTab>('bloodPressure');
   const [vitalsData, setVitalsData] = useState<VitalPoint[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -84,13 +87,24 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
     <div className="min-h-full bg-[#F8FAFC] text-slate-900 p-4 sm:p-5 font-sans select-none pb-28">
       <div className="max-w-xl mx-auto flex flex-col gap-4">
         {/* 1. HEADER SECTION (MATCHES image/7.png) */}
-        <div className="pt-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600 font-mono">
-            BIOMETRIC TRENDS
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
-            Vitals Analytics
-          </h1>
+        <div className="pt-1 flex items-start justify-between">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-600 font-mono">
+              BIOMETRIC TRENDS
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
+              Vitals Analytics
+            </h1>
+          </div>
+
+          <button
+            onClick={() => setIsPreviewOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm active:scale-95 transition-all mt-1"
+            title="One-Tap Quick Doctor A4 Preview with 30-Day BP Chart & Scannable QR Code"
+          >
+            <FontAwesomeIcon icon={faEye} className="text-xs" />
+            <span>Doctor A4 Sheet</span>
+          </button>
         </div>
 
         {/* 2. 3 METRIC TABS (MATCHES image/7.png) */}
@@ -312,6 +326,23 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
           </div>
         </div>
       </div>
+
+      {/* ONE-TAP QUICK DOCTOR A4 PREVIEW MODAL */}
+      <DoctorReportPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        patientName="Eleanor Vance"
+        patientAge={78}
+        caregiverName="Sarah Connor"
+        adherenceRate={87.5}
+        vitals={vitalsData.map((v) => ({
+          timestamp: `2026-${v.date}T08:00:00Z`,
+          systolic: v.systolic,
+          diastolic: v.diastolic,
+          bloodSugar: v.bloodSugar,
+          heartRate: v.heartRate,
+        }))}
+      />
     </div>
   );
 }

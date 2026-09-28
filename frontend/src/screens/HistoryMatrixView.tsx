@@ -11,8 +11,10 @@ import {
   faCircleCheck,
   faArrowsRotate,
   faCrown,
+  faEye,
 } from '@fortawesome/free-solid-svg-icons';
 
+import { DoctorReportPreviewModal } from '../components/DoctorReportPreviewModal';
 import { AuthSession } from '../components/AuthGate';
 
 interface HistoryMatrixViewProps {
@@ -35,6 +37,7 @@ export function HistoryMatrixView({
   patientAge,
 }: HistoryMatrixViewProps) {
   const [isExporting, setIsExporting] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const { medicines, rawLogs, rawVitals, loading, refetch } = useHeatmap();
 
   useEffect(() => {
@@ -124,6 +127,22 @@ export function HistoryMatrixView({
               <FontAwesomeIcon icon={faArrowsRotate} className="text-xs" />
             </button>
 
+            {/* One-Tap Quick Doctor A4 Preview Button */}
+            <button
+              onClick={() => {
+                if (!isPro) {
+                  onOpenPaywall?.();
+                  return;
+                }
+                setIsPreviewModalOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm active:scale-95 transition-all"
+              title="One-Tap Quick Doctor A4 Report Preview with 30-day BP Chart & QR Code"
+            >
+              <FontAwesomeIcon icon={faEye} className="text-xs" />
+              <span>Preview A4</span>
+            </button>
+
             {/* Export PDF Button (image/4.png) */}
             <button
               onClick={handleExportPDF}
@@ -196,6 +215,25 @@ export function HistoryMatrixView({
           </div>
         </div>
       </div>
+
+      {/* ONE-TAP QUICK DOCTOR A4 PREVIEW MODAL */}
+      <DoctorReportPreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        patientName={authSession?.patientName || patientName || 'Eleanor Vance'}
+        patientAge={authSession?.patientAge || patientAge || 78}
+        caregiverName={authSession?.caregiverName || caregiverName || 'Sarah Connor'}
+        adherenceRate={
+          medicines.length > 0
+            ? Math.round(
+                medicines.reduce((acc, m) => acc + m.adherenceRate, 0) / medicines.length
+              )
+            : 87.5
+        }
+        logs={rawLogs}
+        vitals={rawVitals}
+        isPro={isPro}
+      />
     </div>
   );
 }

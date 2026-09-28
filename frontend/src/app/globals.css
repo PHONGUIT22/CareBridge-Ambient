@@ -150,3 +150,24 @@ body {
     opacity: 0.2;
   }
 }
+
+@keyframes radarSweep {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0.1;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  85% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(400%);
+    opacity: 0.1;
+  }
+}
+
+.animate-radarSweep {
+  animation: radarSweep 3.6s linear infinite;
+}
