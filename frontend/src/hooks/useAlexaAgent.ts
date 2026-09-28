@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { mcpClient } from '../services/mcpClient';
 import { speechService } from '../services/speechService';
 import { ClinicalAdviceResponse, AmazonRefillOrder } from '../types';
+import { MockVoiceScenario } from '../services/mockVoiceScenarios';
 
 export interface ToolExecutionLog {
   timestamp: string;
@@ -19,6 +20,8 @@ export interface ChatMessage {
   sender: 'user' | 'alexa';
   text: string;
   timestamp: string;
+  isSimulated?: boolean;
+  senderLabel?: string;
   toolCall?: {
     toolName: string;
     args: any;
@@ -47,6 +50,9 @@ export function useAlexaAgent(options?: UseAlexaAgentOptions) {
   const [isListening, setIsListening] = useState<boolean>(false);
   const [isThinking, setIsThinking] = useState<boolean>(false);
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+  const [isPatientSpeaking, setIsPatientSpeaking] = useState<boolean>(false);
+  const [patientTranscript, setPatientTranscript] = useState<string>('');
+  const [activeScenarioId, setActiveScenarioId] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<string>('');
   const [toolLogs, setToolLogs] = useState<ToolExecutionLog[]>([
     {
@@ -236,7 +242,10 @@ function toConciseSpokenSummary(text: string): string {
 }
 
   const processVoiceQuery = useCallback(
-    async (queryText: string) => {
+    async (
+      queryText: string,
+      queryOptions?: { skipUserMessage?: boolean; isSimulated?: boolean; userMsgId?: string }
+    ) => {
       // 1. Lock against concurrent queries
       if (isBusyRef.current) {
         console.warn('[useAlexaAgent] Dropped concurrent query because agent is busy:', queryText);
@@ -305,16 +314,20 @@ function toConciseSpokenSummary(text: string): string {
       const trimmed = queryText.trim();
       if (!trimmed) return;
 
-      setConversation((prev) => [...prev, { sender: 'user', text: trimmed }]);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `user_${Date.now()}`,
-          sender: 'user',
-          text: trimmed,
-          timestamp: now,
-        },
-      ]);
+      if (!queryOptions?.skipUserMessage) {
+        setConversation((prev) => [...prev, { sender: 'user', text: trimmed }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: queryOptions?.userMsgId || `user_${Date.now()}`,
+            sender: 'user',
+            text: trimmed,
+            timestamp: now,
+            isSimulated: queryOptions?.isSimulated,
+            senderLabel: queryOptions?.isSimulated ? '🎙️ Eleanor (Simulated Voice)' : undefined,
+          },
+        ]);
+      }
 
       // Log start state of Bedrock Native Tool-Use Orchestrator
       setToolLogs((prev) => [
@@ -462,21 +475,136 @@ function toConciseSpokenSummary(text: string): string {
     [options]
   );
 
-  useEffect(() => {
-    processVoiceQueryRef.current = processVoiceQuery;
-  }, [processVoiceQuery]);
+  const simulateVoiceScenario = useCallback(
+    async (scenario: MockVoiceScenario) => {
+      // 1. Guard against concurrent query execution
+      if (isBusyRef.current || isThinking || isSpeaking || isPatientSpeaking) {
+        console.warn('[useAlexaAgent] Simulator locked: agent or speaker is busy');
+        return;
+      }
+
+      // 2. Safely cancel active Web Speech mic recognition to prevent audio feedback loops
+      speechService.cancel();
+      setIsSpeaking(false);
+      try {
+        recognitionRef.current?.abort();
+      } catch (_) {}
+      setIsListening(false);
+
+      // 3. Initiate Turn 1: Patient Voice Simulation
+      setIsPatientSpeaking(true);
+      setPatientTranscript(scenario.prompt);
+      setActiveScenarioId(scenario.id);
+
+      const now = new Date().toLocaleTimeString('en-US', { hour12: false });
+      const userSimId = `user_sim_${Date.now()}`;
+
+      // Instantly append user chat bubble to timeline with [🎙️ Eleanor (Simulated Voice)]
+      setConversation((prev) => [...prev, { sender: 'user', text: scenario.prompt }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: userSimId,
+          sender: 'user',
+          text: scenario.prompt,
+          timestamp: now,
+          isSimulated: true,
+          senderLabel: '🎙️ Eleanor (Simulated Voice)',
+        },
+      ]);
+
+      // Helper function to transition from Turn 1 (Patient) to Turn 2 (Alexa Copilot)
+      let turn2Started = false;
+      const executeTurn2 = async () => {
+        if (turn2Started) return;
+        turn2Started = true;
+        setIsPatientSpeaking(false);
+        setPatientTranscript('');
+        setActiveScenarioId(null);
+
+        // Execute Turn 2 (Alexa Bedrock reasoning, tool call, Polly speech, rich card)
+        await processVoiceQuery(scenario.prompt, {
+          skipUserMessage: true,
+          isSimulated: true,
+        });
+      };
+
+      // Synthesize Patient Voice (Eleanor Vance, age 78, gentle pace)
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(scenario.prompt);
+          utterance.pitch = 0.95; // Gentle mature female pitch
+          utterance.rate = 0.92;  // Deliberate, clear cadence for senior
+          utterance.lang = 'en-US';
+
+          // Select warm English female voice if available
+          const voices = window.speechSynthesis.getVoices();
+          const preferredVoice = voices.find(
+            (v) =>
+              v.lang.startsWith('en') &&
+              (v.name.includes('Samantha') ||
+                v.name.includes('Victoria') ||
+                v.name.includes('Google US English') ||
+                v.name.includes('Jenny') ||
+                v.name.includes('Zira') ||
+                v.name.includes('Karen') ||
+                v.name.includes('Natural'))
+          );
+          if (preferredVoice) {
+            utterance.voice = preferredVoice;
+          }
+
+          // Safety timeout to prevent permanent lock if utterance onend does not fire
+          const timeoutGuard = setTimeout(() => {
+            executeTurn2();
+          }, 8500);
+
+          utterance.onend = () => {
+            clearTimeout(timeoutGuard);
+            // Brief 250ms conversational natural pause between patient finish and Alexa chime
+            setTimeout(() => {
+              executeTurn2();
+            }, 250);
+          };
+
+          utterance.onerror = (err) => {
+            console.warn('[useAlexaAgent] Patient voice synthesis error, falling back:', err);
+            clearTimeout(timeoutGuard);
+            executeTurn2();
+          };
+
+          window.speechSynthesis.speak(utterance);
+          return;
+        } catch (err) {
+          console.warn('[useAlexaAgent] window.speechSynthesis failed:', err);
+        }
+      }
+
+      // Fallback if browser audio is restricted or unsupported: 1.2s simulated speaking delay
+      setTimeout(() => {
+        executeTurn2();
+      }, 1200);
+    },
+    [isThinking, isSpeaking, isPatientSpeaking, processVoiceQuery]
+  );
 
   return {
     isListening,
     isThinking,
     isSpeaking,
+    isPatientSpeaking,
+    patientTranscript,
+    activeScenarioId,
     transcript,
     toolLogs,
     conversation,
     messages,
     toggleListening,
     processVoiceQuery,
+    simulateVoiceScenario,
   };
 }
 
 export type UseAlexaAgentReturn = ReturnType<typeof useAlexaAgent>;
+

@@ -7,9 +7,12 @@ export interface AlexaAmbientGlowProps {
   isListening?: boolean;
   isThinking?: boolean;
   isSpeaking?: boolean;
+  isPatientSpeaking?: boolean;
+  patientTranscript?: string;
   transcript?: string;
   className?: string;
   showStatusBadge?: boolean;
+  onTriggerDemoVoice?: () => void;
 }
 
 /**
@@ -19,17 +22,20 @@ export interface AlexaAmbientGlowProps {
  * 
  * Hardware Fidelity Upgrade (Amazon Devices Track):
  * Integrates Web Audio API (AudioContext & AnalyserNode) to achieve real-time audio-reactive
- * waveform undulation when senior speaks into the microphone or when Alexa responds.
+ * waveform undulation when senior speaks into the microphone, simulated patient speaks, or Alexa responds.
  */
 export function AlexaAmbientGlow({
   isListening = false,
   isThinking = false,
   isSpeaking = false,
+  isPatientSpeaking = false,
+  patientTranscript = '',
   transcript = '',
   className = '',
   showStatusBadge = true,
+  onTriggerDemoVoice,
 }: AlexaAmbientGlowProps) {
-  const isActive = isListening || isThinking || isSpeaking;
+  const isActive = isListening || isThinking || isSpeaking || isPatientSpeaking;
 
   // Real-time audio reactive metrics
   const [amplitude, setAmplitude] = useState<number>(0);
@@ -173,7 +179,7 @@ export function AlexaAmbientGlow({
         }
       } else {
         // Natural Procedural Speech Rhythm Fallback (Harmonic Modulation)
-        if (isSpeaking) {
+        if (isSpeaking || isPatientSpeaking) {
           // Human speech rhythm (3-6 Hz syllables with carrier harmonics)
           const syllable = Math.sin(phase * 1.8) * Math.cos(phase * 0.6);
           const vocalFormant = Math.sin(phase * 3.4) * 0.25;
@@ -223,7 +229,7 @@ export function AlexaAmbientGlow({
         animFrameRef.current = null;
       }
     };
-  }, [isActive, isListening, isSpeaking, isThinking]);
+  }, [isActive, isListening, isSpeaking, isThinking, isPatientSpeaking]);
 
   // Construct SVG Waveform Path across bottom edge
   const svgWavePath = React.useMemo(() => {
@@ -270,10 +276,12 @@ export function AlexaAmbientGlow({
       {/* 2. CONTEXTUAL STATUS PILL WITH EQUALIZER BARS (Echo Show 10 6-foot Legibility) */}
       {showStatusBadge && isActive && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#0d131f]/95 border border-[#00CAFF]/50 backdrop-blur-md shadow-[0_0_20px_rgba(0,202,255,0.4)] transition-all animate-fadeIn">
-          {/* Pulsing Alexa Cyan Indicator */}
+          {/* Pulsing Dot */}
           <span
             className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_#00CAFF] ${
-              isListening
+              isPatientSpeaking
+                ? 'bg-purple-400 animate-pulse'
+                : isListening
                 ? 'bg-[#00CAFF] animate-ping'
                 : isThinking
                 ? 'bg-[#4D8BFF] animate-spin'
@@ -286,7 +294,9 @@ export function AlexaAmbientGlow({
             {freqBands.slice(0, 5).map((val, idx) => (
               <span
                 key={idx}
-                className="w-1 bg-[#00CAFF] rounded-full transition-all duration-75"
+                className={`w-1 rounded-full transition-all duration-75 ${
+                  isPatientSpeaking ? 'bg-purple-400' : 'bg-[#00CAFF]'
+                }`}
                 style={{
                   height: `${Math.max(2, val * 12)}px`,
                   opacity: 0.6 + val * 0.4,
@@ -297,7 +307,11 @@ export function AlexaAmbientGlow({
 
           {/* Voice Context Text */}
           <span className="text-[12px] font-mono font-medium text-cyan-200 tracking-tight whitespace-nowrap">
-            {isListening
+            {isPatientSpeaking
+              ? patientTranscript
+                ? `🎙️ Eleanor (Simulated Voice): "${patientTranscript}"`
+                : '🎙️ Eleanor (Simulated Voice)...'
+              : isListening
               ? transcript
                 ? `"${transcript}"`
                 : 'Listening (Audio-Reactive)...'
@@ -308,10 +322,30 @@ export function AlexaAmbientGlow({
 
           {/* Real-time Decibel / Gain Signal Badge */}
           {amplitude > 0.05 && (
-            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
-              {Math.round(amplitude * 100)}%
+            <span
+              className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                isPatientSpeaking
+                  ? 'bg-purple-950/80 text-purple-300 border-purple-500/40'
+                  : 'bg-cyan-950/80 text-cyan-300 border-cyan-500/30'
+              }`}
+            >
+              {isPatientSpeaking ? 'SIM VOICE' : `${Math.round(amplitude * 100)}%`}
             </span>
           )}
+        </div>
+      )}
+
+      {/* 2B. LOCATION A: DEMO VOICE SIMULATOR BUTTON (BEDSIDE HARDWARE BAR) */}
+      {onTriggerDemoVoice && (
+        <div className="absolute bottom-4 right-4 pointer-events-auto z-40">
+          <button
+            onClick={onTriggerDemoVoice}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0d131f]/95 hover:bg-[#1e293b] border border-[#00CAFF]/50 hover:border-[#00CAFF] text-cyan-200 hover:text-white text-[11px] font-mono font-bold shadow-[0_0_16px_rgba(0,202,255,0.35)] transition-all active:scale-95"
+            title="1-Click Dual-Turn Mock Voice Dialogue Simulator"
+          >
+            <span>🎭</span>
+            <span>Demo Voice</span>
+          </button>
         </div>
       )}
 

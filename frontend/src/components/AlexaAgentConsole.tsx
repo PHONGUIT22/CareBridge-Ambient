@@ -18,6 +18,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { UseAlexaAgentReturn, ChatMessage, ToolExecutionLog } from '../hooks/useAlexaAgent';
 import { ClinicalAdviceResponse } from '../types';
+import { MockVoiceScenario, MOCK_VOICE_SCENARIOS } from '../services/mockVoiceScenarios';
 
 export interface AlexaAgentConsoleProps {
   onTriggerVisualCard?: (medName: string) => void;
@@ -27,11 +28,15 @@ export interface AlexaAgentConsoleProps {
   isListening?: boolean;
   isThinking?: boolean;
   isSpeaking?: boolean;
+  isPatientSpeaking?: boolean;
+  activeScenarioId?: string | null;
+  patientTranscript?: string;
   transcript?: string;
   messages?: ChatMessage[];
   toolLogs?: ToolExecutionLog[];
   toggleListening?: () => void;
   processVoiceQuery?: (query: string) => Promise<void>;
+  simulateVoiceScenario?: (scenario: MockVoiceScenario) => Promise<void>;
   patientName?: string;
   patientAge?: number;
 }
@@ -85,10 +90,13 @@ export function AlexaAgentConsole({
   isListening: propIsListening,
   isThinking: propIsThinking,
   isSpeaking: propIsSpeaking,
+  isPatientSpeaking: propIsPatientSpeaking,
+  activeScenarioId: propActiveScenarioId,
   transcript: propTranscript,
   messages: propMessages,
   toggleListening: propToggleListening,
   processVoiceQuery: propProcessVoiceQuery,
+  simulateVoiceScenario: propSimulateVoiceScenario,
   patientName = 'Eleanor Vance',
   patientAge = 78,
 }: AlexaAgentConsoleProps) {
@@ -100,10 +108,14 @@ export function AlexaAgentConsole({
   const isListening = voiceAgent ? voiceAgent.isListening : propIsListening ?? false;
   const isThinking = voiceAgent ? voiceAgent.isThinking : propIsThinking ?? false;
   const isSpeaking = voiceAgent ? (voiceAgent as any).isSpeaking : propIsSpeaking ?? false;
+  const isPatientSpeaking = voiceAgent ? (voiceAgent as any).isPatientSpeaking : propIsPatientSpeaking ?? false;
+  const activeScenarioId = voiceAgent ? (voiceAgent as any).activeScenarioId : propActiveScenarioId ?? null;
   const transcript = voiceAgent ? voiceAgent.transcript : propTranscript ?? '';
   const messages = voiceAgent ? voiceAgent.messages : propMessages ?? EMPTY_MESSAGES;
   const toggleListening = voiceAgent ? voiceAgent.toggleListening : propToggleListening ?? (() => {});
   const processVoiceQuery = voiceAgent ? voiceAgent.processVoiceQuery : propProcessVoiceQuery ?? (async () => {});
+  const simulateVoiceScenario = voiceAgent ? (voiceAgent as any).simulateVoiceScenario : propSimulateVoiceScenario ?? (async () => {});
+  const isBusy = isListening || isThinking || isSpeaking || isPatientSpeaking;
 
   const toggleJson = (id: string) => {
     setExpandedJsonIds((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -178,6 +190,12 @@ export function AlexaAgentConsole({
             </div>
           </div>
           <div className="flex items-center gap-1.5">
+            {isPatientSpeaking && (
+              <span className="px-2 py-0.5 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-xs font-mono font-medium flex items-center gap-1 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-600 animate-ping" />
+                Turn 1: Eleanor
+              </span>
+            )}
             {isListening && (
               <span className="px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[#1E3A8A] text-xs font-mono font-medium flex items-center gap-1 animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-ping" />
@@ -196,11 +214,52 @@ export function AlexaAgentConsole({
                 Speaking
               </span>
             )}
-            {!isListening && !isThinking && !isSpeaking && (
+            {!isListening && !isThinking && !isSpeaking && !isPatientSpeaking && (
               <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-mono font-medium">
                 Live
               </span>
             )}
+          </div>
+        </div>
+
+        {/* LOCATION B: 1-CLICK DUAL-TURN VOICE SCENARIO BAR */}
+        <div className="mb-2 p-2 rounded-xl bg-gradient-to-r from-purple-50/90 via-indigo-50/70 to-blue-50/90 border border-purple-200/80 shadow-2xs">
+          <div className="flex items-center justify-between gap-2 mb-1.5 px-0.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-purple-900 tracking-tight">
+              <span className="text-sm">🎭</span>
+              <span>1-Click Voice Scenario</span>
+              <span className="text-[10px] font-semibold text-purple-700 bg-purple-100/90 px-1.5 py-0.5 rounded-full border border-purple-200">
+                Dual-Turn Audio Simulator
+              </span>
+            </div>
+            {isPatientSpeaking && (
+              <span className="text-[10px] font-mono text-purple-700 animate-pulse flex items-center gap-1 font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-600 animate-ping" />
+                Turn 1: Eleanor Speaking...
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            {MOCK_VOICE_SCENARIOS.map((scenario) => {
+              const isActive = activeScenarioId === scenario.id;
+              return (
+                <button
+                  key={scenario.id}
+                  onClick={() => simulateVoiceScenario(scenario)}
+                  disabled={isBusy}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 shadow-2xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${
+                    isActive
+                      ? 'bg-purple-600 text-white shadow-md ring-2 ring-purple-300 ring-offset-1 animate-pulse'
+                      : 'bg-white hover:bg-purple-100/80 text-purple-900 border border-purple-200/70 hover:border-purple-300'
+                  }`}
+                  title={`${scenario.title}: "${scenario.prompt}"`}
+                >
+                  <span>{scenario.actionIcon}</span>
+                  <span>{scenario.title}</span>
+                  <span className="text-[9px] font-mono opacity-60 ml-0.5">({scenario.badge})</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -245,9 +304,22 @@ export function AlexaAgentConsole({
           const isExpanded = Boolean(expandedJsonIds[msg.id]);
 
           if (isUser) {
+            const isSimulated = msg.isSimulated || Boolean(msg.senderLabel);
             return (
               <div key={msg.id} className="flex justify-end animate-fadeIn">
-                <div className="max-w-[85%] bg-[#1E3A8A] text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 text-xs shadow-sm border border-blue-900">
+                <div
+                  className={`max-w-[85%] rounded-2xl rounded-tr-sm px-3.5 py-2.5 text-xs shadow-sm border ${
+                    isSimulated
+                      ? 'bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-900 text-purple-50 border-purple-500/50 shadow-purple-900/20'
+                      : 'bg-[#1E3A8A] text-white border-blue-900'
+                  }`}
+                >
+                  {isSimulated && (
+                    <div className="flex items-center gap-1.5 mb-1 pb-1 border-b border-purple-500/30 text-[10px] font-semibold text-purple-200 tracking-wider">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />
+                      <span>{msg.senderLabel || '🎙️ Eleanor (Simulated Voice)'}</span>
+                    </div>
+                  )}
                   <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                   <span className="block text-[10px] text-sky-200 text-right mt-1 font-mono">
                     {msg.timestamp}

@@ -16,6 +16,8 @@ import { AuthGate, AuthSession } from '../components/AuthGate';
 import { PaywallModal } from '../components/PaywallModal';
 import { OnboardingModal } from '../components/OnboardingModal';
 import { AlexaAmbientGlow } from '../components/AlexaAmbientGlow';
+import { DemoVoiceModal } from '../components/DemoVoiceModal';
+import { MockVoiceScenario } from '../services/mockVoiceScenarios';
 import { AmazonRefillOrder } from '../types';
 import { mcpClient } from '../services/mcpClient';
 import { speechService } from '../services/speechService';
@@ -56,6 +58,7 @@ export default function Home() {
   const [ringEmergencyReason, setRingEmergencyReason] = useState<string>('');
   const [guardianCardOpen, setGuardianCardOpen] = useState<boolean>(false);
   const [guardianCardData, setGuardianCardData] = useState<any>(null);
+  const [isDemoVoiceModalOpen, setIsDemoVoiceModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -623,14 +626,16 @@ export default function Home() {
                     </button>
                   </div>
 
-                  {/* ELEVATED CENTER HARDWARE-STYLE MIC BUTTON */}
-                  <div className="relative -top-4 flex items-center justify-center">
+                  {/* ELEVATED CENTER HARDWARE-STYLE MIC BUTTON & DEMO VOICE SIMULATOR */}
+                  <div className="relative -top-4 flex items-center justify-center gap-2">
                     {/* Visual voice feedback pill above Mic */}
-                    {(alexaAgent.isListening || alexaAgent.isThinking || alexaAgent.isSpeaking) && (
+                    {(alexaAgent.isListening || alexaAgent.isThinking || alexaAgent.isSpeaking || alexaAgent.isPatientSpeaking) && (
                       <div className="absolute -top-11 px-3 py-1.5 rounded-xl bg-white border border-[#2563EB]/40 text-slate-900 text-xs font-semibold shadow-lg backdrop-blur-md whitespace-nowrap flex items-center gap-2 z-30 pointer-events-none animate-fadeIn">
                         <span
                           className={`w-2 h-2 rounded-full shrink-0 ${
-                            alexaAgent.isThinking
+                            alexaAgent.isPatientSpeaking
+                              ? 'bg-purple-600 animate-ping'
+                              : alexaAgent.isThinking
                               ? 'bg-[#2563EB] animate-spin'
                               : alexaAgent.isListening
                               ? 'bg-[#00CAFF] animate-ping'
@@ -638,7 +643,11 @@ export default function Home() {
                           }`}
                         />
                         <span className="max-w-[220px] truncate">
-                          {alexaAgent.isThinking
+                          {alexaAgent.isPatientSpeaking
+                            ? alexaAgent.patientTranscript
+                              ? `Eleanor: "${alexaAgent.patientTranscript}"`
+                              : 'Eleanor speaking...'
+                            : alexaAgent.isThinking
                             ? 'Analyzing with Bedrock...'
                             : alexaAgent.isSpeaking
                             ? 'Speaking response...'
@@ -666,6 +675,21 @@ export default function Home() {
                         icon={alexaAgent.isThinking ? faCircleNotch : faMicrophone}
                         className={`text-lg ${alexaAgent.isSpeaking ? 'text-slate-900' : 'text-white'} ${alexaAgent.isThinking ? 'animate-spin' : ''}`}
                       />
+                    </button>
+
+                    {/* LOCATION A: 1-CLICK DUAL-TURN DEMO VOICE TOGGLE/CHIP */}
+                    <button
+                      onClick={() => setIsDemoVoiceModalOpen(true)}
+                      disabled={alexaAgent.isThinking || alexaAgent.isSpeaking || alexaAgent.isPatientSpeaking}
+                      className={`h-10 px-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-all shadow-xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${
+                        alexaAgent.isPatientSpeaking
+                          ? 'bg-purple-600 text-white border-purple-400 ring-2 ring-purple-300 animate-pulse'
+                          : 'bg-white/95 hover:bg-purple-50 text-purple-900 border-purple-200 shadow-sm'
+                      }`}
+                      title="1-Click Dual-Turn Mock Voice Dialogue Simulator"
+                    >
+                      <span className="text-sm">🎭</span>
+                      <span className="text-[11px] font-mono tracking-tight">Demo Voice</span>
                     </button>
                   </div>
 
@@ -707,7 +731,10 @@ export default function Home() {
                 isListening={alexaAgent.isListening}
                 isThinking={alexaAgent.isThinking}
                 isSpeaking={alexaAgent.isSpeaking}
+                isPatientSpeaking={alexaAgent.isPatientSpeaking}
+                patientTranscript={alexaAgent.patientTranscript}
                 transcript={alexaAgent.transcript}
+                onTriggerDemoVoice={() => setIsDemoVoiceModalOpen(true)}
               />
             </div>
           </div>
@@ -874,6 +901,17 @@ export default function Home() {
         )}
         initialEmail={authSession?.email}
         onComplete={handleOnboardingComplete}
+      />
+
+      {/* 1-CLICK DUAL-TURN MOCK VOICE DIALOGUE SIMULATOR MODAL */}
+      <DemoVoiceModal
+        isOpen={isDemoVoiceModalOpen}
+        onClose={() => setIsDemoVoiceModalOpen(false)}
+        onSelectScenario={async (scenario: MockVoiceScenario) => {
+          await alexaAgent.simulateVoiceScenario(scenario);
+        }}
+        activeScenarioId={alexaAgent.activeScenarioId}
+        isBusy={alexaAgent.isThinking || alexaAgent.isSpeaking || alexaAgent.isPatientSpeaking}
       />
 
       {/* TOAST NOTIFICATION CONTAINER (NON-BLOCKING RESILIENT WARNINGS) */}

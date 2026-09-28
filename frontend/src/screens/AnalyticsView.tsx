@@ -336,7 +336,7 @@ export function AnalyticsView({ refreshTrigger = 0 }: { refreshTrigger?: number 
         caregiverName="Sarah Connor"
         adherenceRate={87.5}
         vitals={vitalsData.map((v) => ({
-          timestamp: `2026-${v.date}T08:00:00Z`,
+          date: `2026-${v.date}`,
           systolic: v.systolic,
           diastolic: v.diastolic,
           bloodSugar: v.bloodSugar,

@@ -86,14 +86,14 @@ export function DoctorReportPreviewModal({
         caregiverName: fullCaregiverTitle,
         adherenceRate,
         logs: logs.length > 0 ? logs : [
-          { date: '2026-09-14', scheduledTime: '08:00', name: 'Amlodipine Besylate', dosage: '5mg oral', status: 'taken', notes: 'Verified morning intake' },
-          { date: '2026-09-14', scheduledTime: '08:00', name: 'Metformin HCl', dosage: '500mg oral', status: 'taken', notes: 'With breakfast' },
-          { date: '2026-09-14', scheduledTime: '12:00', name: 'Lisinopril', dosage: '10mg oral', status: 'taken', notes: 'Hydration verified' },
-          { date: '2026-09-13', scheduledTime: '20:00', name: 'Atorvastatin Calcium', dosage: '20mg oral', status: 'taken', notes: 'Bedtime dose' },
-          { date: '2026-09-13', scheduledTime: '12:00', name: 'Lisinopril', dosage: '10mg oral', status: 'taken', notes: 'Confirmed with caregiver' },
+          { logId: 'fb1', medicineId: 'm1', isTaken: true, date: '2026-09-14', scheduledTime: '08:00', name: 'Amlodipine Besylate', dosage: '5mg oral', status: 'taken', notes: 'Verified morning intake' },
+          { logId: 'fb2', medicineId: 'm2', isTaken: true, date: '2026-09-14', scheduledTime: '08:00', name: 'Metformin HCl', dosage: '500mg oral', status: 'taken', notes: 'With breakfast' },
+          { logId: 'fb3', medicineId: 'm3', isTaken: true, date: '2026-09-14', scheduledTime: '12:00', name: 'Lisinopril', dosage: '10mg oral', status: 'taken', notes: 'Hydration verified' },
+          { logId: 'fb4', medicineId: 'm4', isTaken: true, date: '2026-09-13', scheduledTime: '20:00', name: 'Atorvastatin Calcium', dosage: '20mg oral', status: 'taken', notes: 'Bedtime dose' },
+          { logId: 'fb5', medicineId: 'm3', isTaken: true, date: '2026-09-13', scheduledTime: '12:00', name: 'Lisinopril', dosage: '10mg oral', status: 'taken', notes: 'Confirmed with caregiver' },
         ],
         vitals: vitals.length > 0 ? vitals : [
-          { timestamp: '2026-09-14T08:00:00Z', systolic: 121, diastolic: 79, heartRate: 72, bloodSugar: 106.8 },
+          { date: '2026-09-14', systolic: 121, diastolic: 79, heartRate: 72, bloodSugar: 106.8 },
         ],
       });
     } catch (e) {
