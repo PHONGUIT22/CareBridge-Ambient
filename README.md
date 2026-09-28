@@ -41,7 +41,7 @@ Millions of older adults forget daily medications or misjudge acute symptoms (su
 
 | Devpost Submission Field | CareBridge Implementation | Runtime Verification & Evidence |
 | :--- | :--- | :--- |
-| **Primary Track: Alexa+ (Full MCP Architecture)** | Full Model Context Protocol (MCP) server implementing **all 3 MCP Primitives**: **Tools** (`CallToolRequestSchema`, `ListToolsRequestSchema`), **Resources** (`ListResourcesRequestSchema`, `ReadResourceRequestSchema`), and **Prompts** (`ListPromptsRequestSchema`, `GetPromptRequestSchema`). Implements **Streamable HTTP Server-Sent Events (SSE)** transport (`/sse`, `/message`). | [`backend-mcp/src/server.ts`](./backend-mcp/src/server.ts)<br>[`backend-mcp/src/resources/index.ts`](./backend-mcp/src/resources/index.ts)<br>[`backend-mcp/src/prompts/index.ts`](./backend-mcp/src/prompts/index.ts)<br>5 MCP Tools + 2 Clinical Resources + 2 Workflow Prompts. |
+| **Primary Track: Alexa+ (Full MCP Architecture)** | Full Model Context Protocol (MCP) server implementing **all 3 MCP Primitives**: **Tools** (`CallToolRequestSchema`, `ListToolsRequestSchema`), **Resources** (`ListResourcesRequestSchema`, `ReadResourceRequestSchema`), and **Prompts** (`ListPromptsRequestSchema`, `GetPromptRequestSchema`). Implements **Streamable HTTP Server-Sent Events (SSE)** transport (`/sse`, `/message`). | [`backend-mcp/src/server.ts`](./backend-mcp/src/server.ts)<br>[`backend-mcp/src/resources/index.ts`](./backend-mcp/src/resources/index.ts)<br>[`backend-mcp/src/prompts/index.ts`](./backend-mcp/src/prompts/index.ts)<br>7 MCP Tools + 2 Clinical Resources + 2 Workflow Prompts. |
 | **Mini-Challenge: AWS Builder (Clinical Enterprise)** | **End-to-End Enterprise AWS Pipeline:**<br>1. **Amazon Bedrock Runtime:** Claude Haiku 4.5 with Guardrails (Topic Denial for cardiac alterations & PII Redaction for SSN/Credit Cards) + Streaming inference (<400ms TTFA).<br>2. **AWS Polly:** Neural TTS (`Ruth`) streamed directly via Web Audio pipeline.<br>3. **AWS SNS:** High-priority `Transactional` SMS emergency dispatch to caregiver Sarah Connor (`+1 555-0199`).<br>4. **15-Drug Beers Criteria Engine:** Comprehensive geriatric interaction lookup registry with 20 critical safety rules. | [`backend-mcp/src/aws/bedrockClient.ts`](./backend-mcp/src/aws/bedrockClient.ts)<br>[`backend-mcp/src/services/drugInteractionService.ts`](./backend-mcp/src/services/drugInteractionService.ts)<br>[`backend-mcp/src/aws/pollyClient.ts`](./backend-mcp/src/aws/pollyClient.ts)<br>[`backend-mcp/src/aws/snsClient.ts`](./backend-mcp/src/aws/snsClient.ts) |
 | **Amazon Devices Track: Echo Show 10 Hardware Fidelity** | **Tailored for 6-Foot Bedside Viewing:**<br>1. **Web Audio Reactive Light Bar:** Liquid SVG ribbon `#00CAFF` modulating height & bloom based on microphone and Polly audio amplitude.<br>2. **Ring Porch Cam Simulation:** Switchable 850nm IR night-vision, continuous radar scan sweep, and emerald green `[Amazon Prime Package - Verified]` CV bounding box.<br>3. **One-Tap Doctor A4 Preview:** Visualized 30-day BP chart, scannable HL7/FHIR QR Code, and 1-tap PDF export. | [`frontend/src/components/AlexaAmbientGlow.tsx`](./frontend/src/components/AlexaAmbientGlow.tsx)<br>[`frontend/src/components/RichCards/RingDoorbellCard.tsx`](./frontend/src/components/RichCards/RingDoorbellCard.tsx)<br>[`frontend/src/components/DoctorReportPreviewModal.tsx`](./frontend/src/components/DoctorReportPreviewModal.tsx) |
 | **Mini-Challenge: Open Source** | 100% open-source software under the permissive **MIT License**. Standard root license file and metadata visible directly in GitHub repository about section. | [`LICENSE`](./LICENSE)<br>Verified open-source repository. |
@@ -68,6 +68,8 @@ CareBridge is built on the complete Anthropic / Amazon Model Context Protocol sp
         │ • recordVitals           │      │      │ • acute_chest_pain_     │
         │ • clinicalAdvisor        │      │      │   triage                │
         │ • orderRefill            │      │      └─────────────────────────┘
+        │ • ringDeviceHub          │      │
+        │ • negotiateAdherence     │      │
         └──────────────────────────┘      │
                                ┌──────────▼──────────────┐
                                │      MCP RESOURCES      │
@@ -80,19 +82,23 @@ CareBridge is built on the complete Anthropic / Amazon Model Context Protocol sp
                                └─────────────────────────┘
 ```
 
-### 1. The 5 Registered MCP Tools
+### The Full Tri-Pillar MCP Implementation (7 Tools, 2 Resources, 2 Prompts)
+
+#### 1. The 7 Registered MCP Action Tools
 - [`getTodaySchedule`](./backend-mcp/src/tools/getTodaySchedule.ts): Queries daily regimen, adherence rate, and upcoming doses.
-- [`logDoseStatus`](./backend-mcp/src/tools/logDoseStatus.ts): Logs taken/skipped, decrements inventory, and triggers low-stock alerts ($\le 5$ pills).
+- [`logDoseStatus`](./backend-mcp/src/tools/logDoseStatus.ts): Logs taken/skipped, decrements inventory, and triggers low-stock alerts ($\le 3$ pills).
 - [`recordVitals`](./backend-mcp/src/tools/recordVitals.ts): Records blood pressure, heart rate, and blood glucose in SQLite WAL.
 - [`clinicalAdvisor`](./backend-mcp/src/tools/clinicalAdvisor.ts): Bedrock Claude Haiku triage with AWS SNS emergency caregiver dispatch.
-- [`orderRefill`](./backend-mcp/src/tools/orderRefill.ts): Autonomous Amazon Pharmacy 1-click replenishment (+30 tablets).
+- [`orderRefill`](./backend-mcp/src/tools/orderRefill.ts): Autonomous Amazon Pharmacy 1-click replenishment (+30 tablets, Prime 2-Day delivery).
+- [`ringDeviceHub`](./backend-mcp/src/tools/ringDeviceHub.ts): Smart home IoT bridge for Ring Doorbell live night-vision camera, package CV detection, and paramedic smart deadbolt emergency unlock.
+- [`negotiateAdherence`](./backend-mcp/src/tools/negotiateAdherence.ts): Multi-turn compassionate AI guardian negotiation for medication refusal, with automatic **Sarah Connor Circuit-Breaker** escalation.
 
-### 2. The 2 Registered MCP Resources
+#### 2. The 2 Registered MCP Resources
 MCP clients can read clinical state directly without triggering tool invocations:
 - `carebridge://patient/eleanor-vance/adherence-30d`: Exposes 30 days of structured adherence events, dosages, and compliance percentages in standard JSON.
 - `carebridge://clinical/prescriptions/active`: Exposes active medication catalog with expiration dates, daily dosage frequencies, and real-time inventory counts.
 
-### 3. The 2 Registered MCP Prompts
+#### 3. The 2 Registered MCP Prompts
 Re-usable clinical workflow templates that guide assistant interaction:
 - `morning_medication_checkin`: Directs Alexa to converse with gentle geriatric phrasing, reminding the senior of hydration and breakfast intake.
 - `acute_chest_pain_triage`: Enforces strict emergency triage protocol, bypassing pleasantries to assess radiation of pain, dyspnea, and triggering smart lock / paramedic SMS alert.
@@ -119,25 +125,32 @@ Engineered in [`drugInteractionService.ts`](./backend-mcp/src/services/drugInter
 
 ## 📱 Pillar 3: Echo Show 10 Hardware Fidelity & Ambient UI
 
-### 1. Web Audio Reactive Alexa Cyan Glow (`AlexaAmbientGlow.tsx`)
-- Integrates Web Audio API `AudioContext` and `AnalyserNode`.
-- Liquid SVG ribbon with Alexa Cyan gradient (`#00CAFF` &rarr; `#0070F3` &rarr; `#00F5FF`) ripples dynamically along the bottom screen edge in response to real-time voice amplitude.
-- Upward diffused ambient aura plume height expands from 48px to 100px based on volume.
-- Contextual HUD pill displays animated 5-bar equalizer visualizer and decibel gain readout.
+### 1. Web Audio API Reactive Alexa Cyan Glow (`AlexaAmbientGlow.tsx`)
+- Integrates native **Web Audio API `AudioContext`** and **`AnalyserNode`** connected directly to audio streams.
+- **Dynamic Liquid SVG Wave Ribbon**: High-definition undulating wave with signature Alexa Cyan gradient (`#00CAFF` &rarr; `#0070F3` &rarr; `#00F5FF`) rippling rhythmically along the screen's bottom bezel according to real-time voice frequencies, harmonic cadence, and decibel amplitude.
+- Upward diffused ambient aura plume dynamically expands from 48px to 100px based on vocal power and ambient resonance.
+- Contextual HUD status pill displays animated **5-band equalizer visualizer**, decibel gain readout, and live voice context tags.
 
-### 2. Ring Doorbell Pro 2 Live Porch Cam Simulation (`RingDoorbellCard.tsx`)
-- **Night-Vision Optical Modes**: Switchable 850nm IR Phosphor Monochrome and Starlight Color Night Vision.
-- **Radar Scan Sweep**: Continuous laser scan line with trailing phosphorescent glow scanning the porch every 3.6s.
-- **Amazon Pharmacy Package Tracking**: Emerald green computer vision bounding box (`#10B981`) tracking delivery parcel with corner brackets and exact certification tag:
+### 2. Ring Doorbell IR Night Vision & Computer Vision (`RingDoorbellCard.tsx`)
+- **Night-Vision Optical Modes**: Switchable 850nm IR phosphor monochrome night-vision and starlight high-contrast camera simulation.
+- **Radar Scan Sweep**: Continuous laser radar sweep with trailing phosphorescent glow scanning the porch surface every 3.6s.
+- **Amazon Pharmacy Package Tracking**: Emerald green computer vision bounding box (`#10B981`) tracking delivery parcel position with corner targeting reticles and verified certification tag:
   > `[Amazon Prime Package - Verified]` (Confidence: 99.4%)
-- **Live Surveillance Telemetry**: Blinking `● LIVE REC` with 30 FPS timecode counter, bitrate, and Ring Deadbolt lock/unlock status.
+- **Paramedic Acute Access**: 1-click **Ring Smart Deadbolt** override unlocking the front door during critical emergencies.
+- **Live Surveillance Telemetry**: Blinking `● LIVE REC` with 30 FPS timecode counter, signal bitrate, and encrypted smart lock telemetry.
 
 ### 3. One-Tap Quick Doctor A4 Preview Modal (`DoctorReportPreviewModal.tsx`)
-- High-fidelity A4 document sheet previewing clinical summary prior to printing/downloading.
-- **30-Day Blood Pressure Longitudinal Trajectory Chart**: Displays Systolic & Diastolic trend curves with target threshold band (<130/80 mmHg).
-- **Scannable Doctor QR Code**: Sharp SVG QR code encoding `https://carebridge.health/audit/CB-7821-EV` for clinic tablet scanning.
-- Attending physician attestation line with AWS KMS digital verification seal.
-- Direct 1-tap PDF generation powered by `pdfService.generateDoctorReport(...)`.
+- High-fidelity hospital-grade A4 document sheet previewing clinical summary prior to printing or PDF export.
+- **30-Day Blood Pressure Longitudinal Trajectory Chart**: Displays Systolic & Diastolic trend curves with clinical target threshold band (<130/80 mmHg).
+- **Scannable Doctor QR Code**: Sharp SVG QR code encoding `https://carebridge.health/audit/CB-7821-EV` formatted for clinical EHR / HL7 FHIR compliance.
+- Attending cardiologist verification attestation with digital cryptographic verification seal.
+- Direct 1-tap PDF generation powered by `pdfService.generateDoctorReport(...)` with zero layout drift.
+
+### 4. One-Click Dual-Turn Mock Voice Dialogue Simulator (`DemoVoiceModal.tsx`)
+- High-contrast toggle chip `[🎭 Demo Voice]` embedded in both the bedside bottom bar and the developer agent console.
+- **Turn 1 (Senior Patient Voice Simulation)**: Synthesizes Eleanor Vance (age 78, gentle timbre, pitch: 0.95, rate: 0.92) asking a realistic clinical query aloud, triggering reactive cyan waves and instant labeled chat bubbles.
+- **Turn 2 (Alexa Copilot Execution)**: On completion, triggers the 0ms earcon chime, engages Bedrock multi-turn reasoning, executes respective MCP tools, speaks via AWS Polly (`Ruth`), and displays rich interactive cards.
+- Pre-loaded with 5 clinically realistic scenarios matching [`DEMO_SCRIPT_3MIN.md`](./DEMO_SCRIPT_3MIN.md).
 
 ---
 
@@ -259,20 +272,27 @@ Click: 👉 **"Sign in with demo (1-click evaluator pass)"**
 
 ## 🧪 Verification & Test Suite
 
-The project includes unit and integration test suites:
+The project includes an enterprise-grade automated test suite executed with Vitest:
 
 ```bash
-# Run all backend tests (MCP Tools, Resources, Prompts, Beers Criteria, Bedrock Guardrails)
-npm run test --workspace=backend-mcp
+# Run all 65 automated tests across all 7 test files (100% pass rate)
+npm test --workspace=backend-mcp
 
 # Run dedicated Bedrock enterprise test suite
 npm run test:bedrock --workspace=backend-mcp
 
-# Verify TypeScript builds
-npm run build --workspaces
+# Verify clean Next.js 15 production build with zero TypeScript errors
+npm run build --workspace=frontend
 ```
 
-**Verification Results: 65 / 65 Tests Passing (100% Pass Rate).**
+**Verification Results: 65 / 65 Passing Automated Tests (100% Pass Rate Across 7 Test Files):**
+- ✅ `tests/bedrockEnterprise.test.ts` (22 tests): Bedrock Guardrails (Topic Denial & PII Redaction), streaming token inference, Polly TTS TTFA < 400ms.
+- ✅ `tests/agentTurn.test.ts` (8 tests): Multi-turn voice agent orchestration, automatic tool reasoning, Sarah Circuit-Breaker, paramedic emergency unlock.
+- ✅ `tests/beersCriteria.test.ts`: 15-drug geriatric pharmacology registry and critical interaction warnings.
+- ✅ `tests/mcpResourcesPrompts.test.ts`: JSON-RPC 2.0 MCP Resources reading & MCP Prompts clinical workflows.
+- ✅ `tests/mcpTools.test.ts`: Independent execution of all 7 registered MCP clinical action tools.
+- ✅ `tests/offlineFallback.test.ts`: Zero-network resilient heuristic fallback engine and SQLite reliability.
+- ✅ `tests/regression.test.ts`: Full clinical pipeline regression suite.
 
 ---
 
@@ -293,13 +313,9 @@ carebridge-ambient/
 │   │   │   ├── vitalsRepo.ts        # Blood Pressure & Heart Rate Records
 │   │   │   └── seedDemoData.ts      # 30-Day Clinical Data Seeder
 │   │   ├── prompts/
-│   │   │   ├── index.ts             # MCP Prompts Registration
-│   │   │   ├── morningMedicationCheckinPrompt.ts # Prompt: Morning Check-in
-│   │   │   └── acuteChestPainTriagePrompt.ts     # Prompt: Emergency Triage
+│   │   │   └── index.ts             # MCP Prompts Registration (2 Prompts)
 │   │   ├── resources/
-│   │   │   ├── index.ts             # MCP Resources Registration
-│   │   │   ├── patientAdherenceResource.ts       # Resource: adherence-30d
-│   │   │   └── activePrescriptionsResource.ts    # Resource: active-prescriptions
+│   │   │   └── index.ts             # MCP Resources Registration (2 Resources)
 │   │   ├── services/
 │   │   │   └── drugInteractionService.ts # 15-Drug Beers Criteria Registry
 │   │   ├── tools/
@@ -307,11 +323,19 @@ carebridge-ambient/
 │   │   │   ├── logDoseStatus.ts     # MCP: logDoseStatus (Low-Stock Trigger)
 │   │   │   ├── recordVitals.ts      # MCP: recordVitals
 │   │   │   ├── clinicalAdvisor.ts   # MCP: clinicalAdvisor (Bedrock + SNS)
-│   │   │   └── orderRefill.ts       # MCP: orderRefill (Amazon Pharmacy)
+│   │   │   ├── orderRefill.ts       # MCP: orderRefill (Amazon Pharmacy)
+│   │   │   ├── ringDeviceHub.ts     # MCP: ringDeviceHub (Night-vision cam & Door unlock)
+│   │   │   ├── negotiateAdherence.ts# MCP: negotiateAdherence (Sarah Circuit-Breaker)
+│   │   │   └── agentTurnHandler.ts  # Bedrock Agentic Loop & Offline Fallback
 │   │   └── server.ts                # Streamable HTTP (SSE) & Express Router
-│   ├── tests/
-│   │   ├── bedrockEnterprise.test.ts # Tests for Guardrails, Streaming & Beers Registry
-│   │   └── mcpPrimitives.test.ts     # Tests for MCP Tools, Resources & Prompts
+│   ├── tests/                       # 65 Passing Tests across 7 files
+│   │   ├── bedrockEnterprise.test.ts # Guardrails, Streaming Inference & Polly TTFA
+│   │   ├── agentTurn.test.ts        # Multi-turn Voice Loop & Tool Invocations
+│   │   ├── beersCriteria.test.ts    # 15-Drug Geriatric Pharmacology Rules
+│   │   ├── mcpResourcesPrompts.test.ts # MCP Resources & Prompts Specs
+│   │   ├── mcpTools.test.ts         # Direct 7 MCP Tools Execution
+│   │   ├── offlineFallback.test.ts  # Resilient Zero-Network Engine
+│   │   └── regression.test.ts       # Full Regression Suite
 │   └── package.json                 # Workspaces & MCP Dependencies
 ├── frontend/                        # Echo Show 10 Ambient Display (Port 3000)
 │   ├── src/
@@ -322,15 +346,18 @@ carebridge-ambient/
 │   │   │   ├── AlexaAmbientGlow.tsx # Web Audio Reactive Echo Show Light Bar
 │   │   │   ├── AlexaAgentConsole.tsx# Developer Timeline & Raw JSON Inspector
 │   │   │   ├── AuthGate.tsx         # Evaluator 1-Click Sandbox Login
+│   │   │   ├── DemoVoiceModal.tsx   # 1-Click Dual-Turn Voice Simulator Modal
 │   │   │   ├── DoctorReportPreviewModal.tsx # A4 Doctor Preview with BP Chart & QR Code
-│   │   │   └── RichCards/           # RingDoorbellCard, ClinicalAdvice, AmazonOrder Cards
+│   │   │   └── RichCards/           # RingDoorbell, ClinicalAdvice, AmazonOrder Cards
 │   │   ├── hooks/
 │   │   │   └── useAlexaAgent.ts     # Unified Multi-Turn Voice Orchestrator
 │   │   └── services/
 │   │       ├── mcpClient.ts         # Streamable HTTP / SSE Client
+│   │       ├── mockVoiceScenarios.ts# 5 Pre-built Demonstration Scenarios
 │   │       ├── pdfService.ts        # jsPDF Clinical Summary Generator
 │   │       └── speechService.ts     # Web Audio Pipeline (Polly -> Web Speech)
 │   └── package.json                 # Next.js 15, React 19, Tailwind CSS
+├── ARCHITECTURE.md                  # Comprehensive System Architecture & Flow Blueprint
 ├── FRICTION_LOG.md                  # Developer Friction Log (10 In-Depth Entries)
 ├── PRODUCT.md                       # Comprehensive Product Specification & Personas
 ├── DESIGN.md                        # Industrial Design Tokens & Ergonomics Guidelines
