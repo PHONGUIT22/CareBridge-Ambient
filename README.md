@@ -12,7 +12,7 @@
 [![Judging Bonus](https://img.shields.io/badge/Friction%20Log-%2B10%25%20Bonus%20Attached-00CAFF?style=for-the-badge&logo=buffer&logoColor=white)](./FRICTION_LOG.md)
 [![Architecture](https://img.shields.io/badge/Stack-Next.js%2015%20•%20Express%20MCP%20•%20SQLite%20WAL-6366F1?style=for-the-badge&logo=react&logoColor=white)](#-tech-stack)
 
-[📺 Watch Live Demo (YouTube)](https://youtu.be/placeholder) • [💻 Public GitHub Repository](https://github.com/PHONGUIT22/CareBridge-Ambient) • [📑 Friction Log & DX Feedback](./FRICTION_LOG.md) • [📜 MIT License](./LICENSE) • [📐 Product Spec](./PRODUCT.md) • [🎨 Design System](./DESIGN.md)
+[📺 Watch Live Demo (YouTube)](https://youtu.be/placeholder) • [💻 Public GitHub Repository](https://github.com/PHONGUIT22/CareBridge-Ambient) • [🏛️ System Architecture](./ARCHITECTURE.md) • [📑 Friction Log & DX Feedback](./FRICTION_LOG.md) • [📜 MIT License](./LICENSE) • [📐 Product Spec](./PRODUCT.md) • [🎨 Design System](./DESIGN.md)
 
 </div>
 
