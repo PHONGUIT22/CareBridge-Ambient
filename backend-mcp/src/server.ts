@@ -7,7 +7,14 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
 
 // Multi-tier environment variable loader for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -41,7 +48,21 @@ import { negotiateAdherenceTool } from './tools/negotiateAdherence.js';
 import { getLocalDateString } from './utils/dateUtils.js';
 import { handleAgentTurn } from './tools/agentTurnHandler.js';
 import { synthesizeSpeech } from './aws/pollyClient.js';
-import { checkDrugInteractions } from './services/drugInteractionService.js';
+import {
+  checkDrugInteractions,
+  BEERS_CRITERIA_GERIATRIC_DRUGS,
+  getBeersCriteriaProfile,
+} from './services/drugInteractionService.js';
+import {
+  evaluateBedrockGuardrails,
+  invokeBedrockWithStreaming,
+  BEDROCK_GUARDRAIL_ID,
+  BEDROCK_GUARDRAIL_VERSION,
+} from './aws/bedrockClient.js';
+
+// Core MCP Resources & Prompts (Completing all 3 MCP Primitives: Tools + Resources + Prompts)
+import { registeredResources, readResourceHandler } from './resources/index.js';
+import { registeredPrompts, getPromptHandler } from './prompts/index.js';
 
 const app = express();
 const PORT = Number(process.env.MCP_PORT || process.env.PORT) || 3001;
@@ -64,6 +85,8 @@ const mcpServer = new Server(
   {
     capabilities: {
       tools: {},
+      resources: {},
+      prompts: {},
     },
   }
 );
@@ -79,6 +102,7 @@ const registeredTools = [
   negotiateAdherenceTool,
 ];
 
+// --- MCP TOOLS HANDLERS ---
 // Handler when Alexa/Agent requests tool list
 mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
@@ -128,6 +152,42 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
       isError: true,
       content: [{ type: 'text', text: `Error executing tool '${name}': ${error.message}` }],
     };
+  }
+});
+
+// --- MCP RESOURCES HANDLERS (ListResourcesRequestSchema & ReadResourceRequestSchema) ---
+// Handler when MCP client queries available read-only resources
+mcpServer.setRequestHandler(ListResourcesRequestSchema, async () => {
+  return {
+    resources: registeredResources,
+  };
+});
+
+// Handler when MCP client reads static URI resource (e.g. adherence history, active prescriptions)
+mcpServer.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  const { uri } = request.params;
+  try {
+    return await readResourceHandler(uri);
+  } catch (error: any) {
+    throw new Error(`Failed to read MCP Resource '${uri}': ${error.message}`);
+  }
+});
+
+// --- MCP PROMPTS HANDLERS (ListPromptsRequestSchema & GetPromptRequestSchema) ---
+// Handler when MCP client queries pre-engineered ambient interaction and triage prompts
+mcpServer.setRequestHandler(ListPromptsRequestSchema, async () => {
+  return {
+    prompts: registeredPrompts,
+  };
+});
+
+// Handler when MCP client instantiates a prompt template with parameters
+mcpServer.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  const { name, arguments: promptArgs } = request.params;
+  try {
+    return await getPromptHandler(name, promptArgs);
+  } catch (error: any) {
+    throw new Error(`Failed to get MCP Prompt '${name}': ${error.message}`);
   }
 });
 
@@ -722,6 +782,181 @@ app.post('/api/seed', async (req: Request, res: Response) => {
     const userId = extractUserId(req) || 'usr_demo';
     await seedDemoData(userId, true);
     res.json({ success: true, message: `Reset and reseeded 30 days of clinical demo data for user ${userId} successfully!` });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ==========================================
+// MCP PROTOCOL REST INSPECTION ENDPOINTS
+// ==========================================
+
+// GET /api/mcp/resources - List registered MCP read-only resources
+app.get('/api/mcp/resources', async (_req: Request, res: Response) => {
+  try {
+    res.json({
+      success: true,
+      resources: registeredResources,
+      count: registeredResources.length,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/mcp/resources/read - Read resource content via query param (?uri=carebridge://...)
+app.get('/api/mcp/resources/read', async (req: Request, res: Response) => {
+  try {
+    const uri = req.query.uri as string;
+    if (!uri) {
+      res.status(400).json({
+        success: false,
+        error: 'Missing required query parameter "uri".',
+        registeredUris: registeredResources.map((r) => r.uri),
+      });
+      return;
+    }
+    const result = await readResourceHandler(uri);
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    res.status(404).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/mcp/prompts - List registered pre-engineered MCP prompts
+app.get('/api/mcp/prompts', async (_req: Request, res: Response) => {
+  try {
+    res.json({
+      success: true,
+      prompts: registeredPrompts,
+      count: registeredPrompts.length,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/mcp/prompts/:name - Retrieve prompt instructions by name
+app.get('/api/mcp/prompts/:name', async (req: Request, res: Response) => {
+  try {
+    const rawName = req.params.name;
+    const name = Array.isArray(rawName) ? rawName[0] : rawName;
+    const args = req.query as Record<string, string>;
+    const result = await getPromptHandler(name, args);
+    res.json({ success: true, promptName: name, ...result });
+  } catch (error: any) {
+    res.status(404).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/mcp/prompts/get - Retrieve prompt instructions with JSON payload arguments
+app.post('/api/mcp/prompts/get', async (req: Request, res: Response) => {
+  try {
+    const { name, arguments: promptArgs } = req.body || {};
+    if (!name) {
+      res.status(400).json({
+        success: false,
+        error: 'Missing prompt name in request body.',
+        availablePrompts: registeredPrompts.map((p) => p.name),
+      });
+      return;
+    }
+    const result = await getPromptHandler(name, promptArgs);
+    res.json({ success: true, promptName: name, ...result });
+  } catch (error: any) {
+    res.status(404).json({ success: false, error: error.message });
+  }
+});
+
+// ==========================================
+// AWS BEDROCK CLINICAL ENTERPRISE & GUARDRAILS
+// ==========================================
+
+// POST /api/bedrock/guardrails/check - Verify Topic Denial & PII Redaction
+app.post('/api/bedrock/guardrails/check', async (req: Request, res: Response) => {
+  try {
+    const { text } = req.body || {};
+    if (!text || typeof text !== 'string') {
+      res.status(400).json({ success: false, error: 'Missing text in request body.' });
+      return;
+    }
+    const result = evaluateBedrockGuardrails(text);
+    res.json({
+      success: true,
+      guardrailConfig: {
+        identifier: BEDROCK_GUARDRAIL_ID,
+        version: BEDROCK_GUARDRAIL_VERSION,
+      },
+      ...result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/bedrock/stream - Streaming Claude Haiku 4.5 inference with TTFA < 400ms metrics
+app.post('/api/bedrock/stream', async (req: Request, res: Response) => {
+  try {
+    const { query, voiceId } = req.body || {};
+    if (!query || typeof query !== 'string') {
+      res.status(400).json({ success: false, error: 'Missing query in request body.' });
+      return;
+    }
+
+    const streamedTokens: string[] = [];
+    const streamedSentences: string[] = [];
+
+    const streamResult = await invokeBedrockWithStreaming(
+      query,
+      {
+        onToken: (tok) => streamedTokens.push(tok),
+        onSentence: (sen) => streamedSentences.push(sen),
+        voiceId,
+      }
+    );
+
+    res.json({
+      success: true,
+      query,
+      fullText: streamResult.fullText,
+      sentences: streamResult.sentences,
+      audioBuffersCount: streamResult.audioBuffers.length,
+      timeToFirstTokenMs: streamResult.timeToFirstTokenMs,
+      timeToFirstAudioMs: streamResult.timeToFirstAudioMs,
+      targetTtfpAchieved: streamResult.timeToFirstAudioMs < 400,
+      guardrailRedacted: streamResult.guardrailRedacted,
+      guardrailBlocked: streamResult.guardrailBlocked,
+      firstAudioBase64: streamResult.audioBuffers[0]?.toString('base64') || null,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/medicines/beers-criteria - Query 2023 AGS Beers Criteria 15-Medication Registry
+app.get('/api/medicines/beers-criteria', async (req: Request, res: Response) => {
+  try {
+    const query = req.query.drug as string;
+    if (query) {
+      const profile = getBeersCriteriaProfile(query);
+      if (!profile) {
+        res.status(404).json({
+          success: false,
+          error: `Drug "${query}" not found in Beers Criteria registry.`,
+          availableDrugs: Object.keys(BEERS_CRITERIA_GERIATRIC_DRUGS),
+        });
+        return;
+      }
+      res.json({ success: true, drug: query, profile });
+      return;
+    }
+
+    res.json({
+      success: true,
+      guideline: '2023 American Geriatrics Society (AGS) Beers Criteria®',
+      medicationsCount: Object.keys(BEERS_CRITERIA_GERIATRIC_DRUGS).length,
+      medications: BEERS_CRITERIA_GERIATRIC_DRUGS,
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
