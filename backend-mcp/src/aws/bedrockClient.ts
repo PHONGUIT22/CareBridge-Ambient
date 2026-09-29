@@ -468,8 +468,10 @@ If no tool is needed (such as a greeting or simple conversation), respond direct
       textResponse: textResponse?.trim(),
       rawResponse: parsed,
     };
-  } catch (err: any) {
-    console.warn(`[Bedrock Tool-Use] AWS Bedrock call failed (${err?.name || 'Error'}: ${err?.message || err}). Falling back smoothly to offline heuristic fallback.`);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    const errName = err instanceof Error ? err.name : 'Error';
+    console.warn(`[Bedrock Tool-Use] AWS Bedrock call failed (${errName}: ${message}). Falling back smoothly to offline heuristic fallback.`);
     return null;
   }
 }
@@ -673,8 +675,9 @@ Recent Vitals: ${contextData?.recentVitals || 'Blood Pressure 125/82 mmHg, Blood
         guardrailRedacted: guardrailResult.piiRedacted,
         guardrailBlocked: false,
       };
-    } catch (err: any) {
-      console.warn(`[Bedrock Stream] Streaming failed (${err.message}). Activating clinical streaming emulator.`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(`[Bedrock Stream] Streaming failed (${message}). Activating clinical streaming emulator.`);
     }
   }
 
@@ -880,8 +883,9 @@ Respond STRICTLY in valid JSON with NO markdown codeblock markers, matching this
       };
 
       return result;
-    } catch (err: any) {
-      console.warn(`[Bedrock Fallback] Switching to clinical offline fallback (${err.message}).`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(`[Bedrock Fallback] Switching to clinical offline fallback (${message}).`);
     }
   }
 

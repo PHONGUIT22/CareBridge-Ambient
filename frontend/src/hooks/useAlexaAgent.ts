@@ -453,8 +453,9 @@ function toConciseSpokenSummary(text: string): string {
             options.onGuardianNegotiationTriggered(toolResult);
           }
         }
-      } catch (err: any) {
-        console.warn('Voice command processing error:', err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn('Voice command processing error:', message);
         const reply = "I've recorded your action locally and synchronized with CareBridge.";
         setConversation((prev) => [...prev, { sender: 'alexa', text: reply }]);
         setMessages((prev) => [

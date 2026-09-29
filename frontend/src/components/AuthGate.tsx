@@ -85,8 +85,9 @@ export function AuthGate({ onLogin }: AuthGateProps) {
       } else {
         setStatusMessage('Authentication failed.');
       }
-    } catch (err: any) {
-      console.warn('Backend login fallback:', err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn('Backend login fallback:', message);
       // Fallback in case backend server is temporarily unreachable
       const isDemo = targetEmail.toLowerCase() === 'demo@gmail.com' && targetPin === '1234';
       const fallbackUserId = isDemo ? 'usr_demo' : `usr_${Date.now()}`;

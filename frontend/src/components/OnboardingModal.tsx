@@ -92,8 +92,9 @@ export function OnboardingModal({ isOpen, initialEmail, onComplete }: Onboarding
         patientName: trimmedPatient,
         patientAge: ageNum,
       });
-    } catch (err: any) {
-      console.error('[OnboardingModal] Save error:', err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[OnboardingModal] Save error:', message);
       // Fallback: still complete locally so user is not blocked
       await onComplete({
         caregiverName: trimmedCaregiver,

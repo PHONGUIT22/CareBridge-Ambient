@@ -244,13 +244,15 @@ class SpeechService {
           console.info('[SpeechService] Backend requested Polly fallback -> switching to Web Speech API');
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // If cancel() called abort(), do not fallback
       if (currentId !== this.playbackId) return;
-      if (err.name === 'AbortError') {
+      const isAbort = err instanceof Error && err.name === 'AbortError';
+      if (isAbort) {
         console.info('[SpeechService] AWS Polly exceeded 2500ms -> Fast Fallback to Web Speech API immediately');
       } else {
-        console.warn('[SpeechService] Could not connect to AWS Polly TTS endpoint, fallback to Web Speech API:', err.message);
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn('[SpeechService] Could not connect to AWS Polly TTS endpoint, fallback to Web Speech API:', message);
       }
     }
 

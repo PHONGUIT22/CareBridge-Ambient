@@ -111,11 +111,12 @@ export async function synthesizeSpeech(
     const audioBuffer = await streamToBuffer(response.AudioStream);
     console.log(`[Polly Success] Synthesized ${audioBuffer.length} bytes of MP3 audio via Ruth (Neural).`);
     return audioBuffer;
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    const errName = err instanceof Error ? err.name : 'UnknownError';
     console.warn(`[Polly Warning] Failed to synthesize speech via AWS Polly:`);
-    console.warn(`  Error Name: ${err?.name || 'UnknownError'}`);
-    console.warn(`  Error Message: ${err?.message || String(err)}`);
-    console.warn(`  HTTP Status: ${err?.$metadata?.httpStatusCode ?? 'N/A'}`);
+    console.warn(`  Error Name: ${errName}`);
+    console.warn(`  Error Message: ${message}`);
     console.warn(`[Polly Fallback] Falling back gracefully to browser SpeechSynthesis.`);
     return null;
   }

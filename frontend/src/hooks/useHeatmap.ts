@@ -143,9 +143,10 @@ export function useHeatmap() {
       });
 
       setMedicines(heatmapItems);
-    } catch (err: any) {
-      console.warn('Failed to compute heatmap:', err.message);
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn('Failed to compute heatmap:', message);
+      setError(message);
     } finally {
       setLoading(false);
     }

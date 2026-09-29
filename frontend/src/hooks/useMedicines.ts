@@ -140,8 +140,9 @@ export function useMedicines(dateStr?: string) {
       try {
         await mcpClient.toggleDose(logId, currentStatus);
         setIsOnline(true);
-      } catch (err: any) {
-        console.warn('Backend sync failed, rolling back optimistic state gracefully:', err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn('Backend sync failed, rolling back optimistic state gracefully:', message);
         setSchedule(previousSchedule);
         setAdherenceRate(previousAdherence);
         setIsOnline(false);

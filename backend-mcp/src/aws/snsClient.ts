@@ -106,8 +106,9 @@ export async function sendEmergencySMS(
         timestamp,
         simulated: false,
       };
-    } catch (err: any) {
-      console.warn(`[AWS SNS Warning] Failed to publish live SMS via AWS SNS (${err?.message || err}).`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(`[AWS SNS Warning] Failed to publish live SMS via AWS SNS (${message}).`);
       console.warn(`[AWS SNS Fallback] Engaging transactional simulation mode for demo stability.`);
     }
   } else {

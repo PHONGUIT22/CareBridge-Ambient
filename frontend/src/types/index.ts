@@ -293,4 +293,9 @@ export interface GuardianNegotiationResult {
   richCard: GuardianNegotiationCardData;
   error?: string;
 }
-
+export interface RingPackageDetails {
+  carrier?: string;
+  description?: string;
+  deliveryTime?: string;
+  orderId?: string;
+}

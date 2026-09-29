@@ -382,8 +382,9 @@ export async function handleAgentTurn(req: AgentTurnRequest): Promise<AgentTurnR
             : (decision.textResponse || speechResponse),
         offlineFallbackUsed: false,
       };
-    } catch (toolExecErr: any) {
-      console.warn(`[agentTurnHandler] Error executing tool '${toolName}':`, toolExecErr.message);
+    } catch (toolExecErr: unknown) {
+      const message = toolExecErr instanceof Error ? toolExecErr.message : String(toolExecErr);
+      console.warn(`[agentTurnHandler] Error executing tool '${toolName}':`, message);
     }
   }
 
