@@ -19,6 +19,16 @@ export async function seedDemoData(
     userId = userIdOrForce.trim();
   }
 
+  // Guarantee target userId exists before inserting records into medicines or intake_logs
+  db.prepare(`
+    INSERT OR IGNORE INTO users (id, email, pin, role, is_pro, is_demo, caregiver_name, patient_name, patient_age, is_onboarded, created_at)
+    VALUES (?, ?, '1234', 'caregiver', 1, 1, 'Sarah Connor', 'Eleanor Vance', 78, 1, ?)
+  `).run(
+    userId,
+    userId === 'usr_demo' ? 'demo@gmail.com' : `${userId}@carebridge.internal`,
+    new Date().toISOString()
+  );
+
   // Check if medication records already exist for this user
   const existingCount = db.prepare('SELECT COUNT(*) as count FROM medicines WHERE user_id = ?').get(userId) as { count: number };
   if (existingCount && existingCount.count > 0 && !isForce) {

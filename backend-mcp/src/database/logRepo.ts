@@ -48,6 +48,23 @@ export const LogRepo = {
       VALUES (?, ?, ?, ?, ?, 'pending', NULL, ?)
     `);
 
+    const verifiedUsers = new Set<string>();
+    const ensureUserExists = (uId: string) => {
+      if (verifiedUsers.has(uId)) return;
+      const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(uId);
+      if (!userExists) {
+        db.prepare(`
+          INSERT OR IGNORE INTO users (id, email, pin, role, is_pro, is_demo, caregiver_name, patient_name, patient_age, is_onboarded, created_at)
+          VALUES (?, ?, '1234', 'caregiver', 1, 1, 'Sarah Connor', 'Eleanor Vance', 78, 1, ?)
+        `).run(
+          uId,
+          uId === 'usr_demo' ? 'demo@gmail.com' : `${uId}@carebridge.internal`,
+          new Date().toISOString()
+        );
+      }
+      verifiedUsers.add(uId);
+    };
+
     const insertBatch = db.transaction(() => {
       for (const med of allMeds) {
         const medStartDate = med.createdAt.split('T')[0];
@@ -62,6 +79,7 @@ export const LogRepo = {
         if (isScheduledToday) {
           for (const time of med.reminderTimes) {
             const effectiveUserId = userId || med.userId || 'usr_demo';
+            ensureUserExists(effectiveUserId);
             const logId = `log_${effectiveUserId}_${dateStr}_${med.id}_${time.replace(':', '')}`;
             const now = new Date().toISOString();
             insertStmt.run(logId, effectiveUserId, med.id, dateStr, time, now);
