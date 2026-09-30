@@ -266,11 +266,23 @@ function resolveOfflineHeuristic(query: string): {
     else if (lower.includes('aspirin')) medicineName = 'Aspirin';
     else if (lower.includes('atorvastatin') || lower.includes('lipitor')) medicineName = 'Atorvastatin';
 
+    let quantity = 30;
+    const explicitPillMatch = query.match(/\b(\d{1,3})\s*(?:tablets|pills|capsules|tabs|doses)\b/i);
+    const verbQtyMatch = query.match(/(?:order|refill|reorder|re-order|buy|send|get)\s+(?:a\s+)?(?:supply\s+of\s+)?(\d{1,3})\b(?!\s*mg|\s*mcg|\s*ml)/i);
+
+    if (explicitPillMatch) {
+      const parsed = parseInt(explicitPillMatch[1], 10);
+      if (parsed > 0) quantity = parsed;
+    } else if (verbQtyMatch) {
+      const parsed = parseInt(verbQtyMatch[1], 10);
+      if (parsed > 0) quantity = parsed;
+    }
+
     return {
       toolName: 'orderRefill',
       toolArgs: {
         medicineName,
-        quantity: 30,
+        quantity,
       },
     };
   }

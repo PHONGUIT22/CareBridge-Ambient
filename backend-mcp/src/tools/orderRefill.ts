@@ -105,7 +105,7 @@ export const orderRefillTool = {
       }
     }
 
-    const speechText = `I've placed your Amazon Pharmacy order for 30 tablets of ${matchedMed.name} for ${totalPrice}. It will arrive on ${deliveryFormatted} with Prime Two-Day free shipping.`;
+    const speechText = `I've placed your Amazon Pharmacy order for ${quantity} tablets of ${matchedMed.name} for ${totalPrice}. It will arrive on ${deliveryFormatted} with Prime Two-Day free shipping.`;
 
     return {
       success: true,

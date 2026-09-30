@@ -48,6 +48,18 @@ describe('CareBridge Ambient Agentic Loop & Voice Turn Orchestrator', () => {
     expect(response.toolResult.quantityAdded).toBe(30);
   });
 
+  it('dispatches orderRefill tool with extracted custom quantity when patient requests 60 tablets', async () => {
+    const response = await handleAgentTurn({
+      query: 'Alexa, order 60 pills of Metformin from Amazon Pharmacy',
+    });
+
+    expect(response.success).toBe(true);
+    expect(response.toolName).toBe('orderRefill');
+    expect(response.toolArgs?.quantity).toBe(60);
+    expect(response.toolResult?.quantityAdded).toBe(60);
+    expect(response.speechResponse).toContain('60 tablets');
+  });
+
   // TEST 4: Intent analysis for checking Ring doorbell -> ringDeviceHub (checkFrontPorch)
   it('dispatches ringDeviceHub tool when patient asks about deliveries at the front porch', async () => {
     const response = await handleAgentTurn({
