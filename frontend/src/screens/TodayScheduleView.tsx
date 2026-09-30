@@ -143,8 +143,8 @@ export function TodayScheduleView({
   };
 
   const takenCount = schedule.filter((s) => s.status === 'taken').length;
-  const totalCount = schedule.length || 1;
-  const calculatedAdherence = Math.round((takenCount / totalCount) * 100);
+  const totalCount = schedule.length;
+  const calculatedAdherence = totalCount > 0 ? Math.round((takenCount / totalCount) * 100) : 100;
 
   // Dynamic 6-day calendar strip centered on current date (today - 2 to today + 3 when stripOffset = 0)
   const calendarDays = useMemo(() => {
@@ -282,7 +282,7 @@ export function TodayScheduleView({
                   Patient: {authSession?.patientName || 'Eleanor Vance'} (Age {authSession?.patientAge || 78})
                 </span>
                 <span className="text-xs text-sky-100 font-semibold">
-                  • {takenCount} of {totalCount} doses completed today
+                  • {totalCount > 0 ? `${takenCount} of ${totalCount} doses completed today` : 'No doses scheduled for this day'}
                 </span>
               </div>
             </div>
@@ -476,7 +476,7 @@ export function TodayScheduleView({
               </span>
             </div>
             <span className="text-xs text-slate-500 font-medium">
-              {takenCount} of {totalCount} completed
+              {totalCount > 0 ? `${takenCount} of ${totalCount} completed` : '0 doses'}
             </span>
           </div>
 

@@ -106,7 +106,7 @@ export function useMedicines(dateStr?: string) {
       setSchedule((prev) => {
         previousSchedule = prev;
         const prevTaken = prev.filter((s) => s.status === 'taken').length;
-        previousAdherence = prev.length > 0 ? Math.round((prevTaken / prev.length) * 100) : 0;
+        previousAdherence = prev.length > 0 ? Math.round((prevTaken / prev.length) * 100) : 100;
 
         const updated = prev.map((item) => {
           if (item.logId === logId) {
@@ -126,12 +126,10 @@ export function useMedicines(dateStr?: string) {
           return item;
         });
 
-        // Recalculate adherence rate immediately
+        // Recalculate adherence rate immediately (defaults to 100% if no doses scheduled)
         const takenCount = updated.filter((s) => s.status === 'taken').length;
         const total = updated.length;
-        if (total > 0) {
-          setAdherenceRate(Math.round((takenCount / total) * 100));
-        }
+        setAdherenceRate(total > 0 ? Math.round((takenCount / total) * 100) : 100);
 
         return updated;
       });
