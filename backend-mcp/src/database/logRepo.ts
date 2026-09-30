@@ -145,27 +145,27 @@ export const LogRepo = {
    * Toggle intake status when clicking "I Took My Pill" button
    */
   async toggleLogStatus(logId: string, currentStatus: LogStatus): Promise<void> {
-    const db = getDatabase();
-
-    // Find medicineId to increment or decrement inventory
-    const log = db.prepare('SELECT medicine_id FROM intake_logs WHERE id = ?').get(logId) as any;
-
-    if (currentStatus === 'taken') {
-      db.prepare(`UPDATE intake_logs SET status = 'pending', taken_at = NULL WHERE id = ?`).run(logId);
-      if (log) await MedicineRepo.updateStock(log.medicine_id, 1);
-    } else {
-      const now = new Date();
-      const timeFormatted = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      db.prepare(`UPDATE intake_logs SET status = 'taken', taken_at = ? WHERE id = ?`).run(timeFormatted, logId);
-      if (log) await MedicineRepo.updateStock(log.medicine_id, -1);
-    }
+    const nextStatus: LogStatus = currentStatus === 'taken' ? 'pending' : 'taken';
+    await this.updateStatusDirect(logId, nextStatus);
   },
 
   /**
-   * Directly update dose status (used by Alexa MCP Tools)
+   * Directly update dose status (used by Alexa MCP Tools & API routes)
+   * Enforces idempotent inventory transitions:
+   * - Transition to 'taken' decrements stock (-1)
+   * - Transition from 'taken' to 'pending'/'skipped' restores stock (+1)
+   * - Redundant/idempotent updates do not alter stock
    */
   async updateStatusDirect(logId: string, status: LogStatus, notes?: string): Promise<void> {
     const db = getDatabase();
+
+    const current = db.prepare('SELECT status, medicine_id FROM intake_logs WHERE id = ?').get(logId) as
+      | { status: LogStatus; medicine_id: string }
+      | undefined;
+
+    if (!current) return;
+
+    const previousStatus = current.status;
     const now = new Date();
     const timeFormatted = status === 'taken' 
       ? `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}` 
@@ -177,9 +177,10 @@ export const LogRepo = {
       WHERE id = ?
     `).run(status, timeFormatted, notes || null, logId);
 
-    const log = db.prepare('SELECT medicine_id FROM intake_logs WHERE id = ?').get(logId) as any;
-    if (log && status === 'taken') {
-      await MedicineRepo.updateStock(log.medicine_id, -1);
+    if (previousStatus !== 'taken' && status === 'taken') {
+      await MedicineRepo.updateStock(current.medicine_id, -1);
+    } else if (previousStatus === 'taken' && status !== 'taken') {
+      await MedicineRepo.updateStock(current.medicine_id, 1);
     }
   },
 

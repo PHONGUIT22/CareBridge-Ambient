@@ -80,6 +80,46 @@ describe('CareBridge Ambient Core MCP Tools Suite', () => {
       expect(result.newStatus).toBe('skipped');
       expect(result.speechText).toContain('skipped');
     });
+
+    it('is strictly idempotent: duplicate taken calls do not decrement stock and transitioning back to skipped restores stock', async () => {
+      const allMeds = await MedicineRepo.getAllMedicines();
+      const targetMed = allMeds[0];
+
+      // Mark dose as taken
+      const res1 = await logDoseStatusTool.handler({
+        medicineName: targetMed.name,
+        status: 'taken',
+        notes: 'First confirmation',
+      });
+      expect(res1.success).toBe(true);
+
+      const medAfter1 = await MedicineRepo.getMedicineById(targetMed.id);
+      const stockAfter1 = medAfter1!.stockCount;
+
+      // Duplicate taken call (e.g. repeated voice confirmation or note update)
+      const res2 = await logDoseStatusTool.handler({
+        logId: res1.logId,
+        medicineName: targetMed.name,
+        status: 'taken',
+        notes: 'Updated note on taken dose',
+      });
+      expect(res2.success).toBe(true);
+
+      const medAfter2 = await MedicineRepo.getMedicineById(targetMed.id);
+      expect(medAfter2!.stockCount).toBe(stockAfter1); // Stock must remain unchanged!
+
+      // Transition dose from taken to skipped: stock must be restored (+1)
+      const res3 = await logDoseStatusTool.handler({
+        logId: res1.logId,
+        medicineName: targetMed.name,
+        status: 'skipped',
+        notes: 'Corrected to skipped',
+      });
+      expect(res3.success).toBe(true);
+
+      const medAfter3 = await MedicineRepo.getMedicineById(targetMed.id);
+      expect(medAfter3!.stockCount).toBe(stockAfter1 + 1);
+    });
   });
 
   // TEST 3: orderRefill generates valid Amazon order ID (114-XXXXXXX-XXXXXXX) & adds +30 units
@@ -113,6 +153,22 @@ describe('CareBridge Ambient Core MCP Tools Suite', () => {
       // Verify persistence in SQLite
       const reloadedMed = await MedicineRepo.getMedicineById(medToRefill.id);
       expect(reloadedMed!.stockCount).toBe(previousStock + refillQuantity);
+    });
+
+    it('accurately reflects requested quantity in speechText for non-standard refills', async () => {
+      const allMeds = await MedicineRepo.getAllMedicines();
+      const medToRefill = allMeds[0];
+      const customQuantity = 60;
+
+      const result = await orderRefillTool.handler({
+        medicineName: medToRefill.name,
+        quantity: customQuantity,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.quantityAdded).toBe(customQuantity);
+      expect(result.speechText).toContain(`${customQuantity} tablets`);
+      expect(result.richCard.quantity).toBe(customQuantity);
     });
   });
 
