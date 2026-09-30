@@ -107,7 +107,75 @@ function resolveOfflineHeuristic(query: string): {
     };
   }
 
-  // 1. Schedule inquiry intent (getTodaySchedule) - Priority if query mentions schedule/calendar
+  // 1. Drug-Interaction & Medication Safety Inquiry Intent (clinicalAdvisor) - Top Priority
+  const isDrugSafetyInteractionIntent =
+    // Inquisitive co-administration questions: "can I take ... with", "should I take ... with", etc.
+    ((lower.includes('can i') ||
+      lower.includes('should i') ||
+      lower.includes('could i') ||
+      lower.includes('is it safe') ||
+      lower.includes('may i') ||
+      lower.includes('what happens if i take') ||
+      lower.includes('am i allowed to take')) &&
+      (lower.includes('take') ||
+        lower.includes('have') ||
+        lower.includes('drink') ||
+        lower.includes('combine') ||
+        lower.includes('mix') ||
+        lower.includes('with') ||
+        lower.includes('together'))) ||
+    // Drug combinations & interaction terminology
+    lower.includes('interaction') ||
+    lower.includes('interact') ||
+    lower.includes('contraindication') ||
+    lower.includes('contraindicated') ||
+    lower.includes('side effect') ||
+    lower.includes('adverse reaction') ||
+    lower.includes('bad reaction') ||
+    lower.includes('safe to take') ||
+    lower.includes('safe with') ||
+    ((lower.includes('take') || lower.includes('combine') || lower.includes('mix')) &&
+      (lower.includes('together') ||
+        lower.includes('with other') ||
+        lower.includes('with my') ||
+        lower.includes('with daily') ||
+        lower.includes('with aspirin') ||
+        lower.includes('with warfarin') ||
+        lower.includes('with metformin') ||
+        lower.includes('with amlodipine') ||
+        lower.includes('with lipitor') ||
+        lower.includes('with atorvastatin'))) ||
+    // High-risk geriatric interactants when queried alongside other medications or safety phrasing
+    ((lower.includes('warfarin') || lower.includes('coumadin') || lower.includes('jantoven')) &&
+      (lower.includes('aspirin') ||
+        lower.includes('take') ||
+        lower.includes('safe') ||
+        lower.includes('can') ||
+        lower.includes('pill') ||
+        lower.includes('daily'))) ||
+    ((lower.includes('ibuprofen') ||
+      lower.includes('advil') ||
+      lower.includes('motrin') ||
+      lower.includes('naproxen') ||
+      lower.includes('aleve') ||
+      lower.includes('nsaid')) &&
+      (lower.includes('pressure') ||
+        lower.includes('amlodipine') ||
+        lower.includes('metformin') ||
+        lower.includes('aspirin') ||
+        lower.includes('safe') ||
+        lower.includes('can i') ||
+        lower.includes('take') ||
+        lower.includes('pill')));
+
+  if (isDrugSafetyInteractionIntent) {
+    return {
+      toolName: 'clinicalAdvisor',
+      toolArgs: { query },
+    };
+  }
+
+  // 2. Schedule inquiry intent (getTodaySchedule) - Priority if query mentions schedule/calendar
   const isScheduleIntent =
     lower.includes('schedule') ||
     lower.includes('what pill') ||
@@ -124,20 +192,36 @@ function resolveOfflineHeuristic(query: string): {
     };
   }
 
-  // 2. Dose intake / skipped intent (logDoseStatus)
+  // 3. Dose intake / skipped intent (logDoseStatus) with Negative Lookahead Guardrails
+  const isInquisitiveOrConditional =
+    lower.includes('can i') ||
+    lower.includes('could i') ||
+    lower.includes('should i') ||
+    lower.includes('is it safe') ||
+    lower.includes('may i') ||
+    lower.includes('what if') ||
+    lower.includes('together') ||
+    lower.includes('?') ||
+    ((lower.includes('take') || lower.includes('taking')) &&
+      (lower.includes('with') ||
+        lower.includes('safe') ||
+        lower.includes('warfarin') ||
+        lower.includes('ibuprofen')));
+
   const isDoseIntent =
-    lower.includes('took') ||
-    lower.includes('taken') ||
-    lower.includes('had my') ||
-    lower.includes('drank') ||
-    lower.includes('swallowed') ||
-    lower.includes('skip') ||
-    lower.includes('skipped') ||
-    lower.includes('morning pills') ||
-    lower.includes('morning pill') ||
-    lower.includes('evening pills') ||
-    ((lower.includes('take') || lower.includes('log') || lower.includes('mark')) &&
-      (lower.includes('pill') || lower.includes('dose') || lower.includes('medication') || lower.includes('medicine') || lower.includes('amlodipine') || lower.includes('atorvastatin') || lower.includes('metformin') || lower.includes('aspirin')));
+    !isInquisitiveOrConditional &&
+    (lower.includes('took') ||
+      lower.includes('taken') ||
+      lower.includes('had my') ||
+      lower.includes('drank') ||
+      lower.includes('swallowed') ||
+      lower.includes('skip') ||
+      lower.includes('skipped') ||
+      lower.includes('morning pills') ||
+      lower.includes('morning pill') ||
+      lower.includes('evening pills') ||
+      ((lower.includes('take') || lower.includes('log') || lower.includes('mark')) &&
+        (lower.includes('pill') || lower.includes('dose') || lower.includes('medication') || lower.includes('medicine') || lower.includes('amlodipine') || lower.includes('atorvastatin') || lower.includes('metformin') || lower.includes('aspirin'))));
 
   if (isDoseIntent) {
     const status: 'taken' | 'skipped' =
@@ -236,7 +320,7 @@ function resolveOfflineHeuristic(query: string): {
     };
   }
 
-  // 5. Clinical symptoms or health concerns intent (clinicalAdvisor)
+  // 5. Clinical symptoms, safety concerns, or health queries (clinicalAdvisor)
   const isClinicalIntent =
     lower.includes('dizzy') ||
     lower.includes('dizziness') ||
@@ -248,7 +332,26 @@ function resolveOfflineHeuristic(query: string): {
     lower.includes('fall') ||
     lower.includes('headache') ||
     lower.includes('nausea') ||
-    lower.includes('feel');
+    lower.includes('feel') ||
+    lower.includes('fever') ||
+    lower.includes('vomit') ||
+    lower.includes('bleeding') ||
+    lower.includes('bruise') ||
+    lower.includes('bruising') ||
+    lower.includes('rash') ||
+    lower.includes('swelling') ||
+    lower.includes('allergic') ||
+    lower.includes('allergy') ||
+    lower.includes('doctor') ||
+    lower.includes('physician') ||
+    lower.includes('advice') ||
+    lower.includes('safe') ||
+    lower.includes('safety') ||
+    lower.includes('harmful') ||
+    lower.includes('danger') ||
+    lower.includes('dangerous') ||
+    lower.includes('symptom') ||
+    lower.includes('reaction');
 
   if (isClinicalIntent) {
     return {

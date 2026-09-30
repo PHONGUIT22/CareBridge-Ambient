@@ -111,5 +111,43 @@ describe('CareBridge Ambient Agentic Loop & Voice Turn Orchestrator', () => {
     expect(response.toolResult.sarahNotified).toBe(true);
     expect(response.speechResponse).toContain('Sarah at work (+1 555-0199)');
   });
+
+  // TEST 9: Drug-interaction intent analysis (Warfarin + Baby Aspirin) -> dispatches clinicalAdvisor, NOT logDoseStatus
+  it('dispatches clinicalAdvisor tool when patient asks about drug interaction (Warfarin + Aspirin)', async () => {
+    const response = await handleAgentTurn({
+      query: 'Can I take Warfarin with my daily Baby Aspirin?',
+    });
+
+    expect(response.success).toBe(true);
+    expect(response.toolName).toBe('clinicalAdvisor');
+    expect(response.toolName).not.toBe('logDoseStatus');
+    expect(response.toolResult).toBeDefined();
+    expect(response.speechResponse.length).toBeGreaterThan(0);
+  });
+
+  // TEST 10: Medication safety inquiry (Ibuprofen with blood pressure pills) -> dispatches clinicalAdvisor
+  it('dispatches clinicalAdvisor tool when patient asks if an NSAID is safe with blood pressure pills', async () => {
+    const response = await handleAgentTurn({
+      query: 'Is it safe to take Ibuprofen with my blood pressure pills?',
+    });
+
+    expect(response.success).toBe(true);
+    expect(response.toolName).toBe('clinicalAdvisor');
+    expect(response.toolResult).toBeDefined();
+    expect(response.speechResponse.length).toBeGreaterThan(0);
+  });
+
+  // TEST 11: Affirmative intake log ("I took my Aspirin") -> strictly dispatches logDoseStatus
+  it('dispatches logDoseStatus tool when patient confirms taking Aspirin', async () => {
+    const response = await handleAgentTurn({
+      query: 'I took my Aspirin',
+    });
+
+    expect(response.success).toBe(true);
+    expect(response.toolName).toBe('logDoseStatus');
+    expect(response.toolResult).toBeDefined();
+    expect(response.toolResult.newStatus).toBe('taken');
+    expect(response.toolResult.medicineName).toContain('Aspirin');
+  });
 });
 

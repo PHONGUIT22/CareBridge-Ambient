@@ -913,6 +913,34 @@ Respond STRICTLY in valid JSON with NO markdown codeblock markers, matching this
     };
   }
 
+  const isDrugInteraction =
+    (lower.includes('warfarin') && (lower.includes('aspirin') || lower.includes('take') || lower.includes('safe'))) ||
+    ((lower.includes('ibuprofen') || lower.includes('advil') || lower.includes('nsaid')) &&
+      (lower.includes('blood pressure') || lower.includes('amlodipine') || lower.includes('aspirin') || lower.includes('safe') || lower.includes('take'))) ||
+    lower.includes('interaction') ||
+    lower.includes('contraindication') ||
+    (lower.includes('safe') && lower.includes('take') && lower.includes('with'));
+
+  if (isDrugInteraction) {
+    const isBleedingRisk = lower.includes('warfarin') || lower.includes('aspirin');
+    return {
+      speechResponse: isBleedingRisk
+        ? 'Warning: Combining Warfarin with Aspirin significantly heightens bleeding risks. Please consult Dr. Reynolds immediately.'
+        : 'Caution: Medication interaction detected. Please verify with Dr. Reynolds before combining these drugs.',
+      displayCardTitle: 'CRITICAL: Drug-Drug Interaction Warning',
+      actionAdvice: isBleedingRisk
+        ? 'Do not combine Warfarin with Aspirin without direct physician authorization. Schedule an urgent INR check with Dr. Reynolds.'
+        : 'Hold the additional medication until verified with your prescribing clinician or primary care team.',
+      clinicalExplanation: isBleedingRisk
+        ? 'Dual platelet inhibition and anticoagulation impairs primary and secondary hemostasis, exponentially elevating hemorrhage risks (2023 AGS Beers Criteria).'
+        : 'Potential pharmacokinetic or pharmacodynamic contraindication flagged in geriatric care regimen.',
+      urgencyLevel: 'HIGH',
+      recommendedAction: 'Withhold combination and contact prescribing physician immediately',
+      guardrailTriggered: false,
+      redactedPii: guardrailResult.piiRedacted,
+    };
+  }
+
   const isDizzy = lower.includes('dizzy');
 
   return {
