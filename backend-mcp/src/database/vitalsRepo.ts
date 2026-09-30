@@ -37,10 +37,10 @@ export const VitalsRepo = {
       INSERT INTO daily_vitals (user_id, date, systolic, diastolic, blood_sugar, heart_rate, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id, date) DO UPDATE SET
-        systolic = excluded.systolic,
-        diastolic = excluded.diastolic,
-        blood_sugar = excluded.blood_sugar,
-        heart_rate = excluded.heart_rate,
+        systolic = COALESCE(excluded.systolic, daily_vitals.systolic),
+        diastolic = COALESCE(excluded.diastolic, daily_vitals.diastolic),
+        blood_sugar = COALESCE(excluded.blood_sugar, daily_vitals.blood_sugar),
+        heart_rate = COALESCE(excluded.heart_rate, daily_vitals.heart_rate),
         updated_at = excluded.updated_at
     `);
 

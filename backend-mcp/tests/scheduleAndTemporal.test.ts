@@ -76,6 +76,30 @@ describe('Task 2 & Task 3: Schedule by Date & Temporal Guard Logic', () => {
       expect(vitalsA?.systolic).toBe(120);
       expect(vitalsB?.systolic).toBe(135);
     });
+
+    it('merges partial vitals updates without wiping existing metrics (COALESCE guarantee)', async () => {
+      const partialDate = '2026-03-12';
+      // 1. Morning blood pressure recording
+      await VitalsRepo.saveVitals({
+        userId: testUserId,
+        date: partialDate,
+        systolic: 124,
+        diastolic: 82,
+      });
+
+      // 2. Afternoon blood sugar recording (systolic & diastolic omitted)
+      await VitalsRepo.saveVitals({
+        userId: testUserId,
+        date: partialDate,
+        bloodSugar: 108.5,
+      });
+
+      const vitals = await VitalsRepo.getVitalsByDate(partialDate, testUserId);
+      expect(vitals).toBeDefined();
+      expect(vitals?.systolic).toBe(124);
+      expect(vitals?.diastolic).toBe(82);
+      expect(vitals?.bloodSugar).toBe(108.5);
+    });
   });
 
   describe('Task 3: Task Generation Date Skipping (dateStr < medStartDate)', () => {
