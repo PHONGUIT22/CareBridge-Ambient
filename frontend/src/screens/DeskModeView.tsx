@@ -47,6 +47,16 @@ export function DeskModeView({
   const effectivePatientName = authSession?.patientName || patientName;
   const [schedule, setSchedule] = useState<DailyLogItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isNightDimmer, setIsNightDimmer] = useState<boolean>(false);
+
+  const contextualGreeting = useMemo(() => {
+    const hour = new Date().getHours();
+    const firstName = effectivePatientName ? effectivePatientName.split(' ')[0] : 'Eleanor';
+    if (hour >= 5 && hour < 12) return `Good morning, ${firstName}`;
+    if (hour >= 12 && hour < 17) return `Good afternoon, ${firstName}`;
+    if (hour >= 17 && hour < 21) return `Good evening, ${firstName}`;
+    return `Rest peacefully, ${firstName}`;
+  }, [effectivePatientName]);
 
   const fetchSchedule = useCallback(async () => {
     try {
@@ -134,29 +144,65 @@ export function DeskModeView({
   };
 
   return (
-    <div className="min-h-full bg-[#050811] text-white flex flex-col justify-between p-4 sm:p-6 select-none font-sans pb-28">
+    <div
+      className={`min-h-full flex flex-col justify-between p-4 sm:p-6 select-none font-sans pb-28 transition-colors duration-500 ${
+        isNightDimmer
+          ? 'bg-[#020306] text-amber-100/90'
+          : 'bg-[#050811] text-white'
+      }`}
+    >
       {/* 1. TOP STATUS BAR (MATCHES image/8.png) */}
-      <div className="flex items-center justify-between w-full max-w-lg mx-auto pt-1">
+      <div className="flex items-center justify-between w-full max-w-lg mx-auto pt-1 gap-2 flex-wrap">
         {/* Senior Nightstand Mode Chip */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-teal-400 text-xs font-semibold shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+        <div
+          className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-sm border transition-colors ${
+            isNightDimmer
+              ? 'bg-amber-950/40 border-amber-900/60 text-amber-400'
+              : 'bg-slate-900 border-slate-800 text-teal-400'
+          }`}
+        >
+          <span className={`w-2 h-2 rounded-full animate-pulse ${isNightDimmer ? 'bg-amber-400' : 'bg-teal-400'}`} />
           <span>SENIOR NIGHTSTAND • {effectivePatientName ? effectivePatientName.toUpperCase() : 'PATIENT'}</span>
         </div>
 
-        {/* Caregiver Hub Button */}
-        <button
-          onClick={onSwitchToCaregiver}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition-colors border border-slate-800 shadow-sm"
-        >
-          <FontAwesomeIcon icon={faShieldHalved} className="text-xs text-sky-400" />
-          <span>Caregiver Hub</span>
-          <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Bedside Night Dimmer Mode Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsNightDimmer(!isNightDimmer)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border cursor-pointer active:scale-95 ${
+              isNightDimmer
+                ? 'bg-amber-950/60 text-amber-300 border-amber-700 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
+                : 'bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border-slate-800'
+            }`}
+            title="Toggle Bedside OLED Night Dimmer mode"
+          >
+            <FontAwesomeIcon icon={isNightDimmer ? faSun : faMoon} className={`text-xs ${isNightDimmer ? 'text-amber-400' : 'text-slate-400'}`} />
+            <span className="hidden xs:inline">{isNightDimmer ? 'Dimmer ON' : 'Night Dimmer'}</span>
+          </button>
+
+          {/* Caregiver Hub Button */}
+          <button
+            onClick={onSwitchToCaregiver}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition-colors border border-slate-800 shadow-sm cursor-pointer"
+          >
+            <FontAwesomeIcon icon={faShieldHalved} className="text-xs text-sky-400" />
+            <span>Caregiver</span>
+            <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
+          </button>
+        </div>
       </div>
 
-      {/* 2. GIANT HARDWARE CLOCK (MATCHES image/8.png) */}
-      <div className="my-auto py-8">
-        <SeniorClock />
+      {/* 2. CONTEXTUAL GREETING & GIANT HARDWARE CLOCK */}
+      <div className="my-auto py-6 flex flex-col items-center justify-center text-center">
+        <p className={`text-sm sm:text-base font-medium tracking-wide mb-1 transition-colors ${
+          isNightDimmer ? 'text-amber-400/90 font-mono' : 'text-sky-300/90 font-mono'
+        }`}>
+          {contextualGreeting}
+        </p>
+        <div className={isNightDimmer ? 'brightness-75 contrast-125' : ''}>
+          <SeniorClock />
+        </div>
       </div>
 
       {/* 3. ADHERENCE & UPCOMING DOSE CARDS (MATCHES image/8.png) */}
