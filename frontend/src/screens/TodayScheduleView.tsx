@@ -539,8 +539,8 @@ export function TodayScheduleView({
 
                   const enrichedItem: MedicineCardItem = {
                     ...item,
-                    beersStatus: item.beersStatus || 'audited',
-                    interactionNote: item.interactionNote || getInteractionText(item.name),
+                    beersStatus: (item as unknown as { beersStatus?: 'audited' | 'caution' | 'exempt' }).beersStatus || 'audited',
+                    interactionNote: (item as unknown as { interactionNote?: string }).interactionNote || getInteractionText(item.name),
                   };
 
                   return (

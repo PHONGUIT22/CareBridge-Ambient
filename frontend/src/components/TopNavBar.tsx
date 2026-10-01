@@ -9,6 +9,8 @@ import {
   faCrown,
   faRightFromBracket,
   faVideo,
+  faTv,
+  faBoxOpen,
 } from '@fortawesome/free-solid-svg-icons';
 import { AuthSession } from '../types';
 
@@ -16,10 +18,13 @@ export interface TopNavBarProps {
   isDeskClock: boolean;
   authSession: AuthSession;
   isDualMode: boolean;
+  viewportMode?: 'dual' | 'single' | 'echoShow10';
   onOpenPaywall: () => void;
   onSignOut: () => void;
   onSetDualMode: (isDual: boolean) => void;
+  onSetViewportMode?: (mode: 'dual' | 'single' | 'echoShow10') => void;
   onPreviewRingPorch: () => void;
+  onSimulatePorchDrop?: () => void;
 }
 
 /**
@@ -29,10 +34,13 @@ export function TopNavBar({
   isDeskClock,
   authSession,
   isDualMode,
+  viewportMode = 'dual',
   onOpenPaywall,
   onSignOut,
   onSetDualMode,
+  onSetViewportMode,
   onPreviewRingPorch,
+  onSimulatePorchDrop,
 }: TopNavBarProps) {
   return (
     <header
@@ -111,45 +119,80 @@ export function TopNavBar({
           <span className="hidden md:inline">Switch profile</span>
         </button>
 
-        {/* Echo Show 10 Dual View / Single Frame Toggle */}
-        <button
-          onClick={() => onSetDualMode(true)}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-            isDualMode
-              ? 'bg-[#1E3A8A] text-white shadow-xs'
-              : isDeskClock
-              ? 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
-              : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-2xs'
-          }`}
-          title="Echo Show 10 Dual View"
-        >
-          <FontAwesomeIcon icon={faDesktop} className="text-xs" />
-          <span className="hidden lg:inline">Dual frame</span>
-        </button>
+        {/* Simulate Porch Delivery Trigger (Proactive Ring Motion Test) */}
+        {onSimulatePorchDrop && (
+          <button
+            onClick={onSimulatePorchDrop}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold transition-all active:scale-95 shadow-2xs cursor-pointer"
+            title="Simulate Amazon Prime delivery arrival at front porch (Tests proactive Ring chime & banner)"
+          >
+            <FontAwesomeIcon icon={faBoxOpen} className="text-xs text-emerald-600" />
+            <span className="hidden sm:inline">Simulate Delivery</span>
+          </button>
+        )}
+
+        {/* Viewport Modes: Dual Frame, Echo Show 10, Single Mobile */}
+        <div className="flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-medium">
+          {/* 1. Dual Dev Mode */}
+          <button
+            onClick={() => {
+              if (onSetViewportMode) onSetViewportMode('dual');
+              onSetDualMode(true);
+            }}
+            className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              viewportMode === 'dual' || (isDualMode && !viewportMode)
+                ? 'bg-[#1E3A8A] text-white shadow-xs font-semibold'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Dual Dev Frame (Echo Device + Alexa Agent Console)"
+          >
+            <FontAwesomeIcon icon={faDesktop} className="text-xs" />
+            <span className="hidden xl:inline">Dual frame</span>
+          </button>
+
+          {/* 2. Echo Show 10 Hardware Frame */}
+          <button
+            onClick={() => {
+              if (onSetViewportMode) onSetViewportMode('echoShow10');
+              onSetDualMode(false);
+            }}
+            className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              viewportMode === 'echoShow10'
+                ? 'bg-[#1E3A8A] text-white shadow-xs font-semibold'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Amazon Echo Show 10 Hardware Frame Simulator (10.1-inch 16:10 with Swivel Base)"
+          >
+            <FontAwesomeIcon icon={faTv} className="text-xs" />
+            <span className="hidden xl:inline">Echo Show 10</span>
+          </button>
+
+          {/* 3. Mobile Device Mode */}
+          <button
+            onClick={() => {
+              if (onSetViewportMode) onSetViewportMode('single');
+              onSetDualMode(false);
+            }}
+            className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              viewportMode === 'single'
+                ? 'bg-[#1E3A8A] text-white shadow-xs font-semibold'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Single Device Mobile View"
+          >
+            <FontAwesomeIcon icon={faMobileScreen} className="text-xs" />
+            <span className="hidden xl:inline">Mobile</span>
+          </button>
+        </div>
 
         {/* Ring Doorbell Pro Camera Quick Trigger */}
         <button
           onClick={onPreviewRingPorch}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-medium transition-all active:scale-95 shadow-2xs"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-medium transition-all active:scale-95 shadow-2xs cursor-pointer"
           title="Preview Ring Doorbell Pro Camera"
         >
           <FontAwesomeIcon icon={faVideo} className="text-xs" />
           <span className="hidden sm:inline">Ring Porch</span>
-        </button>
-
-        <button
-          onClick={() => onSetDualMode(false)}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-            !isDualMode
-              ? 'bg-[#1E3A8A] text-white shadow-xs'
-              : isDeskClock
-              ? 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
-              : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-2xs'
-          }`}
-          title="Single Device Mobile View"
-        >
-          <FontAwesomeIcon icon={faMobileScreen} className="text-xs" />
-          <span className="hidden lg:inline">Single device</span>
         </button>
       </div>
     </header>

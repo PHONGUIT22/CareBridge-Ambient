@@ -52,6 +52,7 @@ export default function Home() {
   const [viewportMode, setViewportMode] = useState<ViewportMode>('dual');
   const [cameraShutterClosed, setCameraShutterClosed] = useState(false);
   const isDualMode = viewportMode === 'dual';
+  const setIsDualMode = (dual: boolean) => setViewportMode(dual ? 'dual' : 'single');
   const [visualCardOpen, setVisualCardOpen] = useState(false);
   const [selectedMedForCard, setSelectedMedForCard] = useState('Amlodipine (Blood Pressure)');
   const [clinicalAdviceOpen, setClinicalAdviceOpen] = useState(false);
@@ -328,9 +329,12 @@ export default function Home() {
         isDeskClock={isDeskClock}
         authSession={authSession}
         isDualMode={isDualMode}
+        viewportMode={viewportMode}
         onOpenPaywall={() => setIsPaywallOpen(true)}
         onSignOut={handleSignOut}
         onSetDualMode={setIsDualMode}
+        onSetViewportMode={setViewportMode}
+        onSimulatePorchDrop={() => handleTriggerProactiveDelivery()}
         onPreviewRingPorch={() => {
           setRingCardMode('delivery');
           setRingPackageData({

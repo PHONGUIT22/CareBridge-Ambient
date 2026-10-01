@@ -38,6 +38,8 @@ export interface DailyLogItem {
   imageUri?: string;
   stockCount?: number;
   type?: 'medication' | 'routine';
+  beersStatus?: 'audited' | 'caution' | 'exempt';
+  interactionNote?: string;
 }
 
 export interface VitalRecord {
