@@ -232,21 +232,46 @@ export function AmazonOrderCard({
         </div>
 
         {/* 4. Action Buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {trackingStep === 4 ? (
+            <button
+              onClick={() => {
+                if (onViewPorchCamera) onViewPorchCamera();
+                onClose();
+              }}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 active:scale-95 cursor-pointer animate-pulse"
+            >
+              <FontAwesomeIcon icon={faVideo} className="text-xs" />
+              <span>View Porch Camera (Ring Doorbell)</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                if (onTrackOrder) onTrackOrder(orderId);
+                onClose();
+              }}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-[#00A8E1] hover:bg-[#0095C8] text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#00A8E1]/20 active:scale-95 cursor-pointer"
+            >
+              <span>Track on Amazon</span>
+              <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
+            </button>
+          )}
+
           <button
             onClick={() => {
-              if (onTrackOrder) onTrackOrder(orderId);
+              if (onViewPorchCamera) onViewPorchCamera();
               onClose();
             }}
-            className="flex-1 py-2.5 px-4 rounded-xl bg-[#00A8E1] hover:bg-[#0095C8] text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#00A8E1]/20 active:scale-95"
+            className="py-2.5 px-3 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 text-sky-300 font-semibold text-xs border border-blue-500/30 transition-colors flex items-center gap-1.5 cursor-pointer"
+            title="Check front porch Ring camera feed"
           >
-            <span>Track on Amazon</span>
-            <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
+            <FontAwesomeIcon icon={faVideo} className="text-[11px]" />
+            <span className="hidden xs:inline">Ring Cam</span>
           </button>
 
           <button
             onClick={onClose}
-            className="py-2.5 px-4 rounded-xl bg-[#151922] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white font-medium text-xs transition-colors"
+            className="py-2.5 px-3.5 rounded-xl bg-[#151922] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white font-medium text-xs transition-colors cursor-pointer"
           >
             Dismiss
           </button>

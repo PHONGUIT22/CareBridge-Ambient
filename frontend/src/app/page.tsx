@@ -571,6 +571,17 @@ export default function Home() {
         onTrackOrder={(orderId) => {
           addToast({ type: 'info', title: 'Amazon Logistics', message: `Tracking shipment for Order #${orderId}. Carrier: Amazon Prime Delivery.` });
         }}
+        onViewPorchCamera={() => {
+          setRingCardMode('delivery');
+          setRingPackageData({
+            carrier: 'Amazon Prime Delivery',
+            description: `Prescription Parcel (${amazonOrderData?.medicineName || 'Medication Refill'})`,
+            orderId: amazonOrderData?.orderId || '114-7294821-4928103',
+            deliveryTime: 'Just now',
+          });
+          setRingDoorLockStatus('LOCKED');
+          setRingCardOpen(true);
+        }}
         ringCardOpen={ringCardOpen}
         onCloseRingCard={() => setRingCardOpen(false)}
         ringCardMode={ringCardMode}

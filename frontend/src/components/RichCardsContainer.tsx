@@ -32,6 +32,7 @@ export interface RichCardsContainerProps {
   onCloseAmazonOrderCard: () => void;
   amazonOrderData: AmazonRefillOrder | null;
   onTrackOrder: (orderId: string) => void;
+  onViewPorchCamera?: () => void;
 
   // Ring Doorbell & Smart Access Card
   ringCardOpen: boolean;
@@ -80,6 +81,7 @@ export function RichCardsContainer({
   onCloseAmazonOrderCard,
   amazonOrderData,
   onTrackOrder,
+  onViewPorchCamera,
 
   ringCardOpen,
   onCloseRingCard,
@@ -156,6 +158,7 @@ export function RichCardsContainer({
         onClose={onCloseAmazonOrderCard}
         order={amazonOrderData}
         onTrackOrder={onTrackOrder}
+        onViewPorchCamera={onViewPorchCamera}
       />
 
       {/* 4. Ring Smart Doorbell & Access Card */}
