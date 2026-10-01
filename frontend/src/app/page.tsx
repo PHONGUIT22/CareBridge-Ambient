@@ -38,13 +38,20 @@ import {
   faXmark,
   faVideo,
   faBell,
+  faCamera,
+  faEyeSlash,
+  faVolumeLow,
+  faSliders,
 } from '@fortawesome/free-solid-svg-icons';
 
 type ScreenTab = 'caregiver' | 'history' | 'analytics' | 'deskClock';
+type ViewportMode = 'dual' | 'single' | 'echoShow10';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<ScreenTab>('caregiver');
-  const [isDualMode, setIsDualMode] = useState<boolean>(true);
+  const [viewportMode, setViewportMode] = useState<ViewportMode>('dual');
+  const [cameraShutterClosed, setCameraShutterClosed] = useState(false);
+  const isDualMode = viewportMode === 'dual';
   const [visualCardOpen, setVisualCardOpen] = useState(false);
   const [selectedMedForCard, setSelectedMedForCard] = useState('Amlodipine (Blood Pressure)');
   const [clinicalAdviceOpen, setClinicalAdviceOpen] = useState(false);
@@ -388,9 +395,80 @@ export default function Home() {
 
       {/* 2. MAIN WORKSPACE - ENCAPSULATED DEVICE MOCKUP FRAME */}
       <div className="flex-1 flex items-center justify-center p-3 sm:p-6 md:p-8">
-        <div className={`w-full transition-all duration-500 ${isDualMode ? 'max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start justify-center' : 'max-w-[440px] mx-auto'}`}>
-          <div className={`${isDualMode ? 'lg:col-span-7 xl:col-span-8' : 'w-full'} relative rounded-[32px] p-2 sm:p-2.5 transition-all duration-300 ${isDeskClock ? 'bg-[#0B1528] border border-blue-900/40 shadow-2xl' : 'bg-slate-200/80 border border-slate-300 shadow-xl'}`}>
-            <div className={`relative rounded-[24px] overflow-hidden min-h-[720px] max-h-[880px] flex flex-col justify-between transition-colors duration-300 ${isDeskClock ? 'bg-[#050811] border border-slate-800 text-white' : 'bg-[#F8FAFC] border border-slate-200/60 text-slate-900'}`}>
+        <div
+          className={`w-full transition-all duration-500 ${
+            viewportMode === 'dual'
+              ? 'max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start justify-center'
+              : viewportMode === 'echoShow10'
+              ? 'max-w-4xl mx-auto flex flex-col items-center'
+              : 'max-w-[440px] mx-auto'
+          }`}
+        >
+          <div
+            className={`${
+              viewportMode === 'dual' ? 'lg:col-span-7 xl:col-span-8' : 'w-full'
+            } relative flex flex-col items-center`}
+          >
+            {/* Echo Show 10 Hardware Bezel Controls (Rendered in Echo Show 10 Viewport Mode) */}
+            {viewportMode === 'echoShow10' && (
+              <div className="w-full max-w-2xl px-6 py-1.5 mb-1.5 flex items-center justify-between text-slate-400 text-xs font-mono select-none">
+                {/* Physical Volume Controls */}
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-2 rounded-full bg-slate-700 inline-block" title="Volume -" />
+                  <span className="w-5 h-2 rounded-full bg-slate-700 inline-block" title="Volume +" />
+                  <span className="text-[10px] text-slate-400">VOL ±</span>
+                </div>
+
+                {/* Centered Camera & Physical Shutter Switch */}
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#1e2330] border border-slate-700/60 shadow-sm">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full flex items-center justify-center border transition-all ${
+                        cameraShutterClosed
+                          ? 'bg-rose-500 border-rose-400'
+                          : 'bg-emerald-500 border-emerald-400'
+                      }`}
+                      title={cameraShutterClosed ? 'Camera Shutter Closed' : '13MP Wide Motion Camera Active'}
+                    />
+                    <span className="text-[10px] text-white font-semibold">
+                      {cameraShutterClosed ? 'Shutter Closed' : '13MP Motion Cam'}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setCameraShutterClosed(!cameraShutterClosed)}
+                    className="ml-1 px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-white text-[9px] font-bold border border-slate-600 transition-colors cursor-pointer"
+                    title="Toggle Physical Privacy Camera Shutter"
+                  >
+                    {cameraShutterClosed ? 'OPEN' : 'CLOSE'}
+                  </button>
+                </div>
+
+                {/* Mic Array Indicator */}
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-700 inline-block" />
+                  <span className="text-[10px] text-slate-400">MIC ARRAY</span>
+                </div>
+              </div>
+            )}
+
+            <div
+              className={`w-full relative transition-all duration-300 ${
+                viewportMode === 'echoShow10'
+                  ? 'rounded-[36px] p-3 sm:p-4 bg-[#141720] border-4 border-[#252b3b] shadow-[0_20px_50px_rgba(0,0,0,0.55)]'
+                  : isDeskClock
+                  ? 'rounded-[32px] p-2 sm:p-2.5 bg-[#0B1528] border border-blue-900/40 shadow-2xl'
+                  : 'rounded-[32px] p-2 sm:p-2.5 bg-slate-200/80 border border-slate-300 shadow-xl'
+              }`}
+            >
+              <div
+                className={`relative rounded-[24px] overflow-hidden min-h-[720px] max-h-[880px] flex flex-col justify-between transition-colors duration-300 ${
+                  isDeskClock
+                    ? 'bg-[#050811] border border-slate-800 text-white'
+                    : 'bg-[#F8FAFC] border border-slate-200/60 text-slate-900'
+                }`}
+              >
               <div className="w-full flex items-center justify-center pt-2.5 pb-1 relative z-20">
                 <div className={`w-20 h-1 rounded-full ${isDeskClock ? 'bg-white/20' : 'bg-slate-300'}`} />
               </div>
@@ -515,6 +593,29 @@ export default function Home() {
               />
             </div>
           </div>
+
+          {/* Echo Show 10 Motorized Swivel Speaker Base */}
+          {viewportMode === 'echoShow10' && (
+            <div className="relative -mt-2 w-72 h-16 rounded-b-[36px] bg-gradient-to-b from-[#1c2230] via-[#121622] to-[#0a0d14] border-x-2 border-b-2 border-slate-700/70 shadow-2xl flex flex-col items-center justify-center select-none overflow-hidden">
+              <div
+                className="absolute inset-0 opacity-15 pointer-events-none"
+                style={{
+                  backgroundImage:
+                    'repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0px, transparent 1px, transparent 4px)',
+                }}
+              />
+              <div className="w-56 h-0.5 bg-gradient-to-r from-transparent via-[#00CAFF]/80 to-transparent shadow-[0_0_12px_#00CAFF]" />
+              <div className="relative z-10 flex flex-col items-center mt-1">
+                <span className="text-[10px] font-mono tracking-widest text-slate-300 font-bold uppercase">
+                  Amazon Echo Show 10
+                </span>
+                <span className="text-[8.5px] font-mono tracking-tight text-sky-400">
+                  Motorized Motion Swivel Base • Dual Tweeters & Woofer
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
 
           {/* DEVICE MOCKUP FRAME 2: ALEXA AGENT CONSOLE (DUAL VIEW) */}
           {isDualMode && (
