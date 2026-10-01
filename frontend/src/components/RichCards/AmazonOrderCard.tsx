@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCircleCheck,
@@ -9,6 +9,10 @@ import {
   faXmark,
   faArrowRight,
   faReceipt,
+  faShieldHalved,
+  faBoxOpen,
+  faVideo,
+  faForwardStep,
 } from '@fortawesome/free-solid-svg-icons';
 import { AmazonRefillOrder } from '../../types';
 
@@ -17,6 +21,7 @@ interface AmazonOrderCardProps {
   onClose: () => void;
   order?: AmazonRefillOrder | null;
   onTrackOrder?: (orderId: string) => void;
+  onViewPorchCamera?: () => void;
 }
 
 export function AmazonOrderCard({
@@ -24,7 +29,10 @@ export function AmazonOrderCard({
   onClose,
   order,
   onTrackOrder,
+  onViewPorchCamera,
 }: AmazonOrderCardProps) {
+  const [trackingStep, setTrackingStep] = useState<number>(3);
+
   if (!isOpen) return null;
 
   const orderId = order?.orderId || '114-7294821-4928103';
@@ -84,6 +92,97 @@ export function AmazonOrderCard({
             <p className="text-[11px] text-slate-300 font-mono mt-0.5">
               Order #{orderId}
             </p>
+          </div>
+        </div>
+
+        {/* 4-STEP LIVE FULFILLMENT & TRACKING TIMELINE */}
+        <div className="mb-4 p-3.5 rounded-2xl bg-[#151922] border border-white/[0.08]">
+          <div className="flex items-center justify-between text-xs mb-3">
+            <span className="font-mono text-[11px] text-slate-400 font-bold uppercase tracking-wider">
+              Live Delivery Tracking
+            </span>
+            <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#00A8E1]/20 text-[#00A8E1] border border-[#00A8E1]/40 font-semibold">
+              {trackingStep === 1
+                ? '1/4: Order Placed'
+                : trackingStep === 2
+                ? '2/4: Rx & Beers Audited'
+                : trackingStep === 3
+                ? '3/4: Prime In-Transit'
+                : '4/4: Arrived at Porch'}
+            </span>
+          </div>
+
+          {/* Progress Bar & Icons */}
+          <div className="relative flex items-center justify-between mb-3 px-3">
+            {/* Background connector line */}
+            <div className="absolute left-7 right-7 top-3.5 h-1 bg-slate-800 z-0" />
+            <div
+              className="absolute left-7 top-3.5 h-1 bg-gradient-to-r from-emerald-500 to-[#00A8E1] z-0 transition-all duration-500"
+              style={{
+                width: `${((trackingStep - 1) / 3) * 78}%`,
+              }}
+            />
+
+            {/* 4 Step Nodes */}
+            {[
+              { step: 1, label: 'Placed', icon: faReceipt },
+              { step: 2, label: 'Rx Verified', icon: faShieldHalved },
+              { step: 3, label: 'In-Transit', icon: faTruckFast },
+              { step: 4, label: 'At Porch', icon: faBoxOpen },
+            ].map((item) => {
+              const isPast = trackingStep > item.step;
+              const isCurrent = trackingStep === item.step;
+              return (
+                <button
+                  key={item.step}
+                  type="button"
+                  onClick={() => setTrackingStep(item.step)}
+                  className="relative z-10 flex flex-col items-center group cursor-pointer"
+                  title={`Click to set status to ${item.label}`}
+                >
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all ${
+                      isPast
+                        ? 'bg-emerald-500 text-white shadow-sm'
+                        : isCurrent
+                        ? 'bg-[#00A8E1] text-white ring-4 ring-[#00A8E1]/30 shadow-md scale-110'
+                        : 'bg-slate-800 text-slate-500 border border-slate-700'
+                    }`}
+                  >
+                    <FontAwesomeIcon icon={isPast ? faCircleCheck : item.icon} className="text-[10px]" />
+                  </div>
+                  <span
+                    className={`text-[10px] mt-1 font-mono transition-colors ${
+                      isCurrent
+                        ? 'text-[#00A8E1] font-bold'
+                        : isPast
+                        ? 'text-emerald-400'
+                        : 'text-slate-500'
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Step Detail Explanation */}
+          <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-slate-300">
+            <span className="truncate max-w-[240px]">
+              {trackingStep === 1 && 'Refill requested via Alexa+ and sent to pharmacy.'}
+              {trackingStep === 2 && 'Pharmacist approved & Beers Criteria safety passed.'}
+              {trackingStep === 3 && 'Dispatched via Amazon Prime Same-Day Delivery.'}
+              {trackingStep === 4 && 'Parcel arrived on front porch mat!'}
+            </span>
+            <button
+              type="button"
+              onClick={() => setTrackingStep((prev) => (prev < 4 ? prev + 1 : 1))}
+              className="text-[#00A8E1] hover:text-[#38bdf8] font-mono text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer"
+            >
+              <span>{trackingStep === 4 ? 'Reset' : 'Next'}</span>
+              <FontAwesomeIcon icon={faForwardStep} className="text-[9px]" />
+            </button>
           </div>
         </div>
 
