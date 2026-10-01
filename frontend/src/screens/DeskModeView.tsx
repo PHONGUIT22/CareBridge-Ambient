@@ -15,6 +15,11 @@ import {
   faBan,
   faHeartPulse,
   faClock,
+  faCloudSun,
+  faLock,
+  faTemperatureHalf,
+  faMoon,
+  faSun,
 } from '@fortawesome/free-solid-svg-icons';
 import confetti from 'canvas-confetti';
 import { GuardianSelector } from '../components/GuardianSelector';
@@ -156,6 +161,41 @@ export function DeskModeView({
 
       {/* 3. ADHERENCE & UPCOMING DOSE CARDS (MATCHES image/8.png) */}
       <div className="w-full max-w-lg mx-auto flex flex-col gap-4">
+        {/* AMBIENT WEATHER & SECURITY GLANCE WIDGETS */}
+        <div className="grid grid-cols-2 gap-2.5">
+          {/* Weather & Indoor Climate */}
+          <div className="bg-[#0B1528] rounded-2xl p-3 border border-blue-900/40 shadow-sm flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-sm shrink-0 border border-sky-500/30">
+              <FontAwesomeIcon icon={faCloudSun} />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-white font-bold text-xs">72°F</span>
+                <span className="text-[10px] text-slate-400 truncate">Seattle, WA</span>
+              </div>
+              <p className="text-[10px] text-sky-300 font-mono mt-0.5 truncate">
+                Partly Cloudy • Hum 45%
+              </p>
+            </div>
+          </div>
+
+          {/* Ring Smart Home & Security Glance */}
+          <div className="bg-[#0B1528] rounded-2xl p-3 border border-blue-900/40 shadow-sm flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm shrink-0 border border-emerald-500/30">
+              <FontAwesomeIcon icon={faLock} />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-white font-bold text-xs">Front Door</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <p className="text-[10px] text-emerald-300 font-mono mt-0.5 truncate">
+                Ring Locked • AC: 70°F
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Compliance Progress Track Card (image/8.png) */}
         <div className="bg-[#0B1528] rounded-2xl p-4 border border-blue-900/40 shadow-sm">
           <div className="flex items-center justify-between text-xs font-bold mb-2">
