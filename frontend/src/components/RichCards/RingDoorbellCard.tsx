@@ -14,7 +14,9 @@ import {
   faTruckFast,
   faTriangleExclamation,
   faCircleCheck,
+  faBell,
 } from '@fortawesome/free-solid-svg-icons';
+import { soundFxService } from '../../services/soundFxService';
 
 export interface RingDoorbellCardProps {
   isOpen: boolean;
@@ -78,6 +80,14 @@ export function RingDoorbellCard({
       clearInterval(frameInterval);
     };
   }, []);
+
+  useEffect(() => {
+    if (isOpen && mode === 'delivery') {
+      try {
+        soundFxService.playRingChime();
+      } catch (_) {}
+    }
+  }, [isOpen, mode]);
 
   if (!isOpen) return null;
 
@@ -194,10 +204,20 @@ export function RingDoorbellCard({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Ring Chime Test Trigger */}
+            <button
+              onClick={() => soundFxService.playRingChime()}
+              className="px-2.5 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-sky-300 border border-blue-500/40 transition-colors flex items-center gap-1.5 cursor-pointer"
+              title="Test Ring Doorbell 2-Tone Chime"
+            >
+              <FontAwesomeIcon icon={faBell} className="text-[10px]" />
+              <span>Chime</span>
+            </button>
+
             {/* Zoom Toggle */}
             <button
               onClick={() => setZoomLevel(zoomLevel === '1x' ? '1.5x' : '1x')}
-              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-cyan-300 border border-cyan-500/30"
+              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-cyan-300 border border-cyan-500/30 cursor-pointer"
               title="Toggle Digital Zoom"
             >
               FOV: {zoomLevel === '1x' ? '155° Ultrawide' : 'Zoom 1.5x'}

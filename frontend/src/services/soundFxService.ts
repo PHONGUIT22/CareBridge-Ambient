@@ -200,6 +200,47 @@ class SoundFxService {
       console.warn('[SoundFx] Daughter ping suppressed:', e);
     }
   }
+
+  /**
+   * 6. Iconic Ring Doorbell 2-Tone Chime ("Ding-Dong" bell ~ 880Hz / 659Hz with metallic bell decay)
+   */
+  playRingChime() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+
+      // Note 1: Ding (880Hz - A5)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(880, now);
+      gain1.gain.setValueAtTime(0, now);
+      gain1.gain.linearRampToValueAtTime(0.28, now + 0.015);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.65);
+
+      // Note 2: Dong (659.25Hz - E5)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      const note2Start = now + 0.38;
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(659.25, note2Start);
+      gain2.gain.setValueAtTime(0, note2Start);
+      gain2.gain.linearRampToValueAtTime(0.25, note2Start + 0.015);
+      gain2.gain.exponentialRampToValueAtTime(0.001, note2Start + 0.95);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(note2Start);
+      osc2.stop(note2Start + 0.95);
+    } catch (e) {
+      console.warn('[SoundFx] Ring chime suppressed:', e);
+    }
+  }
 }
 
 export const soundFxService = new SoundFxService();
