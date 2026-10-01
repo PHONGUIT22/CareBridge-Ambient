@@ -24,6 +24,7 @@ import {
 } from '../types';
 import { mcpClient } from '../services/mcpClient';
 import { speechService } from '../services/speechService';
+import { soundFxService } from '../services/soundFxService';
 import { useAlexaAgent } from '../hooks/useAlexaAgent';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -35,6 +36,8 @@ import {
   faMicrophone,
   faCircleNotch,
   faXmark,
+  faVideo,
+  faBell,
 } from '@fortawesome/free-solid-svg-icons';
 
 type ScreenTab = 'caregiver' | 'history' | 'analytics' | 'deskClock';
@@ -58,6 +61,12 @@ export default function Home() {
   const [isDemoVoiceModalOpen, setIsDemoVoiceModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [proactiveDeliveryBanner, setProactiveDeliveryBanner] = useState<{
+    show: boolean;
+    title: string;
+    subtitle: string;
+    packageDetails: RingPackageDetails;
+  } | null>(null);
 
   // Authentication & Pro State
   const [authSession, setAuthSession] = useState<AuthSession | null>(null);
@@ -173,6 +182,25 @@ export default function Home() {
     }
   };
 
+  const handleTriggerProactiveDelivery = (customPkg?: RingPackageDetails) => {
+    const pkgData: RingPackageDetails = customPkg || {
+      carrier: 'Amazon Prime Delivery',
+      description: 'Prescription Medication Parcel (Atorvastatin 20mg)',
+      orderId: '114-7294821-4928103',
+      deliveryTime: 'Just now',
+    };
+    setProactiveDeliveryBanner({
+      show: true,
+      title: 'Ring Doorbell: Motion Detected at Front Porch',
+      subtitle: `${pkgData.description} placed on porch mat • Amazon Prime Verified`,
+      packageDetails: pkgData,
+    });
+    try {
+      soundFxService.playRingChime();
+    } catch (_) {}
+    speechService.speak('Ring Doorbell alert: Motion detected at front porch. Amazon Prime prescription delivery arrived.');
+  };
+
   const handleTriggerAmazonOrder = (order: AmazonRefillOrder) => {
     setAmazonOrderData(order);
     setAmazonOrderCardOpen(true);
@@ -183,18 +211,14 @@ export default function Home() {
     });
 
     setTimeout(() => {
-      setRingCardMode('delivery');
-      setRingPackageData({
+      handleTriggerProactiveDelivery({
         carrier: 'Amazon Prime Delivery',
         description: `Prescription Refill (${order.medicineName})`,
         orderId: order.orderId,
         deliveryTime: 'Just now',
       });
-      setRingDoorLockStatus('LOCKED');
-      setRingCardOpen(true);
-      speechService.speak('Ring Doorbell: Amazon Pharmacy package delivered at your front porch.');
       addToast({ type: 'info', title: 'Ring Doorbell Motion Detected', message: 'Amazon Prime delivery arrived on front porch.' });
-    }, 5000);
+    }, 4500);
   };
 
   const alexaAgent = useAlexaAgent({
@@ -312,6 +336,55 @@ export default function Home() {
           setRingCardOpen(true);
         }}
       />
+
+      {/* PROACTIVE RING PORCH MOTION NOTIFICATION BANNER */}
+      {proactiveDeliveryBanner?.show && (
+        <div className="sticky top-14 z-40 mx-auto max-w-4xl w-full px-4 py-2 animate-fadeIn">
+          <div className="bg-[#0b1320] border-2 border-[#00CAFF]/80 rounded-2xl p-3.5 shadow-[0_0_30px_rgba(0,202,255,0.35)] flex items-center justify-between gap-3 text-white">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#1399FF] text-white flex items-center justify-center text-sm shadow-md animate-pulse shrink-0">
+                <FontAwesomeIcon icon={faVideo} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs tracking-tight text-white">
+                    {proactiveDeliveryBanner.title}
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-500/30">
+                    LIVE PORCH MOTION
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 mt-0.5">
+                  {proactiveDeliveryBanner.subtitle}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  setRingCardMode('delivery');
+                  setRingPackageData(proactiveDeliveryBanner.packageDetails);
+                  setRingDoorLockStatus('LOCKED');
+                  setRingCardOpen(true);
+                  setProactiveDeliveryBanner(null);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-[#1399FF] hover:bg-[#0f87e2] text-white font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
+              >
+                <FontAwesomeIcon icon={faVideo} className="text-xs" />
+                <span>View Live Feed</span>
+              </button>
+              <button
+                onClick={() => setProactiveDeliveryBanner(null)}
+                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                title="Dismiss notification"
+              >
+                <FontAwesomeIcon icon={faXmark} className="text-xs" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2. MAIN WORKSPACE - ENCAPSULATED DEVICE MOCKUP FRAME */}
       <div className="flex-1 flex items-center justify-center p-3 sm:p-6 md:p-8">
