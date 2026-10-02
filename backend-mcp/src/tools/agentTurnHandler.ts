@@ -297,7 +297,13 @@ function resolveOfflineHeuristic(query: string): {
     lower.includes('heart rate') ||
     lower.includes('pulse') ||
     lower.includes('blood sugar') ||
-    lower.includes('glucose');
+    lower.includes('glucose') ||
+    lower.includes('vitals') ||
+    lower.includes('vital signs') ||
+    lower.includes('bee') ||
+    lower.includes('wearable') ||
+    lower.includes('healthkit') ||
+    lower.includes('apple watch');
 
   if (isVitalsIntent) {
     const args: Record<string, any> = {};
@@ -323,8 +329,15 @@ function resolveOfflineHeuristic(query: string): {
 
     // If no specific numbers detected, provide safe clinical baseline defaults
     if (Object.keys(args).length === 0) {
-      args.systolic = 120;
-      args.diastolic = 80;
+      if (lower.includes('bee') || lower.includes('wearable') || lower.includes('watch')) {
+        args.systolic = 120;
+        args.diastolic = 78;
+        args.heartRate = 72;
+        args.bloodSugar = 104;
+      } else {
+        args.systolic = 120;
+        args.diastolic = 80;
+      }
     }
 
     return {

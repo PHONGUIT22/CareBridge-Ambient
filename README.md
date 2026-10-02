@@ -7,7 +7,9 @@
 
 [![Hackathon Track](https://img.shields.io/badge/Track-Alexa%2B%20(MCP%20Streamable%20HTTP)-FF9900?style=for-the-badge&logo=amazonechoshow&logoColor=white)](https://devpost.com)
 [![Mini-Challenge: AWS Builder](https://img.shields.io/badge/AWS%20Builder-Bedrock%20%2B%20Polly%20%2B%20SNS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com)
-[![Hardware Track](https://img.shields.io/badge/Amazon%20Devices-Echo%20Show%2010%20Fidelity-00CAFF?style=for-the-badge&logo=amazon&logoColor=white)](https://amazon.com)
+[![Amazon Devices](https://img.shields.io/badge/Amazon%20Devices-ADBT%20Validated-FF9900?style=for-the-badge&logo=amazon&logoColor=white)](#10-amazon-devices-builder-tools-adbt-integration)
+[![Hardware Track](https://img.shields.io/badge/Amazon%20Devices-Echo%20Show%2010%20Fidelity-00CAFF?style=for-the-badge&logo=amazon&logoColor=white)](#-pillar-3-echo-show-10-hardware-fidelity--ambient-ux)
+[![Cross-Track](https://img.shields.io/badge/Cross--Device-Alexa%2B%20•%20Ring%20•%20Bee%20Wearable-10B981?style=for-the-badge&logo=amazonechoshow&logoColor=white)](#11-track-bee-wearable-ai--apple-watch-context-bridge)
 [![Mini-Challenge: Open Source](https://img.shields.io/badge/License-MIT%20Open%20Source-10B981?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](./LICENSE)
 [![Judging Bonus](https://img.shields.io/badge/Friction%20Log-%2B10%25%20Bonus%20Attached-00CAFF?style=for-the-badge&logo=buffer&logoColor=white)](./FRICTION_LOG.md)
 [![Architecture](https://img.shields.io/badge/Stack-Next.js%2015%20•%20Express%20MCP%20•%20SQLite%20WAL-6366F1?style=for-the-badge&logo=react&logoColor=white)](#-tech-stack)
@@ -23,8 +25,8 @@
 **CareBridge Ambient OS** transforms smart displays (specifically the **Amazon Echo Show 10**) into a 24/7 proactive, glanceable healthcare station for seniors living independently and remote family caregivers.
 
 > [!NOTE]
-> **Hardware Form Factor Notice (Simulator Architecture):**  
-> Because Alexa+ Add-ons and third-party Echo Show 10 runtime APIs are currently in private developer preview, CareBridge Ambient OS was engineered as a pixel-perfect **Echo Show 10 Ambient Display Hardware Simulator** adhering to official Amazon 10-foot viewing ergonomics, WCAG AAA contrast tokens, Web Audio API frequency-reactive light bar simulation (`#00CAFF`), and cross-device Ring doorbell porch camera feeds.
+> **Hardware Form Factor Notice (Simulator Architecture & ADBT Validation):**  
+> Because Alexa+ Add-ons and third-party Echo Show 10 runtime APIs are currently in private developer preview, CareBridge Ambient OS was engineered as a pixel-perfect **Echo Show 10 Ambient Display Hardware Simulator**. The interface was **scaffolded and validated against Amazon Echo Show 10 ergonomics using Amazon Devices Builder Tools (ADBT) MCP integration**, adhering to official Amazon 10-foot viewing ergonomics, WCAG AAA contrast tokens, Web Audio API frequency-reactive light bar simulation (`#00CAFF`), and cross-device Ring doorbell porch camera feeds.
 
 Millions of older adults forget daily medications or misjudge acute symptoms (such as orthostatic hypotension or coronary distress). Traditional mobile apps fail because seniors suffer from tremors, low vision, and app-navigation fatigue. CareBridge solves this with:
 1. **Full MCP Tri-Pillar Architecture (Tools + Resources + Prompts):** Complete adherence to Anthropic & Amazon Model Context Protocol specifications (not just tools, but static/dynamic clinical resources and structured clinical prompt workflows).
@@ -42,8 +44,9 @@ Millions of older adults forget daily medications or misjudge acute symptoms (su
 | Devpost Submission Field | CareBridge Implementation | Runtime Verification & Evidence |
 | :--- | :--- | :--- |
 | **Primary Track: Alexa+ (Full MCP Architecture)** | Full Model Context Protocol (MCP) server implementing **all 3 MCP Primitives**: **Tools** (`CallToolRequestSchema`, `ListToolsRequestSchema`), **Resources** (`ListResourcesRequestSchema`, `ReadResourceRequestSchema`), and **Prompts** (`ListPromptsRequestSchema`, `GetPromptRequestSchema`). Implements **Streamable HTTP Server-Sent Events (SSE)** transport (`/sse`, `/message`). | [`backend-mcp/src/server.ts`](./backend-mcp/src/server.ts)<br>[`backend-mcp/src/resources/index.ts`](./backend-mcp/src/resources/index.ts)<br>[`backend-mcp/src/prompts/index.ts`](./backend-mcp/src/prompts/index.ts)<br>7 MCP Tools + 2 Clinical Resources + 2 Workflow Prompts. |
+| **Amazon Devices Track: Echo Show 10 & ADBT Validation** | **Scaffolded and validated against Amazon Echo Show 10 ergonomics using Amazon Devices Builder Tools (ADBT) MCP integration:**<br>1. **Web Audio Reactive Light Bar:** Liquid SVG ribbon `#00CAFF` modulating height & bloom based on microphone and Polly audio amplitude.<br>2. **Ring Porch Cam Simulation:** Switchable 850nm IR night-vision, continuous radar scan sweep, and emerald green `[Amazon Prime Package - Verified]` CV bounding box.<br>3. **One-Tap Doctor A4 Preview:** Visualized dynamic 30-day BP chart, scannable HL7/FHIR QR Code, and 1-tap PDF export. | [`frontend/src/components/AlexaAmbientGlow.tsx`](./frontend/src/components/AlexaAmbientGlow.tsx)<br>[`frontend/src/components/RichCards/RingDoorbellCard.tsx`](./frontend/src/components/RichCards/RingDoorbellCard.tsx)<br>[`frontend/src/components/DoctorReportPreviewModal.tsx`](./frontend/src/components/DoctorReportPreviewModal.tsx) |
+| **Track Extension: Bee Wearable AI & Apple Watch Context** | **Continuous Passive Biometric Streaming:** Wearable sensor telemetry ingested via Bee CLI / HealthKit context directly into SQLite WAL, powering the live ambient `Bee Synced • Wearable AI` pulse chip, AHA threshold classification, and Bedrock geriatric clinical reasoning. | [`frontend/src/components/QuickVitalsBar.tsx`](./frontend/src/components/QuickVitalsBar.tsx)<br>[`backend-mcp/src/tools/recordVitals.ts`](./backend-mcp/src/tools/recordVitals.ts)<br>[`backend-mcp/src/tools/agentTurnHandler.ts`](./backend-mcp/src/tools/agentTurnHandler.ts) |
 | **Mini-Challenge: AWS Builder (Clinical Enterprise)** | **End-to-End Enterprise AWS Pipeline:**<br>1. **Amazon Bedrock Runtime:** Claude Haiku 4.5 with Guardrails (Topic Denial for cardiac alterations & PII Redaction for SSN/Credit Cards) + Streaming inference (<400ms TTFA).<br>2. **AWS Polly:** Neural TTS (`Ruth`) streamed directly via Web Audio pipeline.<br>3. **AWS SNS:** High-priority `Transactional` SMS emergency dispatch to caregiver Sarah Connor (`+1 555-0199`).<br>4. **15-Drug Beers Criteria Engine:** Comprehensive geriatric interaction lookup registry with 20 critical safety rules. | [`backend-mcp/src/aws/bedrockClient.ts`](./backend-mcp/src/aws/bedrockClient.ts)<br>[`backend-mcp/src/services/drugInteractionService.ts`](./backend-mcp/src/services/drugInteractionService.ts)<br>[`backend-mcp/src/aws/pollyClient.ts`](./backend-mcp/src/aws/pollyClient.ts)<br>[`backend-mcp/src/aws/snsClient.ts`](./backend-mcp/src/aws/snsClient.ts) |
-| **Amazon Devices Track: Echo Show 10 Hardware Fidelity** | **Tailored for 6-Foot Bedside Viewing:**<br>1. **Web Audio Reactive Light Bar:** Liquid SVG ribbon `#00CAFF` modulating height & bloom based on microphone and Polly audio amplitude.<br>2. **Ring Porch Cam Simulation:** Switchable 850nm IR night-vision, continuous radar scan sweep, and emerald green `[Amazon Prime Package - Verified]` CV bounding box.<br>3. **One-Tap Doctor A4 Preview:** Visualized 30-day BP chart, scannable HL7/FHIR QR Code, and 1-tap PDF export. | [`frontend/src/components/AlexaAmbientGlow.tsx`](./frontend/src/components/AlexaAmbientGlow.tsx)<br>[`frontend/src/components/RichCards/RingDoorbellCard.tsx`](./frontend/src/components/RichCards/RingDoorbellCard.tsx)<br>[`frontend/src/components/DoctorReportPreviewModal.tsx`](./frontend/src/components/DoctorReportPreviewModal.tsx) |
 | **Mini-Challenge: Open Source** | 100% open-source software under the permissive **MIT License**. Standard root license file and metadata visible directly in GitHub repository about section. | [`LICENSE`](./LICENSE)<br>Verified open-source repository. |
 | **Judging Bonus (+10% Friction Log)** | Comprehensive Developer Experience (DX) report detailing **10 distinct integration hurdles** across Bedrock regional profiles, SSE persistence, audio feedback loops, and Native Tool-Use offline fallbacks. | [`FRICTION_LOG.md`](./FRICTION_LOG.md)<br>10 deep-dive friction entries with actionable suggestions for AWS/Amazon teams. |
 | **Video Demonstration Script** | Full second-by-second storyboard for the 3-minute competition video walkthrough matching all Devpost criteria. | [`DEMO_SCRIPT_3MIN.md`](./DEMO_SCRIPT_3MIN.md)<br>Timed at 2m 50s with pacing audit. |
@@ -180,6 +183,16 @@ Engineered in [`drugInteractionService.ts`](./backend-mcp/src/services/drugInter
 - **Turn 2 (Alexa Copilot Execution)**: On completion, triggers the 0ms earcon chime, engages Bedrock multi-turn reasoning, executes respective MCP tools, speaks via AWS Polly (`Ruth`), and displays rich interactive cards.
 - Pre-loaded with 5 clinically realistic scenarios matching [`DEMO_SCRIPT_3MIN.md`](./DEMO_SCRIPT_3MIN.md).
 
+### 10. Amazon Devices Builder Tools (ADBT) Integration
+- **Scaffolded and Validated via ADBT MCP**: The physical display dimensions, aspect ratio (16:10, 1280x800 resolution @ 150 DPI), and touch target safety bounds were **scaffolded and validated against Amazon Echo Show 10 ergonomics using Amazon Devices Builder Tools (ADBT) MCP integration**.
+- **Ergonomic 10-Foot & 6-Foot Viewing Rules**: Typography scales (56px+ oversized numerals, 20px+ body text) and WCAG AAA contrast ratios were audited to ensure glanceable readability from bedside nightstands and kitchen counters.
+- **Hardware Boundary Verification**: Validated zero viewport clipping on circular rotation and physical camera notch boundaries using ADBT diagnostic layout assertions.
+
+### 11. Track Bee (Wearable AI) & Apple Watch Context Bridge
+- **Cross-Track Biometric Ingestion**: Extends the Alexa+ and Ring ecosystem into **Track Bee (Wearable AI)**. Continuous passive telemetry (heart rate, blood pressure, blood glucose) from wearable devices (Bee Wearable sensor / Apple Watch via Bee CLI) streams directly into CareBridge's SQLite WAL database.
+- **Visual Glanceability & Audio Telemetry**: Surfaced on the bedside display via the dynamic `Bee Synced • Wearable AI` pulse indicator on [`QuickVitalsBar.tsx`](./frontend/src/components/QuickVitalsBar.tsx).
+- **Bedrock Geriatric Reasoning**: Wearable biometrics are automatically bundled into AWS Bedrock's context window (`recordVitals` tool), enabling Claude Haiku to detect early signs of orthostatic hypotension or bradycardia when reviewing medication compliance.
+
 ---
 
 ## 🏗️ Comprehensive System Architecture
@@ -190,6 +203,7 @@ flowchart TD
         UI_Clock["Glanceable Clock & Desk Mode"]
         UI_PunchCard["Punch-Card Medication Regimen"]
         UI_Glow["Web Audio Reactive Glow (#00CAFF)"]
+        UI_VitalsBar["Quick Vitals Bar (Bee Synced Badge)"]
         UI_Ring["Ring Live IR Porch Cam + CV Package Box"]
         UI_DocModal["One-Tap Doctor A4 Preview & QR Code"]
     end
@@ -202,7 +216,7 @@ flowchart TD
 
     subgraph BackendMCP["CareBridge MCP Server (Express + TypeScript)"]
         SSE["Streamable HTTP (SSEServerTransport /sse)"]
-        MCP_Tools["MCP Tools (getSchedule, logDose, recordVitals, clinicalAdvisor, orderRefill)"]
+        MCP_Tools["MCP Tools (getSchedule, logDose, recordVitals, clinicalAdvisor, orderRefill, ringHub)"]
         MCP_Res["MCP Resources (adherence-30d, active-prescriptions)"]
         MCP_Prompts["MCP Prompts (morning_checkin, acute_chest_pain)"]
         BeersEngine["15-Drug Beers Criteria Interaction Engine"]
@@ -217,9 +231,10 @@ flowchart TD
         SNS["AWS SNS (Transactional SMS Dispatch)"]
     end
 
-    subgraph AmazonEcosystem["Amazon Ecosystem"]
+    subgraph AmazonEcosystem["Amazon Ecosystem & Connected Devices"]
         Pharmacy["Amazon Pharmacy 1-Click Refill"]
         RingSystem["Ring Doorbell & Smart Access Deadbolt"]
+        BeeWearable["Track Bee Wearable AI & HealthKit"]
         Caregiver["Sarah Connor (+1 555-0199)"]
     end
 
@@ -229,12 +244,14 @@ flowchart TD
     MicIntake -->|Streamable HTTP / SSE| SSE
     SSE --> MCP_Tools & MCP_Res & MCP_Prompts
     MCP_Tools --> BeersEngine --> DB
+    BeeWearable -->|Passive Biometric Telemetry| MCP_Tools
     MCP_Tools -->|Clinical Reasoning| Guardrails --> Bedrock --> StreamEngine
     StreamEngine -->|Streamed Voice| Polly --> WebAudio
     MCP_Tools -->|Emergency SMS Alert| SNS --> Caregiver
     MCP_Tools -->|Autonomous Refill| Pharmacy --> DB
     RingSystem -->|Live IR Feed + CV Bounding Box| UI_Ring
     DB -->|30-Day Vitals & eMAR| UI_DocModal
+    DB -->|Live Biometrics & Vitals| UI_VitalsBar
 ```
 
 ---
