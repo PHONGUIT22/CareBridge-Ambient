@@ -303,24 +303,27 @@ Click: 👉 **"Sign in with demo (1-click evaluator pass)"**
 The project includes an enterprise-grade automated test suite executed with Vitest:
 
 ```bash
-# Run all 65 automated tests across all 7 test files (100% pass rate)
+# Run all 72 automated tests across all 7 test files (100% pass rate)
 npm test --workspace=backend-mcp
 
+# Or run from monorepo root
+npm test
+
 # Run dedicated Bedrock enterprise test suite
-npm run test:bedrock --workspace=backend-mcp
+npm run test:bedrock
 
 # Verify clean Next.js 15 production build with zero TypeScript errors
 npm run build --workspace=frontend
 ```
 
-**Verification Results: 65 / 65 Passing Automated Tests (100% Pass Rate Across 7 Test Files):**
+**Verification Results: 72 / 72 Passing Automated Tests (100% Pass Rate Across 7 Test Files):**
 - ✅ `tests/bedrockEnterprise.test.ts` (22 tests): Bedrock Guardrails (Topic Denial & PII Redaction), streaming token inference, Polly TTS TTFA < 400ms.
-- ✅ `tests/agentTurn.test.ts` (8 tests): Multi-turn voice agent orchestration, automatic tool reasoning, Sarah Circuit-Breaker, paramedic emergency unlock.
-- ✅ `tests/beersCriteria.test.ts`: 15-drug geriatric pharmacology registry and critical interaction warnings.
-- ✅ `tests/mcpResourcesPrompts.test.ts`: JSON-RPC 2.0 MCP Resources reading & MCP Prompts clinical workflows.
-- ✅ `tests/mcpTools.test.ts`: Independent execution of all 7 registered MCP clinical action tools.
-- ✅ `tests/offlineFallback.test.ts`: Zero-network resilient heuristic fallback engine and SQLite reliability.
-- ✅ `tests/regression.test.ts`: Full clinical pipeline regression suite.
+- ✅ `tests/agentTurn.test.ts` (12 tests): Multi-turn voice agent orchestration, automatic tool reasoning, custom dosage extraction, Sarah Connor Circuit-Breaker, paramedic emergency unlock.
+- ✅ `tests/tools.test.ts` (14 tests): Independent execution of all 7 registered MCP clinical action tools, AWS SNS emergency SMS dispatch, and Beers Criteria interaction warnings.
+- ✅ `tests/mcpPrimitives.test.ts` (10 tests): JSON-RPC 2.0 MCP Tri-Pillar (Tools, Resources, Prompts) schemas and resource reads.
+- ✅ `tests/scheduleAndTemporal.test.ts` (6 tests): Schedule by date, temporal guard logic, and adherence calculation with 0-dose handling.
+- ✅ `tests/authMultiUser.test.ts` (5 tests): Multi-user SQLite WAL isolation, PIN authentication, and demo seeder.
+- ✅ `tests/medicineCrud.test.ts` (3 tests): Full CRUD medication management, schedule generation, and inventory decrement.
 
 ---
 
@@ -334,16 +337,21 @@ carebridge-ambient/
 │   │   │   ├── bedrockClient.ts     # Bedrock Claude Haiku 4.5 + Guardrails & Streaming
 │   │   │   ├── pollyClient.ts       # AWS Polly Neural TTS Engine (Ruth)
 │   │   │   └── snsClient.ts         # AWS SNS Transactional SMS Dispatcher
+│   │   ├── config/
+│   │   │   └── env.ts               # Environment Variables Validation & Loader
 │   │   ├── database/
 │   │   │   ├── db.ts                # SQLite WAL Mode Persistence Engine
 │   │   │   ├── medicineRepo.ts      # Medication Catalog & Stock Levels
 │   │   │   ├── logRepo.ts           # Adherence Punch-Card History
 │   │   │   ├── vitalsRepo.ts        # Blood Pressure & Heart Rate Records
+│   │   │   ├── caregiverRepo.ts     # Emergency Contacts & Caregiver Profiles
 │   │   │   └── seedDemoData.ts      # 30-Day Clinical Data Seeder
 │   │   ├── prompts/
 │   │   │   └── index.ts             # MCP Prompts Registration (2 Prompts)
 │   │   ├── resources/
 │   │   │   └── index.ts             # MCP Resources Registration (2 Resources)
+│   │   ├── routes/
+│   │   │   └── apiRoutes.ts         # Express REST API & Health Endpoints
 │   │   ├── services/
 │   │   │   └── drugInteractionService.ts # 15-Drug Beers Criteria Registry
 │   │   ├── tools/
@@ -355,37 +363,60 @@ carebridge-ambient/
 │   │   │   ├── ringDeviceHub.ts     # MCP: ringDeviceHub (Night-vision cam & Door unlock)
 │   │   │   ├── negotiateAdherence.ts# MCP: negotiateAdherence (Sarah Circuit-Breaker)
 │   │   │   └── agentTurnHandler.ts  # Bedrock Agentic Loop & Offline Fallback
+│   │   ├── types/
+│   │   │   └── index.ts             # Shared Backend TypeScript Types
+│   │   ├── utils/
+│   │   │   └── dateUtils.ts         # Timezone & Local Date Utilities
 │   │   └── server.ts                # Streamable HTTP (SSE) & Express Router
-│   ├── tests/                       # 65 Passing Tests across 7 files
-│   │   ├── bedrockEnterprise.test.ts # Guardrails, Streaming Inference & Polly TTFA
-│   │   ├── agentTurn.test.ts        # Multi-turn Voice Loop & Tool Invocations
-│   │   ├── beersCriteria.test.ts    # 15-Drug Geriatric Pharmacology Rules
-│   │   ├── mcpResourcesPrompts.test.ts # MCP Resources & Prompts Specs
-│   │   ├── mcpTools.test.ts         # Direct 7 MCP Tools Execution
-│   │   ├── offlineFallback.test.ts  # Resilient Zero-Network Engine
-│   │   └── regression.test.ts       # Full Regression Suite
+│   ├── tests/                       # 72 Passing Tests across 7 files (100% Pass)
+│   │   ├── bedrockEnterprise.test.ts# Bedrock Guardrails, Streaming & Polly TTFA
+│   │   ├── agentTurn.test.ts        # Voice Turn Orchestration & Tool Reasoning
+│   │   ├── tools.test.ts            # Direct 7 MCP Tools & SNS Emergency Dispatch
+│   │   ├── mcpPrimitives.test.ts    # MCP Primitives (Tools, Resources, Prompts)
+│   │   ├── scheduleAndTemporal.test.ts # Temporal Schedule Resolution & Adherence
+│   │   ├── authMultiUser.test.ts    # Multi-User SQLite WAL Isolation & Demo Seeding
+│   │   └── medicineCrud.test.ts     # Medication CRUD Operations & Stock Decrement
 │   └── package.json                 # Workspaces & MCP Dependencies
 ├── frontend/                        # Echo Show 10 Ambient Display (Port 3000)
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── globals.css          # Alexa Cyan Light Bar & Radar Sweep Keyframes
-│   │   │   └── page.tsx             # Smart Display Shell & Dual Frame View
+│   │   │   ├── layout.tsx           # Root Next.js 15 App Shell & Metadata
+│   │   │   ├── not-found.tsx        # Fallback 404 Route
+│   │   │   └── page.tsx             # Echo Show 10 Hardware Frame & Viewport Manager
 │   │   ├── components/
-│   │   │   ├── AlexaAmbientGlow.tsx # Web Audio Reactive Echo Show Light Bar
+│   │   │   ├── TopNavBar.tsx        # Viewport Switcher & Simulate Delivery Trigger
+│   │   │   ├── MedicineCard.tsx     # Beers Criteria Badges & Safety Tooltips
+│   │   │   ├── MedicationPunchCard.tsx # Daily Dose Timeline & Punch Indicators
+│   │   │   ├── SeniorClock.tsx      # High-Contrast Clock & Ambient Date
+│   │   │   ├── QuickVitalsBar.tsx   # Glanceable Blood Pressure & Pulse Readouts
+│   │   │   ├── AlexaAmbientGlow.tsx # Web Audio Reactive Echo Show Cyan Light Bar
 │   │   │   ├── AlexaAgentConsole.tsx# Developer Timeline & Raw JSON Inspector
 │   │   │   ├── AuthGate.tsx         # Evaluator 1-Click Sandbox Login
 │   │   │   ├── DemoVoiceModal.tsx   # 1-Click Dual-Turn Voice Simulator Modal
 │   │   │   ├── DoctorReportPreviewModal.tsx # A4 Doctor Preview with BP Chart & QR Code
-│   │   │   └── RichCards/           # RingDoorbell, ClinicalAdvice, AmazonOrder Cards
+│   │   │   └── RichCards/           # AmazonOrder, ClinicalAdvice, RingDoorbell Cards
+│   │   ├── context/
+│   │   │   ├── AlertContext.tsx     # Application-wide Alert State
+│   │   │   └── AlexaVoiceContext.tsx# Voice Agent & Audio Waveform Context
 │   │   ├── hooks/
-│   │   │   └── useAlexaAgent.ts     # Unified Multi-Turn Voice Orchestrator
+│   │   │   ├── useAlexaAgent.ts     # Unified Multi-Turn Voice Orchestrator
+│   │   │   ├── useMedicines.ts      # Prescription State & Adherence Metrics
+│   │   │   └── useHeatmap.ts        # 30-Day Longitudinal Adherence Heatmap
+│   │   ├── screens/
+│   │   │   ├── TodayScheduleView.tsx# Primary Senior Bedside Schedule Interface
+│   │   │   ├── DeskModeView.tsx     # Bedside Desk Clock with OLED Night Dimmer
+│   │   │   ├── HistoryMatrixView.tsx# 30-Day Adherence Log Matrix & Export
+│   │   │   └── AnalyticsView.tsx    # Longitudinal BP Trends & Adherence Analytics
 │   │   └── services/
 │   │       ├── mcpClient.ts         # Streamable HTTP / SSE Client
 │   │       ├── mockVoiceScenarios.ts# 5 Pre-built Demonstration Scenarios
 │   │       ├── pdfService.ts        # jsPDF Clinical Summary Generator
+│   │       ├── soundFxService.ts    # Web Audio API Procedural Ring Chime Synth
 │   │       └── speechService.ts     # Web Audio Pipeline (Polly -> Web Speech)
 │   └── package.json                 # Next.js 15, React 19, Tailwind CSS
 ├── ARCHITECTURE.md                  # Comprehensive System Architecture & Flow Blueprint
+├── DEMO_SCRIPT_3MIN.md              # 3-Minute Video Walkthrough Script & Storyboard
 ├── FRICTION_LOG.md                  # Developer Friction Log (10 In-Depth Entries)
 ├── PRODUCT.md                       # Comprehensive Product Specification & Personas
 ├── DESIGN.md                        # Industrial Design Tokens & Ergonomics Guidelines
@@ -435,17 +466,26 @@ NEXT_PUBLIC_MCP_URL=http://localhost:3001
 ```
 
 ### 4. Run Development Servers
-Open two terminal windows:
 
-**Terminal 1 (Backend MCP Server):**
+**Option A: 1-Command Monorepo Launch (Recommended)**
 ```bash
-npm run dev --workspace=backend-mcp
+# Starts both Backend MCP (Port 3001) and Frontend Echo Show UI (Port 3000) concurrently
+npm run dev
 ```
-*Server starts on `http://localhost:3001` with SSE stream at `/sse`.*
 
-**Terminal 2 (Frontend Echo Show 10 UI):**
+**Option B: Independent Terminals (Detailed Log Inspection)**
+
+*Terminal 1 (Backend MCP Server):*
 ```bash
-npm run dev --workspace=frontend
+npm run dev:backend
+# Or: npm run dev --workspace=backend-mcp
+```
+*Server starts on `http://localhost:3001` with SSE stream at `/sse` and REST routes at `/api`.*
+
+*Terminal 2 (Frontend Echo Show 10 UI):*
+```bash
+npm run dev:frontend
+# Or: npm run dev --workspace=frontend
 ```
 *Application opens at `http://localhost:3000`.*
 
