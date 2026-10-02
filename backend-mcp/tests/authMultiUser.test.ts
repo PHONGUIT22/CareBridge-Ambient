@@ -5,6 +5,8 @@ import { MedicineRepo } from '../src/database/medicineRepo.js';
 import { LogRepo } from '../src/database/logRepo.js';
 import { VitalsRepo } from '../src/database/vitalsRepo.js';
 import { getLocalDateString } from '../src/utils/dateUtils.js';
+import { clinicalAdvisorTool } from '../src/tools/clinicalAdvisor.js';
+import { orderRefillTool } from '../src/tools/orderRefill.js';
 
 describe('Task 1: Multi-User Isolation & Demo Seeding Specification', () => {
   beforeAll(async () => {
@@ -161,8 +163,53 @@ describe('Task 1: Multi-User Isolation & Demo Seeding Specification', () => {
     expect(vitalsB?.heartRate).toBe(88);
   });
 
+  it('Multi-tenant Isolation: clinicalAdvisorTool and orderRefillTool respect authenticated userId', async () => {
+    const judgeUserId = `usr_judge_${Date.now()}`;
+    const db = getDatabase();
+
+    db.prepare(`
+      INSERT INTO users (id, email, pin, role, is_pro, is_demo, created_at)
+      VALUES (?, 'judge@amazon.com', '1234', 'senior', 1, 0, datetime('now'))
+    `).run(judgeUserId);
+
+    // Add only 1 distinct medication for judge
+    await MedicineRepo.addMedicine({
+      userId: judgeUserId,
+      name: 'Gabapentin',
+      dosage: '300mg oral',
+      reminderTimes: ['09:00'],
+      daysOfWeek: ['ALL'],
+      stockCount: 4,
+    });
+
+    // Call clinicalAdvisorTool with judgeUserId
+    const advisorResult = await clinicalAdvisorTool.handler({
+      query: 'I am experiencing drowsiness and dizziness after taking my pill',
+      userId: judgeUserId,
+    });
+
+    expect(advisorResult.success).toBe(true);
+
+    // Call orderRefillTool with judgeUserId
+    const refillResult = await orderRefillTool.handler({
+      medicineName: 'Gabapentin',
+      quantity: 60,
+      userId: judgeUserId,
+    });
+
+    expect(refillResult.success).toBe(true);
+    expect(refillResult.medicineName).toBe('Gabapentin');
+    expect(refillResult.quantityAdded).toBe(60);
+    expect(refillResult.newStockCount).toBe(64); // 4 + 60
+
+    // Ensure Eleanor's demo medicines stock was untouched
+    const demoMeds = await MedicineRepo.getAllMedicines('usr_demo');
+    const demoAmlodipine = demoMeds.find((m) => m.name.toLowerCase().includes('amlodipine'));
+    expect(demoAmlodipine?.stockCount).toBeDefined();
+  });
+
   afterAll(() => {
     const db = getDatabase();
-    db.prepare("DELETE FROM users WHERE id LIKE 'usr_test_normal_%' OR id LIKE 'usr_a_%' OR id LIKE 'usr_b_%'").run();
+    db.prepare("DELETE FROM users WHERE id LIKE 'usr_test_normal_%' OR id LIKE 'usr_a_%' OR id LIKE 'usr_b_%' OR id LIKE 'usr_judge_%'").run();
   });
 });

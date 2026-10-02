@@ -562,12 +562,13 @@ apiRouter.delete('/medicines/:id', async (req: Request, res: Response) => {
 // Clinical advisor query endpoint for AlexaAgentConsole and voice/text queries
 apiRouter.post('/advisor', async (req: Request, res: Response) => {
   try {
+    const userId = extractUserId(req);
     const { query } = req.body;
     if (!query) {
       res.status(400).json({ success: false, error: 'Missing question query.' });
       return;
     }
-    const result = await clinicalAdvisorTool.handler({ query });
+    const result = await clinicalAdvisorTool.handler({ query, userId });
     res.json(result);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -578,7 +579,8 @@ apiRouter.post('/advisor', async (req: Request, res: Response) => {
 // AI Health Guardian adherence negotiation endpoint
 apiRouter.post('/guardian/negotiate', async (req: Request, res: Response) => {
   try {
-    const result = await negotiateAdherenceTool.handler(req.body || {});
+    const userId = extractUserId(req);
+    const result = await negotiateAdherenceTool.handler({ ...(req.body || {}), userId });
     res.json(result);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -590,12 +592,13 @@ apiRouter.post('/guardian/negotiate', async (req: Request, res: Response) => {
 // Agent turn orchestration endpoint (Claude Haiku Native Tool-Use & Offline Heuristic Fallback)
 apiRouter.post('/agent/turn', async (req: Request, res: Response) => {
   try {
+    const userId = extractUserId(req);
     const { query, context } = req.body || {};
     if (!query || typeof query !== 'string') {
       res.status(400).json({ success: false, error: 'Missing user query for agent turn.' });
       return;
     }
-    const result = await handleAgentTurn({ query, context });
+    const result = await handleAgentTurn({ query, context, userId });
     res.json(result);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -607,12 +610,13 @@ apiRouter.post('/agent/turn', async (req: Request, res: Response) => {
 // Stream turn endpoint alias
 apiRouter.post('/stream/turn', async (req: Request, res: Response) => {
   try {
+    const userId = extractUserId(req);
     const { query, context } = req.body || {};
     if (!query || typeof query !== 'string') {
       res.status(400).json({ success: false, error: 'Missing user query for agent turn.' });
       return;
     }
-    const result = await handleAgentTurn({ query, context });
+    const result = await handleAgentTurn({ query, context, userId });
     res.json(result);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);

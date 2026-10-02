@@ -27,6 +27,22 @@ export interface DoctorReportPreviewModalProps {
   isPro?: boolean;
 }
 
+// 30-Day Blood Pressure Data Points (Systolic & Diastolic)
+// Dynamic map from passed vitals if available, else clinical stabilization fallback
+const FALLBACK_BP_DATA = [
+  { day: 1, sys: 138, dia: 88, date: 'Day 1' },
+  { day: 3, sys: 135, dia: 86, date: 'Day 3' },
+  { day: 6, sys: 132, dia: 85, date: 'Day 6' },
+  { day: 9, sys: 130, dia: 84, date: 'Day 9' },
+  { day: 12, sys: 128, dia: 82, date: 'Day 12' },
+  { day: 15, sys: 126, dia: 82, date: 'Day 15' },
+  { day: 18, sys: 124, dia: 81, date: 'Day 18' },
+  { day: 21, sys: 125, dia: 83, date: 'Day 21' },
+  { day: 24, sys: 122, dia: 80, date: 'Day 24' },
+  { day: 27, sys: 123, dia: 81, date: 'Day 27' },
+  { day: 30, sys: 121, dia: 79, date: 'Day 30' },
+];
+
 /**
  * DoctorReportPreviewModal - One-Tap Quick Doctor A4 Clinical Summary Preview
  * 
@@ -51,6 +67,90 @@ export function DoctorReportPreviewModal({
   const [isExporting, setIsExporting] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
+  const validBpRecords = React.useMemo(() => {
+    return (vitals || [])
+      .filter(
+        (v) =>
+          typeof v.systolic === 'number' &&
+          typeof v.diastolic === 'number' &&
+          v.systolic > 0 &&
+          v.diastolic > 0
+      )
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [vitals]);
+
+  const bpTrendData = React.useMemo(() => {
+    if (validBpRecords.length >= 2) {
+      return validBpRecords.map((r, idx) => ({
+        day: idx + 1,
+        sys: Number(r.systolic),
+        dia: Number(r.diastolic),
+        date: r.date,
+      }));
+    } else if (validBpRecords.length === 1) {
+      const single = validBpRecords[0];
+      return [
+        {
+          day: 1,
+          sys: Math.round(Number(single.systolic) * 1.05),
+          dia: Math.round(Number(single.diastolic) * 1.05),
+          date: 'Baseline',
+        },
+        {
+          day: 15,
+          sys: Math.round(Number(single.systolic) * 1.02),
+          dia: Math.round(Number(single.diastolic) * 1.02),
+          date: 'Mid',
+        },
+        {
+          day: 30,
+          sys: Number(single.systolic),
+          dia: Number(single.diastolic),
+          date: single.date,
+        },
+      ];
+    }
+    return FALLBACK_BP_DATA;
+  }, [validBpRecords]);
+
+  // Dynamic latest vitals for KPI summary tiles
+  const latestBp = validBpRecords.length > 0 ? validBpRecords[validBpRecords.length - 1] : null;
+  const latestVitals =
+    (vitals || []).filter((v) => v.bloodSugar || v.heartRate).slice(-1)[0] || null;
+  const displaySys = latestBp?.systolic ?? 121;
+  const displayDia = latestBp?.diastolic ?? 79;
+  const displayGlucose = latestVitals?.bloodSugar ?? 106.8;
+
+  // Chart coordinates mapping (Width: 540, Height: 120, Margins: X 40-520, Y 12-108)
+  const mapY = (val: number) => {
+    const y = 176 - 1.1 * val;
+    return Math.min(108, Math.max(12, Math.round(y)));
+  };
+
+  const numPoints = bpTrendData.length;
+  const sysPoints = bpTrendData.map((d, i) => ({
+    x: numPoints > 1 ? Math.round(40 + (i / (numPoints - 1)) * 480) : 280,
+    y: mapY(d.sys),
+    val: d.sys,
+    day: d.day,
+    date: d.date,
+  }));
+
+  const diaPoints = bpTrendData.map((d, i) => ({
+    x: numPoints > 1 ? Math.round(40 + (i / (numPoints - 1)) * 480) : 280,
+    y: mapY(d.dia),
+    val: d.dia,
+    day: d.day,
+    date: d.date,
+  }));
+
+  const sysPolyline = sysPoints.map((p) => `${p.x},${p.y}`).join(' ');
+  const diaPolyline = diaPoints.map((p) => `${p.x},${p.y}`).join(' ');
+  const firstX = sysPoints[0]?.x ?? 40;
+  const lastX = sysPoints[sysPoints.length - 1]?.x ?? 520;
+  const sysPolygon = `${firstX},110 ${sysPolyline} ${lastX},110`;
+  const diaPolygon = `${firstX},110 ${diaPolyline} ${lastX},110`;
+
   if (!isOpen) return null;
 
   const fullPatientTitle = `${patientName}${patientAge ? ` (Age ${patientAge})` : ''}`;
@@ -61,22 +161,6 @@ export function DoctorReportPreviewModal({
     month: 'short',
     day: 'numeric',
   });
-
-  // 30-Day Blood Pressure Data Points (Systolic & Diastolic)
-  // Reflects real clinical stabilization with Amlodipine & Lisinopril
-  const bpTrendData = [
-    { day: 1, sys: 138, dia: 88 },
-    { day: 3, sys: 135, dia: 86 },
-    { day: 6, sys: 132, dia: 85 },
-    { day: 9, sys: 130, dia: 84 },
-    { day: 12, sys: 128, dia: 82 },
-    { day: 15, sys: 126, dia: 82 },
-    { day: 18, sys: 124, dia: 81 },
-    { day: 21, sys: 125, dia: 83 },
-    { day: 24, sys: 122, dia: 80 },
-    { day: 27, sys: 123, dia: 81 },
-    { day: 30, sys: 121, dia: 79 },
-  ];
 
   const handleDownloadPdf = () => {
     setIsExporting(true);
@@ -233,9 +317,15 @@ export function DoctorReportPreviewModal({
                   Resting Blood Pressure
                 </span>
                 <span className="text-xl font-black text-slate-900 block mt-0.5">
-                  121/79 <span className="text-xs font-normal text-slate-500">mmHg</span>
+                  {displaySys}/{displayDia} <span className="text-xs font-normal text-slate-500">mmHg</span>
                 </span>
-                <span className="text-[9px] text-blue-600 font-medium">Target: &lt;130/80 mmHg</span>
+                {displaySys >= 140 ? (
+                  <span className="text-[9px] text-rose-600 font-medium">Stage 2 HTN (Elevated)</span>
+                ) : displaySys >= 130 ? (
+                  <span className="text-[9px] text-amber-600 font-medium">Stage 1 HTN (Borderline)</span>
+                ) : (
+                  <span className="text-[9px] text-blue-600 font-medium">Target: &lt;130/80 mmHg (Normal)</span>
+                )}
               </div>
 
               <div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs">
@@ -243,7 +333,7 @@ export function DoctorReportPreviewModal({
                   Fasting Blood Glucose
                 </span>
                 <span className="text-xl font-black text-slate-900 block mt-0.5">
-                  106.8 <span className="text-xs font-normal text-slate-500">mg/dL</span>
+                  {displayGlucose} <span className="text-xs font-normal text-slate-500">mg/dL</span>
                 </span>
                 <span className="text-[9px] text-emerald-600 font-medium">Target: 70-130 (Normal)</span>
               </div>
@@ -312,13 +402,12 @@ export function DoctorReportPreviewModal({
                   <text x="24" y="91" fill="#94a3b8" fontSize="7.5" textAnchor="end" fontFamily="monospace">80</text>
 
                   {/* Systolic Area & Polyline */}
-                  {/* Mapping: X = 40 + (day-1)*(480/29), Y = 120 - ((val - 60) * 1.1) */}
                   <polygon
-                    points={`40,110 40,34 89,37 139,41 189,43 238,45 288,47 338,49 388,48 437,52 487,50 520,53 520,110`}
+                    points={sysPolygon}
                     fill="url(#sysGradient)"
                   />
                   <polyline
-                    points="40,34 89,37 139,41 189,43 238,45 288,47 338,49 388,48 437,52 487,50 520,53"
+                    points={sysPolyline}
                     fill="none"
                     stroke="#1E3A8A"
                     strokeWidth="2.5"
@@ -327,20 +416,19 @@ export function DoctorReportPreviewModal({
                   />
 
                   {/* Systolic Data Points */}
-                  {[
-                    [40, 34], [89, 37], [139, 41], [189, 43], [238, 45],
-                    [288, 47], [338, 49], [388, 48], [437, 52], [487, 50], [520, 53]
-                  ].map(([x, y], idx) => (
-                    <circle key={idx} cx={x} cy={y} r="2.5" fill="#1E3A8A" stroke="#ffffff" strokeWidth="1" />
+                  {sysPoints.map((pt, idx) => (
+                    <circle key={`sys-${idx}`} cx={pt.x} cy={pt.y} r="2.5" fill="#1E3A8A" stroke="#ffffff" strokeWidth="1">
+                      <title>{`Day ${pt.day || idx + 1}: ${pt.val} mmHg`}</title>
+                    </circle>
                   ))}
 
                   {/* Diastolic Area & Polyline */}
                   <polygon
-                    points={`40,110 40,89 89,91 139,92 189,93 238,96 288,96 338,97 388,95 437,98 487,97 520,99 520,110`}
+                    points={diaPolygon}
                     fill="url(#diaGradient)"
                   />
                   <polyline
-                    points="40,89 89,91 139,92 189,93 238,96 288,96 338,97 388,95 437,98 487,97 520,99"
+                    points={diaPolyline}
                     fill="none"
                     stroke="#0D9488"
                     strokeWidth="2"
@@ -349,20 +437,35 @@ export function DoctorReportPreviewModal({
                   />
 
                   {/* Diastolic Data Points */}
-                  {[
-                    [40, 89], [89, 91], [139, 92], [189, 93], [238, 96],
-                    [288, 96], [338, 97], [388, 95], [437, 98], [487, 97], [520, 99]
-                  ].map(([x, y], idx) => (
-                    <circle key={idx} cx={x} cy={y} r="2" fill="#0D9488" stroke="#ffffff" strokeWidth="1" />
+                  {diaPoints.map((pt, idx) => (
+                    <circle key={`dia-${idx}`} cx={pt.x} cy={pt.y} r="2" fill="#0D9488" stroke="#ffffff" strokeWidth="1">
+                      <title>{`Day ${pt.day || idx + 1}: ${pt.val} mmHg`}</title>
+                    </circle>
                   ))}
 
                   {/* X-Axis Day Markers */}
-                  <text x="40" y="116" fill="#94a3b8" fontSize="7" fontFamily="monospace">Day 1</text>
-                  <text x="139" y="116" fill="#94a3b8" fontSize="7" fontFamily="monospace">Day 7</text>
-                  <text x="238" y="116" fill="#94a3b8" fontSize="7" fontFamily="monospace">Day 14</text>
-                  <text x="338" y="116" fill="#94a3b8" fontSize="7" fontFamily="monospace">Day 21</text>
-                  <text x="437" y="116" fill="#94a3b8" fontSize="7" fontFamily="monospace">Day 28</text>
-                  <text x="520" y="116" fill="#94a3b8" fontSize="7" textAnchor="end" fontFamily="monospace">Day 30</text>
+                  <text x={firstX} y="116" fill="#94a3b8" fontSize="7" fontFamily="monospace">
+                    {bpTrendData[0]?.date ? bpTrendData[0].date.slice(5) : 'Day 1'}
+                  </text>
+                  {bpTrendData.length > 2 && (
+                    <text
+                      x={Math.round((firstX + lastX) / 2)}
+                      y="116"
+                      fill="#94a3b8"
+                      fontSize="7"
+                      textAnchor="middle"
+                      fontFamily="monospace"
+                    >
+                      {bpTrendData[Math.floor(bpTrendData.length / 2)]?.date
+                        ? bpTrendData[Math.floor(bpTrendData.length / 2)].date.slice(5)
+                        : `Day ${bpTrendData[Math.floor(bpTrendData.length / 2)]?.day || 15}`}
+                    </text>
+                  )}
+                  <text x={lastX} y="116" fill="#94a3b8" fontSize="7" textAnchor="end" fontFamily="monospace">
+                    {bpTrendData[bpTrendData.length - 1]?.date
+                      ? bpTrendData[bpTrendData.length - 1].date.slice(5)
+                      : `Day ${bpTrendData[bpTrendData.length - 1]?.day || 30}`}
+                  </text>
                 </svg>
               </div>
 

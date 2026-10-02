@@ -303,7 +303,7 @@ Click: 👉 **"Sign in with demo (1-click evaluator pass)"**
 The project includes an enterprise-grade automated test suite executed with Vitest:
 
 ```bash
-# Run all 72 automated tests across all 7 test files (100% pass rate)
+# Run all 73 automated tests across all 7 test files (100% pass rate)
 npm test --workspace=backend-mcp
 
 # Or run from monorepo root
@@ -316,13 +316,13 @@ npm run test:bedrock
 npm run build --workspace=frontend
 ```
 
-**Verification Results: 72 / 72 Passing Automated Tests (100% Pass Rate Across 7 Test Files):**
+**Verification Results: 73 / 73 Passing Automated Tests (100% Pass Rate Across 7 Test Files):**
 - ✅ `tests/bedrockEnterprise.test.ts` (22 tests): Bedrock Guardrails (Topic Denial & PII Redaction), streaming token inference, Polly TTS TTFA < 400ms.
-- ✅ `tests/agentTurn.test.ts` (12 tests): Multi-turn voice agent orchestration, automatic tool reasoning, custom dosage extraction, Sarah Connor Circuit-Breaker, paramedic emergency unlock.
 - ✅ `tests/tools.test.ts` (14 tests): Independent execution of all 7 registered MCP clinical action tools, AWS SNS emergency SMS dispatch, and Beers Criteria interaction warnings.
+- ✅ `tests/agentTurn.test.ts` (12 tests): Multi-turn voice agent orchestration, automatic tool reasoning, custom dosage extraction, Sarah Connor Circuit-Breaker, paramedic emergency unlock.
 - ✅ `tests/mcpPrimitives.test.ts` (10 tests): JSON-RPC 2.0 MCP Tri-Pillar (Tools, Resources, Prompts) schemas and resource reads.
 - ✅ `tests/scheduleAndTemporal.test.ts` (6 tests): Schedule by date, temporal guard logic, and adherence calculation with 0-dose handling.
-- ✅ `tests/authMultiUser.test.ts` (5 tests): Multi-user SQLite WAL isolation, PIN authentication, and demo seeder.
+- ✅ `tests/authMultiUser.test.ts` (6 tests): Multi-user SQLite WAL isolation, PIN authentication, demo seeder, and multi-tenant tool isolation.
 - ✅ `tests/medicineCrud.test.ts` (3 tests): Full CRUD medication management, schedule generation, and inventory decrement.
 
 ---
@@ -368,7 +368,7 @@ carebridge-ambient/
 │   │   ├── utils/
 │   │   │   └── dateUtils.ts         # Timezone & Local Date Utilities
 │   │   └── server.ts                # Streamable HTTP (SSE) & Express Router
-│   ├── tests/                       # 72 Passing Tests across 7 files (100% Pass)
+│   ├── tests/                       # 73 Passing Tests across 7 files (100% Pass)
 │   │   ├── bedrockEnterprise.test.ts# Bedrock Guardrails, Streaming & Polly TTFA
 │   │   ├── agentTurn.test.ts        # Voice Turn Orchestration & Tool Reasoning
 │   │   ├── tools.test.ts            # Direct 7 MCP Tools & SNS Emergency Dispatch

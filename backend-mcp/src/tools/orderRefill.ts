@@ -43,6 +43,10 @@ export const orderRefillTool = {
           type: 'number',
           description: 'Quantity of tablets to refill (defaults to 30 tablets - 1 month supply).',
         },
+        userId: {
+          type: 'string',
+          description: 'Optional ID of the authenticated patient/user for multi-tenant isolation.',
+        },
       },
       required: ['medicineName'],
     },

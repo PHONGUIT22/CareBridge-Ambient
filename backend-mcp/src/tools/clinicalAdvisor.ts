@@ -16,18 +16,23 @@ export const clinicalAdvisorTool = {
           type: 'string',
           description: 'Patient verbal statement or symptom description (e.g., "I feel dizzy after taking my pill").',
         },
+        userId: {
+          type: 'string',
+          description: 'Optional ID of the authenticated patient/user for multi-tenant isolation.',
+        },
       },
       required: ['query'],
     },
   },
 
-  async handler(args: { query: string }) {
+  async handler(args: { query: string; userId?: string }) {
     const todayStr = getLocalDateString();
+    const effectiveUserId = args.userId || 'usr_demo';
 
-    // Collect patient's real clinical context from database
+    // Collect patient's real clinical context from database isolated by user
     const [medicines, vitals] = await Promise.all([
-      MedicineRepo.getAllMedicines(),
-      VitalsRepo.getVitalsByDate(todayStr),
+      MedicineRepo.getAllMedicines(effectiveUserId),
+      VitalsRepo.getVitalsByDate(todayStr, effectiveUserId),
     ]);
 
     const currentMeds = medicines.map((m) => `${m.name} (${m.dosage})`);

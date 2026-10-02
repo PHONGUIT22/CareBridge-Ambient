@@ -9,6 +9,7 @@ import { negotiateAdherenceTool } from './negotiateAdherence.js';
 
 export interface AgentTurnRequest {
   query: string;
+  userId?: string;
   context?: {
     currentMeds?: string[];
     recentVitals?: string;
@@ -404,12 +405,20 @@ function resolveOfflineHeuristic(query: string): {
 /**
  * Executes the selected MCP Tool against the SQLite Database
  */
-async function executeTool(toolName: string, toolArgs: Record<string, any>): Promise<{
+async function executeTool(
+  toolName: string,
+  toolArgs: Record<string, any>,
+  userId?: string
+): Promise<{
   toolResult: any;
   speechResponse: string;
 }> {
   let toolResult: any = null;
   let speechResponse = '';
+
+  if (userId && !toolArgs.userId) {
+    toolArgs.userId = userId;
+  }
 
   switch (toolName) {
     case 'getTodaySchedule': {
@@ -460,7 +469,8 @@ async function executeTool(toolName: string, toolArgs: Record<string, any>): Pro
  * Primary entry point for voice turn orchestration (Voice Turn Orchestrator)
  */
 export async function handleAgentTurn(req: AgentTurnRequest): Promise<AgentTurnResponse> {
-  const { query, context } = req;
+  const { query, context, userId } = req;
+  const effectiveUserId = userId || 'usr_demo';
   const trimmedQuery = query.trim();
 
   // 1. Attempt Bedrock Claude Haiku 4.5 Native Tool-Use
@@ -471,6 +481,10 @@ export async function handleAgentTurn(req: AgentTurnRequest): Promise<AgentTurnR
     const { name: toolName, input: toolArgs } = decision.toolCall;
 
     try {
+      if (effectiveUserId && !toolArgs.userId) {
+        toolArgs.userId = effectiveUserId;
+      }
+
       if (toolName === 'negotiateAdherence') {
         const lowerQuery = trimmedQuery.toLowerCase();
         if (
@@ -484,7 +498,7 @@ export async function handleAgentTurn(req: AgentTurnRequest): Promise<AgentTurnR
         }
       }
 
-      const { toolResult, speechResponse } = await executeTool(toolName, toolArgs);
+      const { toolResult, speechResponse } = await executeTool(toolName, toolArgs, effectiveUserId);
 
       return {
         success: true,
@@ -520,9 +534,14 @@ export async function handleAgentTurn(req: AgentTurnRequest): Promise<AgentTurnR
   const heuristic = resolveOfflineHeuristic(trimmedQuery);
 
   if (heuristic) {
+    if (effectiveUserId && !heuristic.toolArgs.userId) {
+      heuristic.toolArgs.userId = effectiveUserId;
+    }
+
     const { toolResult, speechResponse } = await executeTool(
       heuristic.toolName,
-      heuristic.toolArgs
+      heuristic.toolArgs,
+      effectiveUserId
     );
 
     return {
