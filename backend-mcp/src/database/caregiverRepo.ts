@@ -30,10 +30,12 @@ export const CaregiverRepo = {
     return cachedProfile;
   },
 
-  async getCaregiver(): Promise<CaregiverProfile> {
+  async getCaregiver(userId?: string): Promise<CaregiverProfile> {
     try {
       const db = getDatabase();
-      const row = db.prepare('SELECT * FROM caregiver_profile WHERE id = ?').get('primary') as any;
+      const targetId = userId && userId.trim() ? userId.trim() : 'primary';
+      const row = (db.prepare('SELECT * FROM caregiver_profile WHERE id = ?').get(targetId) ||
+                   db.prepare('SELECT * FROM caregiver_profile WHERE id = ?').get('primary')) as any;
 
       if (row && row.name) {
         cachedProfile = {
@@ -48,7 +50,7 @@ export const CaregiverRepo = {
     return cachedProfile;
   },
 
-  async saveCaregiver(email?: string, customName?: string): Promise<CaregiverProfile> {
+  async saveCaregiver(email?: string, customName?: string, userId?: string): Promise<CaregiverProfile> {
     const formattedEmail = email && email.trim() ? email.trim() : 'sarah.c@carebridge.health';
     const computedName = customName && customName.trim()
       ? customName.trim()
@@ -57,18 +59,20 @@ export const CaregiverRepo = {
     cachedProfile = {
       name: computedName,
       email: formattedEmail,
+      phone: process.env.CAREGIVER_PHONE || '+1 (555) 0199',
     };
 
     try {
       const db = getDatabase();
+      const targetId = userId && userId.trim() ? userId.trim() : 'primary';
       db.prepare(`
         INSERT INTO caregiver_profile (id, name, email, updated_at)
-        VALUES ('primary', ?, ?, ?)
+        VALUES (?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           email = excluded.email,
           updated_at = excluded.updated_at
-      `).run(computedName, formattedEmail, new Date().toISOString());
+      `).run(targetId, computedName, formattedEmail, new Date().toISOString());
     } catch (e) {
       console.warn('Failed to persist caregiver profile:', e);
     }

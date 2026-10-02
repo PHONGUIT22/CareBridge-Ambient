@@ -52,7 +52,7 @@ export const clinicalAdvisorTool = {
 
     if (isEmergencyRisk) {
       try {
-        const caregiver = await CaregiverRepo.getCaregiver();
+        const caregiver = await CaregiverRepo.getCaregiver(args.userId);
         const caregiverName = caregiver?.name || 'Sarah Connor';
         const caregiverPhone = caregiver?.phone || '+1 (555) 0199';
 

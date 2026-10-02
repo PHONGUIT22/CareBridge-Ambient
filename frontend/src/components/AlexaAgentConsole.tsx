@@ -292,7 +292,7 @@ export function AlexaAgentConsole({
 
       {/* 2. MAIN MESSAGE BODY (FULL-HEIGHT AGENTIC CHAT TIMELINE) */}
       <div
-        className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 bg-[#F8FAFC]"
+        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 space-y-4 bg-[#F8FAFC]"
         style={{
           scrollbarWidth: 'thin',
           scrollbarColor: 'rgba(37, 99, 235, 0.25) transparent',

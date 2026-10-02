@@ -323,7 +323,7 @@ export default function Home() {
   const isDeskClock = activeTab === 'deskClock';
 
   return (
-    <main className={`min-h-screen font-sans selection:bg-[#2563EB] selection:text-white flex flex-col justify-between transition-colors duration-300 ${isDeskClock ? 'bg-[#050811] text-white' : 'bg-[#F1F5F9] text-slate-900'}`}>
+    <main className={`min-h-screen lg:h-screen lg:overflow-hidden font-sans selection:bg-[#2563EB] selection:text-white flex flex-col justify-between transition-colors duration-300 ${isDeskClock ? 'bg-[#050811] text-white' : 'bg-[#F1F5F9] text-slate-900'}`}>
       {/* 1. TOP NAVIGATION & STATUS BAR */}
       <TopNavBar
         isDeskClock={isDeskClock}
@@ -398,7 +398,7 @@ export default function Home() {
       )}
 
       {/* 2. MAIN WORKSPACE - ENCAPSULATED DEVICE MOCKUP FRAME */}
-      <div className="flex-1 flex items-center justify-center p-3 sm:p-6 md:p-8">
+      <div className="flex-1 flex items-center justify-center p-3 sm:p-6 md:p-8 min-h-0 overflow-hidden">
         <div
           className={`w-full transition-all duration-500 ${
             viewportMode === 'dual'
@@ -464,10 +464,14 @@ export default function Home() {
                   : isDeskClock
                   ? 'rounded-[32px] p-2 sm:p-2.5 bg-[#0B1528] border border-blue-900/40 shadow-2xl'
                   : 'rounded-[32px] p-2 sm:p-2.5 bg-slate-200/80 border border-slate-300 shadow-xl'
-              }`}
+              } ${viewportMode === 'dual' ? 'lg:h-[820px] flex flex-col' : ''}`}
             >
               <div
-                className={`relative rounded-[24px] overflow-hidden min-h-[720px] max-h-[880px] flex flex-col justify-between transition-colors duration-300 ${
+                className={`relative rounded-[24px] overflow-hidden flex flex-col justify-between transition-colors duration-300 ${
+                  viewportMode === 'dual'
+                    ? 'h-full'
+                    : 'min-h-[720px] max-h-[880px]'
+                } ${
                   isDeskClock
                     ? 'bg-[#050811] border border-slate-800 text-white'
                     : 'bg-[#F8FAFC] border border-slate-200/60 text-slate-900'
@@ -478,7 +482,7 @@ export default function Home() {
               </div>
 
               {/* SCROLLABLE VIEW CONTENT */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth">
                 {activeTab === 'caregiver' && (
                   <TodayScheduleView
                     authSession={authSession}
@@ -519,8 +523,8 @@ export default function Home() {
               </div>
 
               {/* 3. FLOATING BOTTOM NAVIGATION BAR */}
-              <div className="sticky bottom-4 left-0 right-0 w-full px-4 z-30 pointer-events-auto">
-                <nav className={`relative rounded-2xl px-4 py-2 flex items-center justify-between border shadow-lg backdrop-blur-md transition-colors duration-300 ${isDeskClock ? 'bg-[#0B1528]/95 border-slate-800 text-slate-300' : 'bg-white/95 border-slate-200/80 text-slate-700 shadow-[0_10px_30px_rgba(0,0,0,0.08)]'}`}>
+              <div className="sticky bottom-4 left-0 right-0 w-full px-4 z-30 pointer-events-none">
+                <nav className={`pointer-events-auto relative rounded-2xl px-4 py-2 flex items-center justify-between border shadow-lg backdrop-blur-md transition-colors duration-300 ${isDeskClock ? 'bg-[#0B1528]/95 border-slate-800 text-slate-300' : 'bg-white/95 border-slate-200/80 text-slate-700 shadow-[0_10px_30px_rgba(0,0,0,0.08)]'}`}>
                   <div className="flex items-center gap-5 pl-1">
                     <button onClick={() => setActiveTab('caregiver')} className={`flex flex-col items-center transition-all ${activeTab === 'caregiver' ? 'text-[#1E3A8A] font-bold' : 'text-slate-400 hover:text-slate-600 font-medium'}`}>
                       <FontAwesomeIcon icon={faShieldHalved} className="text-base" />
@@ -623,7 +627,7 @@ export default function Home() {
 
           {/* DEVICE MOCKUP FRAME 2: ALEXA AGENT CONSOLE (DUAL VIEW) */}
           {isDualMode && (
-            <div className={`lg:col-span-5 xl:col-span-4 relative rounded-[32px] p-2 sm:p-2.5 h-[760px] flex flex-col transition-all duration-300 ${isDeskClock ? 'bg-[#0B1528] border border-blue-900/40 shadow-2xl' : 'bg-slate-200/80 border border-slate-300 shadow-xl'}`}>
+            <div className={`lg:col-span-5 xl:col-span-4 relative rounded-[32px] p-2 sm:p-2.5 lg:h-[820px] h-[760px] flex flex-col transition-all duration-300 ${isDeskClock ? 'bg-[#0B1528] border border-blue-900/40 shadow-2xl' : 'bg-slate-200/80 border border-slate-300 shadow-xl'}`}>
               <div className="relative rounded-[24px] overflow-hidden bg-white border border-slate-200/80 h-full flex flex-col shadow-md">
                 <AlexaAgentConsole
                   voiceAgent={alexaAgent}

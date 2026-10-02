@@ -195,7 +195,7 @@ export function TodayScheduleView({
   const strokeDashoffset = circumference - (calculatedAdherence / 100) * circumference;
 
   return (
-    <div className="min-h-full bg-[#F8FAFC] text-slate-900 p-4 sm:p-5 font-sans select-none pb-28">
+    <div className="min-h-full bg-[#F8FAFC] text-slate-900 p-4 sm:p-5 font-sans select-none pb-40">
       <div className="max-w-xl mx-auto flex flex-col gap-4">
         {/* 1. TOP HEADER BAR (MATCHES image/3.png & image/6.png) */}
         <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
@@ -265,7 +265,7 @@ export function TodayScheduleView({
         </h1>
 
         {/* 2. HERO COMPLIANCE GRADIENT CARD (MATCHES image/3.png & image/6.png) */}
-        <div className="bg-gradient-to-br from-[#1E40AF] via-[#1E3A8A] to-[#2563EB] text-white rounded-[28px] p-5 sm:p-6 shadow-[0_10px_25px_rgba(30,58,138,0.22)] relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#1E40AF] via-[#1E3A8A] to-[#2563EB] text-white rounded-[28px] p-4 sm:p-5 shadow-[0_10px_25px_rgba(30,58,138,0.22)] relative overflow-hidden">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
@@ -288,8 +288,8 @@ export function TodayScheduleView({
             </div>
 
             {/* Circular Progress Ring Gauge */}
-            <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
-              <svg className="w-20 h-20 -rotate-90 transform" viewBox="0 0 72 72">
+            <div className="relative w-16 h-16 shrink-0 flex items-center justify-center">
+              <svg className="w-16 h-16 -rotate-90 transform" viewBox="0 0 72 72">
                 {/* Background track circle */}
                 <circle
                   cx="36"
@@ -314,7 +314,7 @@ export function TodayScheduleView({
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-base sm:text-lg font-extrabold text-white leading-none">
+                <span className="text-sm sm:text-base font-extrabold text-white leading-none">
                   {calculatedAdherence}%
                 </span>
                 <span className="text-[8px] font-bold text-sky-200 tracking-wider mt-0.5">
@@ -325,11 +325,11 @@ export function TodayScheduleView({
           </div>
 
           {/* Bottom Vitals Row inside Hero Card */}
-          <div className="flex items-center gap-2 mt-5 pt-3 border-t border-white/20 flex-wrap">
+          <div className="flex items-center gap-2 mt-3.5 pt-2.5 border-t border-white/20 flex-wrap">
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <FontAwesomeIcon icon={faHeartPulse} className="text-rose-200 text-xs" />
               <span>{vitals?.systolic && vitals?.diastolic ? `${vitals.systolic}/${vitals.diastolic} BP` : (isDemo ? '124/83 BP' : '--/-- BP')}</span>
@@ -338,7 +338,7 @@ export function TodayScheduleView({
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <FontAwesomeIcon icon={faDroplet} className="text-sky-200 text-xs" />
               <span>{vitals?.bloodSugar ? `${vitals.bloodSugar} Sugar` : (isDemo ? '107.4 Sugar' : '-- Sugar')}</span>
@@ -347,7 +347,7 @@ export function TodayScheduleView({
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <FontAwesomeIcon icon={faBolt} className="text-emerald-200 text-xs" />
               <span>{vitals?.heartRate ? `${vitals.heartRate} BPM` : (isDemo ? '73 BPM' : '-- BPM')}</span>
@@ -356,7 +356,7 @@ export function TodayScheduleView({
             <button
               type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 transition-colors ml-auto cursor-pointer shadow-2xs"
+              className="bg-white/25 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white rounded-xl px-2.5 py-1 text-xs font-bold flex items-center gap-1 transition-colors ml-auto cursor-pointer shadow-2xs"
             >
               <FontAwesomeIcon icon={faPencil} className="text-[10px]" />
               <span>+ Log</span>
@@ -399,7 +399,7 @@ export function TodayScheduleView({
                     key={item.dateStr}
                     type="button"
                     onClick={() => setSelectedDateStr(item.dateStr)}
-                    className={`rounded-2xl p-2 sm:p-2.5 w-12 sm:w-14 flex flex-col items-center justify-center transition-all ${
+                    className={`rounded-2xl p-1.5 sm:p-2 w-11 sm:w-13 flex flex-col items-center justify-center transition-all ${
                       isSelected
                         ? 'bg-[#1E3A8A] text-white shadow-md scale-105'
                         : item.isToday
@@ -442,7 +442,7 @@ export function TodayScheduleView({
 
         {/* FREE TIER NOTICE BANNER */}
         {!isPro && (
-          <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between text-xs text-amber-900">
+          <div className="py-2 px-3.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between text-xs text-amber-900">
             <div className="flex items-center gap-2">
               <FontAwesomeIcon icon={faCrown} className="text-amber-600 text-sm" />
               <span>
@@ -459,7 +459,7 @@ export function TodayScheduleView({
         )}
 
         {/* ACTIVE HEALTH GUARDIAN BEHAVIORAL INTERVENTION SELECTOR */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-3">
           <GuardianSelector />
         </div>
 
@@ -497,24 +497,22 @@ export function TodayScheduleView({
           </div>
 
           {/* AWS Bedrock Clinical Guard & Beers Criteria 2026 Audit Header Banner */}
-          <div className="mb-3 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-sky-500/10 to-blue-500/10 border border-emerald-500/20 flex items-center justify-between text-xs shadow-2xs">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-700 flex items-center justify-center shrink-0">
-                <FontAwesomeIcon icon={faShieldHalved} className="text-xs" />
+          <div className="mb-3 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/10 via-sky-500/10 to-blue-500/10 border border-emerald-500/20 flex items-center justify-between text-xs shadow-2xs">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-lg bg-emerald-500/20 text-emerald-700 flex items-center justify-center shrink-0">
+                <FontAwesomeIcon icon={faShieldHalved} className="text-[10px]" />
               </div>
-              <div>
-                <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                  AWS Bedrock Clinical Guard Active
-                  <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
-                    FDA Beers 2026
-                  </span>
+              <span className="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
+                AWS Bedrock Clinical Guard Active
+                <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  FDA Beers 2026
                 </span>
-                <p className="text-[11px] text-slate-600">
-                  All active prescriptions screened with Claude 3.5 Sonnet for senior safety (Age {patientAge || 78}).
-                </p>
-              </div>
+              </span>
+              <span className="text-[11px] text-slate-500 hidden md:inline">
+                • Screened with Claude 3.5 for senior safety (Age {patientAge || 78})
+              </span>
             </div>
-            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg shrink-0 hidden sm:inline">
+            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md shrink-0">
               100% Audited
             </span>
           </div>
