@@ -162,10 +162,10 @@ export function DoctorReportPreviewModal({
     day: 'numeric',
   });
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     setIsExporting(true);
     try {
-      pdfService.generateDoctorReport({
+      await pdfService.generateDoctorReport({
         patientName: fullPatientTitle,
         caregiverName: fullCaregiverTitle,
         adherenceRate,
@@ -183,7 +183,21 @@ export function DoctorReportPreviewModal({
     } catch (e) {
       console.error('PDF export failed:', e);
     } finally {
-      setTimeout(() => setIsExporting(false), 600);
+      setIsExporting(false);
+    }
+  };
+
+  const handlePrintPdf = async () => {
+    try {
+      await pdfService.printDoctorReport({
+        patientName: fullPatientTitle,
+        caregiverName: fullCaregiverTitle,
+        adherenceRate,
+        logs: logs.length > 0 ? logs : undefined,
+        vitals: vitals.length > 0 ? vitals : undefined,
+      });
+    } catch (e) {
+      console.error('Print failed:', e);
     }
   };
 
@@ -622,12 +636,20 @@ export function DoctorReportPreviewModal({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={handleDownloadPdf}
-              disabled={isExporting}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-md active:scale-95 flex items-center gap-2"
+              onClick={handlePrintPdf}
+              className="px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 hover:text-white font-medium transition-all shadow-sm active:scale-95 flex items-center gap-2"
+              title="Open native print dialog to print or save as PDF"
             >
               <FontAwesomeIcon icon={faPrint} />
-              <span>{isExporting ? 'Exporting PDF...' : 'Print / Save PDF'}</span>
+              <span>Print Sheet</span>
+            </button>
+            <button
+              onClick={handleDownloadPdf}
+              disabled={isExporting}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-md active:scale-95 flex items-center gap-2 disabled:opacity-70"
+            >
+              <FontAwesomeIcon icon={faFileArrowDown} className={isExporting ? 'animate-bounce' : ''} />
+              <span>{isExporting ? 'Generating Hospital PDF...' : 'Download Certified PDF'}</span>
             </button>
             <button
               onClick={onClose}

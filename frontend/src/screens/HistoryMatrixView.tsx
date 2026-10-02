@@ -53,7 +53,7 @@ export function HistoryMatrixView({
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!isPro) {
       onOpenPaywall?.();
       return;
@@ -78,7 +78,7 @@ export function HistoryMatrixView({
         ? `${effectiveCaregiverName} (Caregiver)`
         : 'Sarah Connor (Daughter)';
 
-      pdfService.generateDoctorReport({
+      await pdfService.generateDoctorReport({
         patientName: pName,
         caregiverName: cName,
         adherenceRate: avgAdherence,
@@ -147,11 +147,11 @@ export function HistoryMatrixView({
             <button
               onClick={handleExportPDF}
               disabled={isExporting}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#1E3A8A] hover:bg-[#1E40AF] text-white shadow-sm active:scale-95 transition-all"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#1E3A8A] hover:bg-[#1E40AF] text-white shadow-sm active:scale-95 transition-all disabled:opacity-75"
               title={isPro ? 'Export PDF Report for Doctor' : 'Doctor PDF Export'}
             >
-              <FontAwesomeIcon icon={faFileArrowDown} className="text-xs" />
-              <span>{isExporting ? 'Generating...' : 'Export'}</span>
+              <FontAwesomeIcon icon={faFileArrowDown} className={`text-xs ${isExporting ? 'animate-bounce' : ''}`} />
+              <span>{isExporting ? 'Generating PDF...' : 'Export PDF'}</span>
             </button>
           </div>
         </div>
