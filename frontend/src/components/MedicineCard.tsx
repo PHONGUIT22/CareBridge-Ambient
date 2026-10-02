@@ -61,7 +61,6 @@ export function MedicineCard({
   const isFuture = isFutureDose(item.date, item.scheduledTime) && item.status === 'pending';
 
   const handleToggle = () => {
-    if (isFuture) return;
     if (!isTaken) {
       try {
         confetti({
@@ -80,27 +79,26 @@ export function MedicineCard({
       {/* 1. LEFT STATUS CIRCLE BADGE (MATCHES image/3.png & image/6.png) */}
       <button
         type="button"
-        disabled={isFuture}
         onClick={handleToggle}
-        className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-transform ${
-          isFuture
-            ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-75'
-            : isTaken
+        className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-transform cursor-pointer ${
+          isTaken
             ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/60 active:scale-90'
+            : isFuture
+            ? 'bg-amber-50 text-amber-600 border border-amber-200/80 hover:bg-amber-100 active:scale-90'
             : 'bg-blue-50 text-blue-600 border border-blue-200/60 hover:bg-blue-100 active:scale-90'
         }`}
         title={
-          isFuture
-            ? 'Upcoming (Scheduled)'
-            : isTaken
+          isTaken
             ? 'Dose completed (Click to toggle)'
+            : isFuture
+            ? 'Upcoming dose • Click to take early'
             : 'Click to mark dose as taken'
         }
       >
         <FontAwesomeIcon
           icon={isTaken ? faCheck : faClock}
           className={`text-lg ${
-            isFuture ? 'text-slate-400' : isTaken ? 'text-emerald-600 stroke-[3]' : 'text-blue-600'
+            isTaken ? 'text-emerald-600 stroke-[3]' : isFuture ? 'text-amber-600' : 'text-blue-600'
           }`}
         />
       </button>
@@ -246,18 +244,18 @@ export function MedicineCard({
         ) : isFuture ? (
           <button
             type="button"
-            disabled
-            className="bg-slate-100 border border-slate-200 text-slate-400 font-semibold px-3.5 sm:px-4 py-2 rounded-full text-xs flex items-center gap-1.5 cursor-not-allowed opacity-80"
-            title="Upcoming (Scheduled)"
+            onClick={handleToggle}
+            className="bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-600 hover:to-emerald-700 text-white font-bold px-3.5 sm:px-4 py-2 rounded-full text-xs flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer"
+            title={`Scheduled for ${item.scheduledTime} • Click to take early`}
           >
-            <FontAwesomeIcon icon={faClock} className="text-xs text-slate-400" />
-            <span>Upcoming</span>
+            <FontAwesomeIcon icon={faClock} className="text-xs text-amber-100" />
+            <span>Take Early</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={handleToggle}
-            className="bg-[#1E3A8A] hover:bg-[#1E40AF] text-white font-bold px-3.5 sm:px-4 py-2 rounded-full text-xs shadow-sm active:scale-95 transition-all flex items-center gap-1.5"
+            className="bg-[#1E3A8A] hover:bg-[#1E40AF] text-white font-bold px-3.5 sm:px-4 py-2 rounded-full text-xs shadow-sm active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
             title="Mark dose as completed"
           >
             <FontAwesomeIcon icon={faCheck} className="text-xs" />

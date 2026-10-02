@@ -48,6 +48,7 @@ export function DeskModeView({
   const [schedule, setSchedule] = useState<DailyLogItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isNightDimmer, setIsNightDimmer] = useState<boolean>(false);
+  const [showConfetti, setShowConfetti] = useState<boolean>(false);
 
   const contextualGreeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -106,20 +107,24 @@ export function DeskModeView({
   };
 
   const handleTakePill = async () => {
-    if (!upcomingDose || isUpcomingFuture) return;
+    if (!upcomingDose) return;
 
+    setShowConfetti(true);
     soundFxService.playPillClick();
     soundFxService.playCelebrationChord();
 
-    confetti({
-      particleCount: 100,
-      spread: 75,
-      origin: { y: 0.75 },
-      colors: ['#00CAFF', '#10B981', '#38BDF8', '#F59E0B'],
-    });
+    try {
+      confetti({
+        particleCount: 100,
+        spread: 75,
+        origin: { y: 0.75 },
+        colors: ['#00CAFF', '#10B981', '#38BDF8', '#F59E0B'],
+      });
+    } catch (_) {}
 
     const takingLogId = upcomingDose.logId;
     const medName = upcomingDose.name;
+    const wasFuture = isUpcomingFuture;
 
     setSchedule((prev) =>
       prev.map((item) =>
@@ -129,7 +134,13 @@ export function DeskModeView({
       )
     );
 
-    speechService.speak(`Great job! I've marked your ${medName} as taken.`);
+    if (wasFuture) {
+      speechService.speak(
+        `Great job! I've marked your scheduled ${upcomingDose.scheduledTime} dose of ${medName} as taken early.`
+      );
+    } else {
+      speechService.speak(`Great job! I've marked your ${medName} as taken.`);
+    }
 
     try {
       await mcpClient.toggleDose(takingLogId, 'pending');
@@ -141,16 +152,30 @@ export function DeskModeView({
     if (onTakeDose) {
       onTakeDose(takingLogId);
     }
+
+    setTimeout(() => {
+      setShowConfetti(false);
+    }, 3000);
   };
 
   return (
     <div
-      className={`min-h-full flex flex-col justify-between p-4 sm:p-6 select-none font-sans pb-28 transition-colors duration-500 ${
+      className={`min-h-full flex flex-col justify-between p-4 sm:p-6 select-none font-sans pb-28 transition-colors duration-500 relative ${
         isNightDimmer
           ? 'bg-[#020306] text-amber-100/90'
           : 'bg-[#050811] text-white'
       }`}
     >
+      {/* Floating Celebration Toast on Dose Taken */}
+      {showConfetti && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-bounce">
+          <div className="px-4 py-2 rounded-full bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-xl flex items-center gap-2 border border-emerald-300">
+            <FontAwesomeIcon icon={faCheck} className="text-white" />
+            <span>Dose Recorded! Great job!</span>
+          </div>
+        </div>
+      )}
+
       {/* 1. TOP STATUS BAR (MATCHES image/8.png) */}
       <div className="flex items-center justify-between w-full max-w-lg mx-auto pt-1 gap-2 flex-wrap">
         {/* Senior Nightstand Mode Chip */}
@@ -294,20 +319,29 @@ export function DeskModeView({
               </button>
             </div>
 
-            {/* Giant Action Button: I TOOK MY PILL or UPCOMING (SCHEDULED) */}
+            {/* Giant Action Button: I TOOK MY PILL or TAKE DOSE (EARLY) */}
             {isUpcomingFuture ? (
               <button
-                disabled
-                className="w-full py-4 sm:py-5 rounded-2xl bg-slate-800 text-slate-400 font-bold text-base sm:text-lg tracking-wide flex items-center justify-center gap-3 cursor-not-allowed border border-slate-700 opacity-80"
-                title="Upcoming (Scheduled)"
+                type="button"
+                onClick={handleTakePill}
+                className="w-full py-3.5 sm:py-4 px-4 rounded-2xl bg-gradient-to-r from-amber-500 via-emerald-600 to-teal-600 hover:from-amber-600 hover:via-emerald-700 hover:to-teal-700 text-white font-black tracking-wide flex flex-col items-center justify-center gap-1 shadow-[0_4px_25px_rgba(245,158,11,0.35)] active:scale-[0.98] transition-all cursor-pointer border border-amber-300/40"
+                title={`Take dose early (Scheduled for ${upcomingDose.scheduledTime})`}
               >
-                <FontAwesomeIcon icon={faClock} className="text-lg text-slate-400" />
-                <span>UPCOMING (SCHEDULED)</span>
+                <div className="flex items-center justify-center gap-2.5 text-lg sm:text-xl">
+                  <FontAwesomeIcon icon={faCheck} className="stroke-[3]" />
+                  <span>TAKE DOSE (EARLY)</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/25 text-amber-100 text-xs font-semibold tracking-normal border border-amber-300/30">
+                  <FontAwesomeIcon icon={faClock} className="text-[10px] text-amber-200" />
+                  <span>Scheduled for {upcomingDose.scheduledTime} • Early Take</span>
+                </div>
               </button>
             ) : (
               <button
+                type="button"
                 onClick={handleTakePill}
-                className="w-full py-4 sm:py-5 rounded-2xl bg-[#10B981] hover:bg-[#059669] text-white font-black text-lg sm:text-xl tracking-wide flex items-center justify-center gap-3 shadow-[0_4px_25px_rgba(16,185,129,0.45)] active:scale-[0.98] transition-all"
+                className="w-full py-4 sm:py-5 rounded-2xl bg-[#10B981] hover:bg-[#059669] text-white font-black text-lg sm:text-xl tracking-wide flex items-center justify-center gap-3 shadow-[0_4px_25px_rgba(16,185,129,0.45)] active:scale-[0.98] transition-all cursor-pointer"
+                title="Mark dose as taken"
               >
                 <FontAwesomeIcon icon={faCheck} className="text-xl stroke-[3]" />
                 <span>I TOOK MY PILL</span>
