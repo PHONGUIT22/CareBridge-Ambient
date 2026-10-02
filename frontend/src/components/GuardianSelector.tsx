@@ -86,31 +86,25 @@ export function GuardianSelector({
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-2.5">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-1.5">
           <span
-            className={`text-xs font-bold uppercase tracking-wider font-mono ${
+            className={`text-[11px] font-bold uppercase tracking-wider font-mono ${
               compact ? 'text-slate-400' : 'text-slate-700'
             }`}
           >
             Active Health Guardian
           </span>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+          <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
             AI Persona
           </span>
         </div>
-        <span className={`text-[11px] font-medium ${compact ? 'text-slate-400' : 'text-slate-500'}`}>
+        <span className={`text-[10px] font-medium ${compact ? 'text-slate-400' : 'text-slate-500'}`}>
           Behavioral intervention engine
         </span>
       </div>
 
-      <div
-        className={`grid ${
-          compact
-            ? 'grid-cols-2 sm:grid-cols-4 gap-2'
-            : 'grid-cols-2 sm:grid-cols-4 gap-2.5'
-        }`}
-      >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
         {GUARDIAN_PERSONAS_LIST.map((persona) => {
           const isSelected = selectedId === persona.id;
           const isRecommended = persona.id === 'grandson_leo';
@@ -120,45 +114,40 @@ export function GuardianSelector({
               key={persona.id}
               type="button"
               onClick={() => handleSelect(persona)}
-              className={`relative flex flex-col items-center text-center p-2.5 rounded-2xl transition-all duration-200 border select-none ${
+              className={`px-3 py-1.5 rounded-xl border flex items-center gap-2 transition-all duration-150 select-none cursor-pointer ${
                 compact
                   ? isSelected
-                    ? 'bg-[#0B1528] ring-2 ring-blue-500 shadow-md translate-y-[-1px]'
-                    : 'bg-slate-900/80 hover:bg-slate-800 border-slate-800'
+                    ? 'bg-[#0B1528] ring-2 ring-blue-500 shadow-md text-white border-blue-500'
+                    : 'bg-slate-900/80 hover:bg-slate-800 border-slate-800 text-slate-300'
                   : isSelected
-                  ? 'bg-blue-50/80 border-2 border-[#1E3A8A] shadow-sm translate-y-[-1px]'
-                  : 'bg-white hover:bg-slate-50 border-slate-200/90 shadow-2xs'
+                  ? 'bg-blue-50/90 border-[#1E3A8A] text-[#1E3A8A] ring-1 ring-[#1E3A8A] shadow-2xs font-bold'
+                  : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700 shadow-2xs font-medium'
               }`}
             >
-              {isRecommended && (
-                <span className="absolute -top-2 right-1.5 px-1.5 py-0.2 rounded-full text-[8.5px] font-bold bg-amber-200 text-amber-950 border border-amber-400 font-mono shadow-2xs">
-                  Rec
-                </span>
-              )}
-              {/* Centered Avatar Icon */}
-              <span
-                className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 mb-1.5 ${
-                  compact ? 'bg-white/10' : isSelected ? 'bg-blue-100/80' : 'bg-slate-100'
-                }`}
-              >
-                {persona.avatarIcon}
-              </span>
-              {/* Display Name - Full Width Without Ugly Truncation */}
-              <h4
-                className={`text-xs font-bold leading-tight w-full ${
-                  compact ? 'text-white' : 'text-slate-900'
-                }`}
-              >
-                {persona.displayName}
-              </h4>
-              {/* Role Subtitle */}
-              <p
-                className={`text-[10px] leading-tight mt-0.5 font-medium truncate w-full ${
-                  compact ? 'text-slate-400' : 'text-slate-500'
-                }`}
-              >
-                {persona.roleTitle}
-              </p>
+              <span className="text-base leading-none shrink-0">{persona.avatarIcon}</span>
+              <div className="text-left min-w-0 flex-1">
+                <div className="flex items-center gap-1">
+                  <span
+                    className={`text-xs font-bold truncate leading-tight ${
+                      compact ? 'text-white' : 'text-slate-900'
+                    }`}
+                  >
+                    {persona.displayName}
+                  </span>
+                  {isRecommended && (
+                    <span className="px-1 py-0.2 rounded text-[7.5px] font-bold bg-amber-100 text-amber-900 border border-amber-300 font-mono shrink-0">
+                      Rec
+                    </span>
+                  )}
+                </div>
+                <p
+                  className={`text-[9.5px] truncate leading-none mt-0.5 font-medium ${
+                    compact ? 'text-slate-400' : 'text-slate-500'
+                  }`}
+                >
+                  {persona.roleTitle}
+                </p>
+              </div>
             </button>
           );
         })}
