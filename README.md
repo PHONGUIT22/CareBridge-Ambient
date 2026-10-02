@@ -125,13 +125,41 @@ Engineered in [`drugInteractionService.ts`](./backend-mcp/src/services/drugInter
 
 ## 📱 Pillar 3: Echo Show 10 Hardware Fidelity & Ambient UI
 
-### 1. Web Audio API Reactive Alexa Cyan Glow (`AlexaAmbientGlow.tsx`)
+### 1. Amazon Echo Show 10 Hardware Frame Simulator (`page.tsx` & `TopNavBar.tsx`)
+- **10.1" 16:10 Landscape Bezel**: Charcoal/graphite hardware frame matching Amazon Echo Show 10 (3rd Gen) industrial ergonomics.
+- **13MP Wide Motion Camera & Physical Privacy Shutter**: Integrated hardware camera notch with physical sliding toggle (`Shutter OPEN / CLOSED`) and hardware volume rockers.
+- **Motorized Motion Swivel Base Silhouette**: Cylindrical brushless motor speaker base underneath with acoustic fabric mesh pattern, Amazon smile contour, and subtle cyan ambient LED underglow.
+- **3-Way Viewport Switcher**: Toggle between `Dual Frame` (Dev Console), `Echo Show 10` (Hardware Simulator), and `Single Mobile`.
+
+### 2. Proactive Ring Doorbell Motion Alert & Web Audio 2-Tone Chime
+- **Zero-Dependency Web Audio 2-Tone Chime (`playRingChime`)**: Procedural synthesizer generating the signature Ring Doorbell chime (880Hz &rarr; 659.25Hz) with metallic bell decay.
+- **Proactive Motion Detection Banner**: Floating top notification banner alerting the senior when a courier approaches the front porch (*"Ring Doorbell: Motion Detected at Front Porch • Amazon Prime delivery"*).
+- **1-Click Test Button (`Simulate Delivery 📦`)**: Available directly on the top navigation bar for evaluators to trigger instant parcel arrival simulations.
+
+### 3. Bedside Desk Mode with Ambient Glance & OLED Night Dimmer (`DeskModeView.tsx`)
+- **Environmental Glance**: Live weather widget (`🌤️ 72°F Seattle, WA • Partly Cloudy • Hum 45%`) and Ring smart home security glance (`🔒 Front Door: Ring Locked • AC: 70°F`).
+- **Circadian Contextual Greetings**: Dynamic time-of-day greetings (*"Good morning, Eleanor"*, *"Good evening, Eleanor"*, *"Rest peacefully tonight, Eleanor"*).
+- **OLED Night Dimmer Mode**: 1-click toggle to a low-glare, warm amber/crimson sleep palette preserving elderly melatonin production and circadian rhythm.
+
+### 4. Amazon Pharmacy 4-Step Live Tracking & Ring Cam Bridge (`AmazonOrderCard.tsx`)
+- **Dynamic 4-Step Fulfillment Timeline**:
+  1. `1. Placed` (Voice refill authorized via Alexa+)
+  2. `2. Rx Verified` (Pharmacist review & Beers Criteria 2026 check passed)
+  3. `3. Prime In-Transit` (Courier dispatched via Prime Same-Day Delivery)
+  4. `4. At Porch` (Parcel delivered on front porch mat)
+- **Ring Porch Camera Bridge**: Seamless 1-click button (`🎥 View Porch Camera`) transitioning from the pharmacy order card directly to the Ring Doorbell Pro 2 live feed with computer vision parcel tracking.
+
+### 5. Geriatric Safety Shield & FDA Beers Criteria 2026 Audit (`MedicineCard.tsx`)
+- **Clinical Badges**: Every prescription card features `🛡️ Beers Audited` (emerald) and `⚡ Shield Active` (sky cyan) chips.
+- **Interactive Tooltip**: Tapping the badges reveals AWS Bedrock Claude 3.5 Sonnet geriatric analysis, verifying zero anticholinergic or sedative burden for senior patients (Age 75+).
+
+### 6. Web Audio API Reactive Alexa Cyan Glow (`AlexaAmbientGlow.tsx`)
 - Integrates native **Web Audio API `AudioContext`** and **`AnalyserNode`** connected directly to audio streams.
 - **Dynamic Liquid SVG Wave Ribbon**: High-definition undulating wave with signature Alexa Cyan gradient (`#00CAFF` &rarr; `#0070F3` &rarr; `#00F5FF`) rippling rhythmically along the screen's bottom bezel according to real-time voice frequencies, harmonic cadence, and decibel amplitude.
 - Upward diffused ambient aura plume dynamically expands from 48px to 100px based on vocal power and ambient resonance.
 - Contextual HUD status pill displays animated **5-band equalizer visualizer**, decibel gain readout, and live voice context tags.
 
-### 2. Ring Doorbell IR Night Vision & Computer Vision (`RingDoorbellCard.tsx`)
+### 7. Ring Doorbell IR Night Vision & Computer Vision (`RingDoorbellCard.tsx`)
 - **Night-Vision Optical Modes**: Switchable 850nm IR phosphor monochrome night-vision and starlight high-contrast camera simulation.
 - **Radar Scan Sweep**: Continuous laser radar sweep with trailing phosphorescent glow scanning the porch surface every 3.6s.
 - **Amazon Pharmacy Package Tracking**: Emerald green computer vision bounding box (`#10B981`) tracking delivery parcel position with corner targeting reticles and verified certification tag:
@@ -139,14 +167,14 @@ Engineered in [`drugInteractionService.ts`](./backend-mcp/src/services/drugInter
 - **Paramedic Acute Access**: 1-click **Ring Smart Deadbolt** override unlocking the front door during critical emergencies.
 - **Live Surveillance Telemetry**: Blinking `● LIVE REC` with 30 FPS timecode counter, signal bitrate, and encrypted smart lock telemetry.
 
-### 3. One-Tap Quick Doctor A4 Preview Modal (`DoctorReportPreviewModal.tsx`)
+### 8. One-Tap Quick Doctor A4 Preview Modal (`DoctorReportPreviewModal.tsx`)
 - High-fidelity hospital-grade A4 document sheet previewing clinical summary prior to printing or PDF export.
 - **30-Day Blood Pressure Longitudinal Trajectory Chart**: Displays Systolic & Diastolic trend curves with clinical target threshold band (<130/80 mmHg).
 - **Scannable Doctor QR Code**: Sharp SVG QR code encoding `https://carebridge.health/audit/CB-7821-EV` formatted for clinical EHR / HL7 FHIR compliance.
 - Attending cardiologist verification attestation with digital cryptographic verification seal.
 - Direct 1-tap PDF generation powered by `pdfService.generateDoctorReport(...)` with zero layout drift.
 
-### 4. One-Click Dual-Turn Mock Voice Dialogue Simulator (`DemoVoiceModal.tsx`)
+### 9. One-Click Dual-Turn Mock Voice Dialogue Simulator (`DemoVoiceModal.tsx`)
 - High-contrast toggle chip `[🎭 Demo Voice]` embedded in both the bedside bottom bar and the developer agent console.
 - **Turn 1 (Senior Patient Voice Simulation)**: Synthesizes Eleanor Vance (age 78, gentle timbre, pitch: 0.95, rate: 0.92) asking a realistic clinical query aloud, triggering reactive cyan waves and instant labeled chat bubbles.
 - **Turn 2 (Alexa Copilot Execution)**: On completion, triggers the 0ms earcon chime, engages Bedrock multi-turn reasoning, executes respective MCP tools, speaks via AWS Polly (`Ruth`), and displays rich interactive cards.
