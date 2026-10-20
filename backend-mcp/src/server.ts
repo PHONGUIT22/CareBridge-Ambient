@@ -2,11 +2,13 @@ import './config/env.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -61,20 +63,6 @@ initDB();
 // ==========================================
 // 2. SETUP MCP SERVER (Spec 2025-11-25)
 // ==========================================
-const mcpServer = new Server(
-  {
-    name: 'carebridge-ambient-mcp',
-    version: '1.0.0',
-  },
-  {
-    capabilities: {
-      tools: {},
-      resources: {},
-      prompts: {},
-    },
-  }
-);
-
 // Registered tools ready for Alexa+ agent
 const registeredTools = [
   getTodayScheduleTool,
@@ -86,90 +74,130 @@ const registeredTools = [
   negotiateAdherenceTool,
 ];
 
-// --- MCP TOOLS HANDLERS ---
-mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
-  return {
-    tools: registeredTools.map((t) => t.definition),
-  };
-});
-
-mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: toolArgs } = request.params;
-
-  try {
-    switch (name) {
-      case 'getTodaySchedule': {
-        const result = await getTodayScheduleTool.handler(toolArgs as unknown as Parameters<typeof getTodayScheduleTool.handler>[0]);
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-      }
-      case 'logDoseStatus': {
-        const result = await logDoseStatusTool.handler(toolArgs as unknown as Parameters<typeof logDoseStatusTool.handler>[0]);
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-      }
-      case 'recordVitals': {
-        const result = await recordVitalsTool.handler(toolArgs as unknown as Parameters<typeof recordVitalsTool.handler>[0]);
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-      }
-      case 'clinicalAdvisor': {
-        const result = await clinicalAdvisorTool.handler(toolArgs as unknown as Parameters<typeof clinicalAdvisorTool.handler>[0]);
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-      }
-      case 'orderRefill': {
-        const result = await orderRefillTool.handler(toolArgs as unknown as Parameters<typeof orderRefillTool.handler>[0]);
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-      }
-      case 'ringDeviceHub': {
-        const result = await ringDeviceHubTool.handler(toolArgs as unknown as Parameters<typeof ringDeviceHubTool.handler>[0]);
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-      }
-      case 'negotiateAdherence': {
-        const result = await negotiateAdherenceTool.handler(toolArgs as unknown as Parameters<typeof negotiateAdherenceTool.handler>[0]);
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-      }
-      default:
-        throw new Error(`MCP Tool '${name}' does not exist.`);
-    }
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+// Helper to register identical Tools (7), Resources (2), and Prompts (2) on any MCP server instance
+function registerMcpHandlers(server: Server): void {
+  // --- MCP TOOLS HANDLERS ---
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
-      isError: true,
-      content: [{ type: 'text', text: `Error executing tool '${name}': ${message}` }],
+      tools: registeredTools.map((t) => t.definition),
     };
-  }
-});
+  });
 
-// --- MCP RESOURCES HANDLERS ---
-mcpServer.setRequestHandler(ListResourcesRequestSchema, async () => {
-  return {
-    resources: registeredResources,
-  };
-});
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: toolArgs } = request.params;
 
-mcpServer.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-  const { uri } = request.params;
-  try {
-    return await readResourceHandler(uri);
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to read MCP Resource '${uri}': ${message}`);
-  }
-});
+    try {
+      switch (name) {
+        case 'getTodaySchedule': {
+          const result = await getTodayScheduleTool.handler(toolArgs as unknown as Parameters<typeof getTodayScheduleTool.handler>[0]);
+          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        }
+        case 'logDoseStatus': {
+          const result = await logDoseStatusTool.handler(toolArgs as unknown as Parameters<typeof logDoseStatusTool.handler>[0]);
+          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        }
+        case 'recordVitals': {
+          const result = await recordVitalsTool.handler(toolArgs as unknown as Parameters<typeof recordVitalsTool.handler>[0]);
+          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        }
+        case 'clinicalAdvisor': {
+          const result = await clinicalAdvisorTool.handler(toolArgs as unknown as Parameters<typeof clinicalAdvisorTool.handler>[0]);
+          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        }
+        case 'orderRefill': {
+          const result = await orderRefillTool.handler(toolArgs as unknown as Parameters<typeof orderRefillTool.handler>[0]);
+          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        }
+        case 'ringDeviceHub': {
+          const result = await ringDeviceHubTool.handler(toolArgs as unknown as Parameters<typeof ringDeviceHubTool.handler>[0]);
+          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        }
+        case 'negotiateAdherence': {
+          const result = await negotiateAdherenceTool.handler(toolArgs as unknown as Parameters<typeof negotiateAdherenceTool.handler>[0]);
+          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        }
+        default:
+          throw new Error(`MCP Tool '${name}' does not exist.`);
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        isError: true,
+        content: [{ type: 'text', text: `Error executing tool '${name}': ${message}` }],
+      };
+    }
+  });
 
-// --- MCP PROMPTS HANDLERS ---
-mcpServer.setRequestHandler(ListPromptsRequestSchema, async () => {
-  return {
-    prompts: registeredPrompts,
-  };
-});
+  // --- MCP RESOURCES HANDLERS ---
+  server.setRequestHandler(ListResourcesRequestSchema, async () => {
+    return {
+      resources: registeredResources,
+    };
+  });
 
-mcpServer.setRequestHandler(GetPromptRequestSchema, async (request) => {
-  const { name, arguments: promptArgs } = request.params;
-  try {
-    return await getPromptHandler(name, promptArgs);
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get MCP Prompt '${name}': ${message}`);
-  }
+  server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+    const { uri } = request.params;
+    try {
+      return await readResourceHandler(uri);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to read MCP Resource '${uri}': ${message}`);
+    }
+  });
+
+  // --- MCP PROMPTS HANDLERS ---
+  server.setRequestHandler(ListPromptsRequestSchema, async () => {
+    return {
+      prompts: registeredPrompts,
+    };
+  });
+
+  server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    const { name, arguments: promptArgs } = request.params;
+    try {
+      return await getPromptHandler(name, promptArgs);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to get MCP Prompt '${name}': ${message}`);
+    }
+  });
+}
+
+function createMcpServer(name: string): Server {
+  const server = new Server(
+    {
+      name,
+      version: '1.0.0',
+    },
+    {
+      capabilities: {
+        tools: {},
+        resources: {},
+        prompts: {},
+      },
+    }
+  );
+  registerMcpHandlers(server);
+  return server;
+}
+
+// 1. Backward-compatible SSE Server Instance
+const mcpServer = createMcpServer('carebridge-ambient-mcp-sse');
+
+// 2. Streamable HTTP Server Instance (Spec 2025-11-25)
+const streamableMcpServer = createMcpServer('carebridge-ambient-mcp');
+
+// ==========================================
+// STREAMABLE HTTP TRANSPORT (Spec 2025-11-25)
+// ==========================================
+const streamableTransport = new StreamableHTTPServerTransport({
+  sessionIdGenerator: () => randomUUID(),
+});
+await streamableMcpServer.connect(streamableTransport);
+
+// Handle Streamable HTTP endpoint for all HTTP verbs (POST, GET, DELETE)
+app.all('/mcp', async (req: Request, res: Response) => {
+  await streamableTransport.handleRequest(req, res, req.body);
 });
 
 // ==========================================
@@ -216,10 +244,11 @@ app.listen(PORT, () => {
   console.log(`
 =====================================================
   CAREBRIDGE AMBIENT MCP SERVER READY!
-  • Port:               ${PORT}
-  • REST API:           http://localhost:${PORT}/api/today
-  • MCP SSE Endpoint:   http://localhost:${PORT}/sse
-  • MCP Message Post:   http://localhost:${PORT}/message
+  • Port:                  ${PORT}
+  • REST API:              http://localhost:${PORT}/api/today
+  • MCP Streamable HTTP:   http://localhost:${PORT}/mcp (Spec 2025-11-25)
+  • MCP SSE Endpoint:      http://localhost:${PORT}/sse
+  • MCP Message Post:      http://localhost:${PORT}/message
 =====================================================
   `);
   console.log(`[AWS Config] Region: ${process.env.AWS_REGION || 'none'}, Key ID: ${process.env.AWS_ACCESS_KEY_ID ? 'Configured' : 'Empty'}`);
